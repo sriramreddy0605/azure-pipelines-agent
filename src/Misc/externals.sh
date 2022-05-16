@@ -10,7 +10,7 @@ CONTAINER_URL=https://vstsagenttools.blob.core.windows.net/tools
 NODE_URL=https://nodejs.org/dist
 NODE_VERSION="6.17.1"
 NODE10_VERSION="10.24.1"
-MINGIT_VERSION="2.30.2"
+MINGIT_VERSION="2.36.1"
 LFS_VERSION="2.13.3"
 
 get_abs_path() {
@@ -186,7 +186,6 @@ fi
 
 # Download the external tools common across OSX and Linux PACKAGERUNTIMEs.
 if [[ "$PACKAGERUNTIME" == "linux-x64" || "$PACKAGERUNTIME" == "linux-arm" || "$PACKAGERUNTIME" == "linux-arm64" || "$PACKAGERUNTIME" == "osx-x64" || "$PACKAGERUNTIME" == "rhel.6-x64" ]]; then
-    acquireExternalTool "$CONTAINER_URL/tee/14_135_0/TEE-CLC-14.135.0.zip" tee fix_nested_dir
     acquireExternalTool "$CONTAINER_URL/vso-task-lib/0.5.5/vso-task-lib.tar.gz" vso-task-lib
 fi
 
