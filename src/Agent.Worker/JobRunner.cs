@@ -128,13 +128,21 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                         }
 
                         if (!string.IsNullOrWhiteSpace(notSupportNet6Message))
-                        {
+                        {                            
+                            if(!AgentKnobs.AcknowledgeNoUpdates.GetValue(jobContext).AsBoolean())
+                            {
+                                jobContext.Error(StringUtil.Loc("FailAgentOnUnsupportedOs"));
+                                return await CompleteJobAsync(jobServer, jobContext, message, TaskResult.Failed);
+                            }
+
                             jobContext.AddIssue(new Issue() { Type = IssueType.Warning, Message = notSupportNet6Message });
                         }
                     }
                     catch (Exception ex)
                     {
                         Trace.Error($"Error has occurred while checking if system supports .NET 6: {ex}");
+                        return await CompleteJobAsync(jobServer, jobContext, message, TaskResult.Failed);
+
                     }
                 }
 
@@ -198,6 +206,18 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 }
                 jobContext.SetVariable(Constants.Variables.Agent.WorkFolder, HostContext.GetDirectory(WellKnownDirectory.Work), isFilePath: true);
                 jobContext.SetVariable(Constants.Variables.System.WorkFolder, HostContext.GetDirectory(WellKnownDirectory.Work), isFilePath: true);
+
+                try
+                {
+                    jobContext.SetVariable(Constants.Variables.System.IsAzureVM, PlatformUtil.DetectAzureVM() ? "1" : "0");
+                    jobContext.SetVariable(Constants.Variables.System.IsDockerContainer, PlatformUtil.DetectDockerContainer() ? "1" : "0");
+                }
+                catch (Exception ex)
+                {
+                    // Error with telemetry shouldn't affect job run
+                    Trace.Info($"Couldn't retrieve telemetry information");
+                    Trace.Info(ex);
+                }
 
                 string toolsDirectory = HostContext.GetDirectory(WellKnownDirectory.Tools);
                 Directory.CreateDirectory(toolsDirectory);
