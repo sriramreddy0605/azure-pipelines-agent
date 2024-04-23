@@ -102,7 +102,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
             // Getting informantion from headers
             var requestHeaders = requestMessage?.Headers;
 
-            if (requestHeaders is null)
+            if (requestHeaders is null || !requestHeaders.Any())
             {
                 return;
             }
