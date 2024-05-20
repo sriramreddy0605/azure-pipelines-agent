@@ -204,6 +204,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
             _logBuilder.AppendLine($"Expiration date: {certificate?.GetExpirationDateString()}");
             _logBuilder.AppendLine($"Issuer: {certificate?.Issuer}");
             _logBuilder.AppendLine($"Subject: {certificate?.Subject}");
+            _logBuilder.AppendLine($"Thumbprint: {certificate?.Thumbprint}");
         }
     }
 }

@@ -90,7 +90,15 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Util
         public void AddCertificateLog_CertificateIsNotNull_ShouldReturnCorrectLog()
         {
             // Arrange
-            var certificate = new X509Certificate2();
+#pragma warning disable SYSLIB0026 // Type or member is obsolete
+            var certificate = new X509Certificate2()
+            {
+                Subject = "CN=TestSubject",
+                Issuer = "CN=TestIssuer",
+                Thumbprint = "TestThumbprint",
+                NotBefore = DateTime.Now
+            };
+#pragma warning restore SYSLIB0026 // Type or member is obsolete
             var logBuilder = new SslDiagnosticsLogBuilder();
             var log = string.Empty;
 
