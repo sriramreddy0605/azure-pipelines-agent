@@ -157,9 +157,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 {
                     var processInvokerOutput = message.Data;
 
-                    var cpuInfoNice = Int32.Parse(processInvokerOutput.Split(' ', (char)StringSplitOptions.RemoveEmptyEntries)[2]);
-                    var cpuInfoIdle = Int32.Parse(processInvokerOutput.Split(' ', (char)StringSplitOptions.RemoveEmptyEntries)[4]);
-                    var cpuInfoIOWait = Int32.Parse(processInvokerOutput.Split(' ', (char)StringSplitOptions.RemoveEmptyEntries)[5]);
+                    var cpuInfoNice = int.Parse(processInvokerOutput.Split(' ', (char)StringSplitOptions.RemoveEmptyEntries)[2]);
+                    var cpuInfoIdle = int.Parse(processInvokerOutput.Split(' ', (char)StringSplitOptions.RemoveEmptyEntries)[4]);
+                    var cpuInfoIOWait = int.Parse(processInvokerOutput.Split(' ', (char)StringSplitOptions.RemoveEmptyEntries)[5]);
 
                     lock (_cpuInfoLock)
                     {
@@ -222,7 +222,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                         cancellationToken: linkedTokenSource.Token);
 
                 // Use second sample for more accurate calculation
-                var cpuInfoIdle = Double.Parse(outputs[1].Split(' ', (char)StringSplitOptions.RemoveEmptyEntries)[6].Trim('%'));
+                var cpuInfoIdle = double.Parse(outputs[1].Split(' ', (char)StringSplitOptions.RemoveEmptyEntries)[6].Trim('%'));
 
                 lock (_cpuInfoLock)
                 {
@@ -317,8 +317,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     lock (_memoryInfoLock)
                     {
                         _memoryInfo.Updated = DateTime.Now;
-                        _memoryInfo.TotalMemoryMB = Int32.Parse(memoryInfoString[1]);
-                        _memoryInfo.UsedMemoryMB = Int32.Parse(memoryInfoString[2]);
+                        _memoryInfo.TotalMemoryMB = long.Parse(memoryInfoString[1]);
+                        _memoryInfo.UsedMemoryMB = long.Parse(memoryInfoString[2]);
                     }
                 };
 
@@ -385,14 +385,14 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                         killProcessOnCancel: true,
                         cancellationToken: linkedTokenSource.Token);
 
-                var pageSize = Int32.Parse(outputs[0].Split(" ", StringSplitOptions.RemoveEmptyEntries)[7]);
+                var pageSize = int.Parse(outputs[0].Split(" ", StringSplitOptions.RemoveEmptyEntries)[7]);
 
-                var pagesFree = Int64.Parse(outputs[1].Split(" ", StringSplitOptions.RemoveEmptyEntries)[2].Trim('.'));
-                var pagesActive = Int64.Parse(outputs[2].Split(" ", StringSplitOptions.RemoveEmptyEntries)[2].Trim('.'));
-                var pagesInactive = Int64.Parse(outputs[3].Split(" ", StringSplitOptions.RemoveEmptyEntries)[2].Trim('.'));
-                var pagesSpeculative = Int64.Parse(outputs[4].Split(" ", StringSplitOptions.RemoveEmptyEntries)[2].Trim('.'));
-                var pagesWiredDown = Int64.Parse(outputs[6].Split(" ", StringSplitOptions.RemoveEmptyEntries)[3].Trim('.'));
-                var pagesOccupied = Int64.Parse(outputs[16].Split(" ", StringSplitOptions.RemoveEmptyEntries)[4].Trim('.'));
+                var pagesFree = long.Parse(outputs[1].Split(" ", StringSplitOptions.RemoveEmptyEntries)[2].Trim('.'));
+                var pagesActive = long.Parse(outputs[2].Split(" ", StringSplitOptions.RemoveEmptyEntries)[2].Trim('.'));
+                var pagesInactive = long.Parse(outputs[3].Split(" ", StringSplitOptions.RemoveEmptyEntries)[2].Trim('.'));
+                var pagesSpeculative = long.Parse(outputs[4].Split(" ", StringSplitOptions.RemoveEmptyEntries)[2].Trim('.'));
+                var pagesWiredDown = long.Parse(outputs[6].Split(" ", StringSplitOptions.RemoveEmptyEntries)[3].Trim('.'));
+                var pagesOccupied = long.Parse(outputs[16].Split(" ", StringSplitOptions.RemoveEmptyEntries)[4].Trim('.'));
 
                 var freeMemory = (pagesFree + pagesInactive) * pageSize;
                 var usedMemory = (pagesActive + pagesSpeculative + pagesWiredDown + pagesOccupied) * pageSize;
