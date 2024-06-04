@@ -132,12 +132,12 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     using var query = new ManagementObjectSearcher("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name=\"_Total\"");
 
                     ManagementObject cpuInfo = query.Get().OfType<ManagementObject>().FirstOrDefault() ?? throw new Exception("Failed to execute WMI query");
-                    var cpuUsage = Convert.ToDouble(cpuInfo["PercentIdleTime"]);
+                    var cpuInfoIdle = Convert.ToDouble(cpuInfo["PercentIdleTime"]);
 
                     lock (_cpuInfoLock)
                     {
                         _cpuInfo.Updated = DateTime.Now;
-                        _cpuInfo.Usage = 100 - cpuUsage;
+                        _cpuInfo.Usage = 100 - cpuInfoIdle;
                     }
                 }, linkedTokenSource.Token);
             }
