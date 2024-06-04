@@ -11,6 +11,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Management;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.VisualStudio.Services.Agent.Worker
@@ -119,91 +120,114 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
             if (PlatformUtil.RunningOnWindows)
             {
-                using var query = new ManagementObjectSearcher("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name=\"_Total\"");
+                using var timeoutTokenSource = new CancellationTokenSource();
+                timeoutTokenSource.CancelAfter(TimeSpan.FromMilliseconds(METRICS_UPDATE_INTERVAL));
 
-                ManagementObject cpuInfo = query.Get().OfType<ManagementObject>().FirstOrDefault() ?? throw new Exception("Failed to execute WMI query");
-                var cpuUsage = Convert.ToDouble(cpuInfo["PercentIdleTime"]);
+                using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+                    _context.CancellationToken,
+                    timeoutTokenSource.Token);
 
-                lock (_cpuInfoLock)
+                await Task.Run(() =>
                 {
-                    _cpuInfo.Updated = DateTime.Now;
-                    _cpuInfo.Usage = 100 - cpuUsage;
-                }
+                    using var query = new ManagementObjectSearcher("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name=\"_Total\"");
+
+                    ManagementObject cpuInfo = query.Get().OfType<ManagementObject>().FirstOrDefault() ?? throw new Exception("Failed to execute WMI query");
+                    var cpuUsage = Convert.ToDouble(cpuInfo["PercentIdleTime"]);
+
+                    lock (_cpuInfoLock)
+                    {
+                        _cpuInfo.Updated = DateTime.Now;
+                        _cpuInfo.Usage = 100 - cpuUsage;
+                    }
+                }, linkedTokenSource.Token);
             }
 
             if (PlatformUtil.RunningOnLinux)
             {
-                using (var processInvoker = HostContext.CreateService<IProcessInvoker>())
+                using var processInvoker = HostContext.CreateService<IProcessInvoker>();
+
+                using var timeoutTokenSource = new CancellationTokenSource();
+                timeoutTokenSource.CancelAfter(TimeSpan.FromMilliseconds(METRICS_UPDATE_INTERVAL));
+
+                using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+                    _context.CancellationToken,
+                    timeoutTokenSource.Token);
+
+                processInvoker.OutputDataReceived += delegate (object sender, ProcessDataReceivedEventArgs message)
                 {
-                    processInvoker.OutputDataReceived += delegate (object sender, ProcessDataReceivedEventArgs message)
+                    var processInvokerOutput = message.Data;
+
+                    var cpuInfoNice = Int32.Parse(processInvokerOutput.Split(' ', (char)StringSplitOptions.RemoveEmptyEntries)[2]);
+                    var cpuInfoIdle = Int32.Parse(processInvokerOutput.Split(' ', (char)StringSplitOptions.RemoveEmptyEntries)[4]);
+                    var cpuInfoIOWait = Int32.Parse(processInvokerOutput.Split(' ', (char)StringSplitOptions.RemoveEmptyEntries)[5]);
+
+                    lock (_cpuInfoLock)
                     {
-                        var processInvokerOutput = message.Data;
+                        _cpuInfo.Updated = DateTime.Now;
+                        _cpuInfo.Usage = (double)(cpuInfoNice + cpuInfoIdle) * 100 / (cpuInfoNice + cpuInfoIdle + cpuInfoIOWait);
+                    }
+                };
 
-                        var cpuInfoNice = Int32.Parse(processInvokerOutput.Split(' ', (char)StringSplitOptions.RemoveEmptyEntries)[2]);
-                        var cpuInfoIdle = Int32.Parse(processInvokerOutput.Split(' ', (char)StringSplitOptions.RemoveEmptyEntries)[4]);
-                        var cpuInfoIOWait = Int32.Parse(processInvokerOutput.Split(' ', (char)StringSplitOptions.RemoveEmptyEntries)[5]);
+                processInvoker.ErrorDataReceived += delegate (object sender, ProcessDataReceivedEventArgs message)
+                {
+                    Trace.Error($"Error on receiving CPU info: {message.Data}");
+                };
 
-                        lock (_cpuInfoLock)
-                        {
-                            _cpuInfo.Updated = DateTime.Now;
-                            _cpuInfo.Usage = (double)(cpuInfoNice + cpuInfoIdle) * 100 / (cpuInfoNice + cpuInfoIdle + cpuInfoIOWait);
-                        }
-                    };
-
-                    processInvoker.ErrorDataReceived += delegate (object sender, ProcessDataReceivedEventArgs message)
-                    {
-                        Trace.Error(message.Data);
-                    };
-
-                    var filePath = "grep";
-                    var arguments = "\"cpu \" /proc/stat";
-                    await processInvoker.ExecuteAsync(
-                            workingDirectory: string.Empty,
-                            fileName: filePath,
-                            arguments: arguments,
-                            environment: null,
-                            requireExitCodeZero: true,
-                            outputEncoding: null,
-                            killProcessOnCancel: true,
-                            cancellationToken: _context.CancellationToken);
-                }
+                var filePath = "grep";
+                var arguments = "\"cpu \" /proc/stat";
+                await processInvoker.ExecuteAsync(
+                        workingDirectory: string.Empty,
+                        fileName: filePath,
+                        arguments: arguments,
+                        environment: null,
+                        requireExitCodeZero: true,
+                        outputEncoding: null,
+                        killProcessOnCancel: true,
+                        cancellationToken: linkedTokenSource.Token);
             }
 
             if (PlatformUtil.RunningOnMacOS)
             {
                 List<string> outputs = new List<string>();
-                using (var processInvoker = HostContext.CreateService<IProcessInvoker>())
+
+                using var processInvoker = HostContext.CreateService<IProcessInvoker>();
+
+                using var timeoutTokenSource = new CancellationTokenSource();
+                timeoutTokenSource.CancelAfter(TimeSpan.FromMilliseconds(METRICS_UPDATE_INTERVAL));
+
+                using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+                    _context.CancellationToken,
+                    timeoutTokenSource.Token);
+
+                processInvoker.OutputDataReceived += delegate (object sender, ProcessDataReceivedEventArgs message)
                 {
-                    processInvoker.OutputDataReceived += delegate (object sender, ProcessDataReceivedEventArgs message)
-                    {
-                        outputs.Add(message.Data);
-                    };
+                    outputs.Add(message.Data);
+                };
 
-                    processInvoker.ErrorDataReceived += delegate (object sender, ProcessDataReceivedEventArgs message)
-                    {
-                        Trace.Error(message.Data);
-                    };
+                processInvoker.ErrorDataReceived += delegate (object sender, ProcessDataReceivedEventArgs message)
+                {
+                    Trace.Error($"Error on receiving CPU info: {message.Data}");
+                };
 
-                    var filePath = "/bin/bash";
-                    var arguments = "-c \"top -l 2 -o cpu | grep ^CPU\"";
-                    await processInvoker.ExecuteAsync(
-                            workingDirectory: string.Empty,
-                            fileName: filePath,
-                            arguments: arguments,
-                            environment: null,
-                            requireExitCodeZero: true,
-                            outputEncoding: null,
-                            killProcessOnCancel: true,
-                            cancellationToken: _context.CancellationToken);
+                var filePath = "/bin/bash";
+                var arguments = "-c \"top -l 2 -o cpu | grep ^CPU\"";
+                await processInvoker.ExecuteAsync(
+                        workingDirectory: string.Empty,
+                        fileName: filePath,
+                        arguments: arguments,
+                        environment: null,
+                        requireExitCodeZero: true,
+                        outputEncoding: null,
+                        killProcessOnCancel: true,
+                        cancellationToken: linkedTokenSource.Token);
 
-                    // Use second sample for more accurate calculation
-                    var cpuInfoIdle = Double.Parse(outputs[1].Split(' ', (char)StringSplitOptions.RemoveEmptyEntries)[6].Trim('%'));
+                // Use second sample for more accurate calculation
+                var cpuInfoIdle = Double.Parse(outputs[1].Split(' ', (char)StringSplitOptions.RemoveEmptyEntries)[6].Trim('%'));
 
-                    lock (_cpuInfoLock)
-                    {
-                        _cpuInfo.Updated = DateTime.Now;
-                        _cpuInfo.Usage = 100 - cpuInfoIdle;
-                    }
+                lock (_cpuInfoLock)
+                {
+                    _cpuInfo.Updated = DateTime.Now;
+                    _cpuInfo.Usage = 100 - cpuInfoIdle;
                 }
             }
         }
@@ -236,18 +260,28 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
             if (PlatformUtil.RunningOnWindows)
             {
-                using var query = new ManagementObjectSearcher("SELECT FreePhysicalMemory, TotalVisibleMemorySize FROM CIM_OperatingSystem");
+                using var timeoutTokenSource = new CancellationTokenSource();
+                timeoutTokenSource.CancelAfter(TimeSpan.FromMilliseconds(METRICS_UPDATE_INTERVAL));
 
-                ManagementObject memoryInfo = query.Get().OfType<ManagementObject>().FirstOrDefault() ?? throw new Exception("Failed to execute WMI query");
-                var freeMemory = Convert.ToInt64(memoryInfo["FreePhysicalMemory"]);
-                var totalMemory = Convert.ToInt64(memoryInfo["TotalVisibleMemorySize"]);
+                using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+                    _context.CancellationToken,
+                    timeoutTokenSource.Token);
 
-                lock (_memoryInfoLock)
+                await Task.Run(() =>
                 {
-                    _memoryInfo.Updated = DateTime.Now;
-                    _memoryInfo.TotalMemoryMB = totalMemory / 1024;
-                    _memoryInfo.UsedMemoryMB = (totalMemory - freeMemory) / 1024;
-                }
+                    using var query = new ManagementObjectSearcher("SELECT FreePhysicalMemory, TotalVisibleMemorySize FROM CIM_OperatingSystem");
+
+                    ManagementObject memoryInfo = query.Get().OfType<ManagementObject>().FirstOrDefault() ?? throw new Exception("Failed to execute WMI query");
+                    var freeMemory = Convert.ToInt64(memoryInfo["FreePhysicalMemory"]);
+                    var totalMemory = Convert.ToInt64(memoryInfo["TotalVisibleMemorySize"]);
+
+                    lock (_memoryInfoLock)
+                    {
+                        _memoryInfo.Updated = DateTime.Now;
+                        _memoryInfo.TotalMemoryMB = totalMemory / 1024;
+                        _memoryInfo.UsedMemoryMB = (totalMemory - freeMemory) / 1024;
+                    }
+                }, linkedTokenSource.Token);
             }
 
             if (PlatformUtil.RunningOnLinux)
@@ -256,54 +290,60 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 // We don't want to break currently existing pipelines with ADO warnings
                 // so related errors thrown here will be sent to the trace or debug logs by caller methods
 
-                using (var processInvoker = HostContext.CreateService<IProcessInvoker>())
+                using var processInvoker = HostContext.CreateService<IProcessInvoker>();
+
+                using var timeoutTokenSource = new CancellationTokenSource();
+                timeoutTokenSource.CancelAfter(TimeSpan.FromMilliseconds(METRICS_UPDATE_INTERVAL));
+
+                using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+                    _context.CancellationToken,
+                    timeoutTokenSource.Token);
+
+                processInvoker.OutputDataReceived += delegate (object sender, ProcessDataReceivedEventArgs message)
                 {
-                    processInvoker.OutputDataReceived += delegate (object sender, ProcessDataReceivedEventArgs message)
+                    if (!message.Data.StartsWith("Mem:"))
                     {
-                        if (!message.Data.StartsWith("Mem:"))
-                        {
-                            return;
-                        }
-
-                        var processInvokerOutputString = message.Data;
-                        var memoryInfoString = processInvokerOutputString.Split(" ", StringSplitOptions.RemoveEmptyEntries);
-
-                        if (memoryInfoString.Length != 7)
-                        {
-                            throw new Exception("\"free\" utility has non-default output");
-                        }
-
-                        lock (_memoryInfoLock)
-                        {
-                            _memoryInfo.Updated = DateTime.Now;
-                            _memoryInfo.TotalMemoryMB = Int32.Parse(memoryInfoString[1]);
-                            _memoryInfo.UsedMemoryMB = Int32.Parse(memoryInfoString[2]);
-                        }
-                    };
-
-                    processInvoker.ErrorDataReceived += delegate (object sender, ProcessDataReceivedEventArgs message)
-                    {
-                        Trace.Error(message.Data);
-                    };
-
-                    try
-                    {
-                        var filePath = "free";
-                        var arguments = "-m";
-                        await processInvoker.ExecuteAsync(
-                                workingDirectory: string.Empty,
-                                fileName: filePath,
-                                arguments: arguments,
-                                environment: null,
-                                requireExitCodeZero: true,
-                                outputEncoding: null,
-                                killProcessOnCancel: true,
-                                cancellationToken: _context.CancellationToken);
+                        return;
                     }
-                    catch (Win32Exception ex)
+
+                    var processInvokerOutputString = message.Data;
+                    var memoryInfoString = processInvokerOutputString.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+
+                    if (memoryInfoString.Length != 7)
                     {
-                        throw new Exception($"\"free\" utility is unavailable. Exception: {ex.Message}");
+                        throw new Exception("\"free\" utility has non-default output");
                     }
+
+                    lock (_memoryInfoLock)
+                    {
+                        _memoryInfo.Updated = DateTime.Now;
+                        _memoryInfo.TotalMemoryMB = Int32.Parse(memoryInfoString[1]);
+                        _memoryInfo.UsedMemoryMB = Int32.Parse(memoryInfoString[2]);
+                    }
+                };
+
+                processInvoker.ErrorDataReceived += delegate (object sender, ProcessDataReceivedEventArgs message)
+                {
+                    Trace.Error($"Error on receiving memory info: {message.Data}");
+                };
+
+                try
+                {
+                    var filePath = "free";
+                    var arguments = "-m";
+                    await processInvoker.ExecuteAsync(
+                            workingDirectory: string.Empty,
+                            fileName: filePath,
+                            arguments: arguments,
+                            environment: null,
+                            requireExitCodeZero: true,
+                            outputEncoding: null,
+                            killProcessOnCancel: true,
+                            cancellationToken: linkedTokenSource.Token);
+                }
+                catch (Win32Exception ex)
+                {
+                    throw new Exception($"\"free\" utility is unavailable. Exception: {ex.Message}");
                 }
             }
 
@@ -314,47 +354,54 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 // so we need to parse and cast the output manually
 
                 List<string> outputs = new List<string>();
-                using (var processInvoker = HostContext.CreateService<IProcessInvoker>())
+
+                using var processInvoker = HostContext.CreateService<IProcessInvoker>();
+
+                using var timeoutTokenSource = new CancellationTokenSource();
+                timeoutTokenSource.CancelAfter(TimeSpan.FromMilliseconds(METRICS_UPDATE_INTERVAL));
+
+                using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+                    _context.CancellationToken,
+                    timeoutTokenSource.Token);
+
+                processInvoker.OutputDataReceived += delegate (object sender, ProcessDataReceivedEventArgs message)
                 {
-                    processInvoker.OutputDataReceived += delegate (object sender, ProcessDataReceivedEventArgs message)
-                    {
-                        outputs.Add(message.Data);
-                    };
+                    outputs.Add(message.Data);
+                };
 
-                    processInvoker.ErrorDataReceived += delegate (object sender, ProcessDataReceivedEventArgs message)
-                    {
-                        Trace.Error(message.Data);
-                    };
+                processInvoker.ErrorDataReceived += delegate (object sender, ProcessDataReceivedEventArgs message)
+                {
+                    Trace.Error($"Error on receiving memory info: {message.Data}");
+                };
 
-                    var filePath = "vm_stat";
-                    await processInvoker.ExecuteAsync(
-                            workingDirectory: string.Empty,
-                            fileName: filePath,
-                            arguments: string.Empty,
-                            environment: null,
-                            requireExitCodeZero: true,
-                            outputEncoding: null,
-                            killProcessOnCancel: true,
-                            cancellationToken: _context.CancellationToken);
+                var filePath = "vm_stat";
+                await processInvoker.ExecuteAsync(
+                        workingDirectory: string.Empty,
+                        fileName: filePath,
+                        arguments: string.Empty,
+                        environment: null,
+                        requireExitCodeZero: true,
+                        outputEncoding: null,
+                        killProcessOnCancel: true,
+                        cancellationToken: linkedTokenSource.Token);
 
-                    var pageSize = Int32.Parse(outputs[0].Split(" ", StringSplitOptions.RemoveEmptyEntries)[7]);
+                var pageSize = Int32.Parse(outputs[0].Split(" ", StringSplitOptions.RemoveEmptyEntries)[7]);
 
-                    var pagesFree = Int64.Parse(outputs[1].Split(" ", StringSplitOptions.RemoveEmptyEntries)[2].Trim('.'));
-                    var pagesActive = Int64.Parse(outputs[2].Split(" ", StringSplitOptions.RemoveEmptyEntries)[2].Trim('.'));
-                    var pagesInactive = Int64.Parse(outputs[3].Split(" ", StringSplitOptions.RemoveEmptyEntries)[2].Trim('.'));
-                    var pagesSpeculative = Int64.Parse(outputs[4].Split(" ", StringSplitOptions.RemoveEmptyEntries)[2].Trim('.'));
-                    var pagesWiredDown = Int64.Parse(outputs[6].Split(" ", StringSplitOptions.RemoveEmptyEntries)[3].Trim('.'));
-                    var pagesOccupied = Int64.Parse(outputs[16].Split(" ", StringSplitOptions.RemoveEmptyEntries)[4].Trim('.'));
+                var pagesFree = Int64.Parse(outputs[1].Split(" ", StringSplitOptions.RemoveEmptyEntries)[2].Trim('.'));
+                var pagesActive = Int64.Parse(outputs[2].Split(" ", StringSplitOptions.RemoveEmptyEntries)[2].Trim('.'));
+                var pagesInactive = Int64.Parse(outputs[3].Split(" ", StringSplitOptions.RemoveEmptyEntries)[2].Trim('.'));
+                var pagesSpeculative = Int64.Parse(outputs[4].Split(" ", StringSplitOptions.RemoveEmptyEntries)[2].Trim('.'));
+                var pagesWiredDown = Int64.Parse(outputs[6].Split(" ", StringSplitOptions.RemoveEmptyEntries)[3].Trim('.'));
+                var pagesOccupied = Int64.Parse(outputs[16].Split(" ", StringSplitOptions.RemoveEmptyEntries)[4].Trim('.'));
 
-                    var freeMemory = (pagesFree + pagesInactive) * pageSize;
-                    var usedMemory = (pagesActive + pagesSpeculative + pagesWiredDown + pagesOccupied) * pageSize;
+                var freeMemory = (pagesFree + pagesInactive) * pageSize;
+                var usedMemory = (pagesActive + pagesSpeculative + pagesWiredDown + pagesOccupied) * pageSize;
 
-                    lock (_memoryInfoLock)
-                    {
-                        _memoryInfo.Updated = DateTime.Now;
-                        _memoryInfo.TotalMemoryMB = (freeMemory + usedMemory) / 1048576;
-                        _memoryInfo.UsedMemoryMB = usedMemory / 1048576;
-                    }
+                lock (_memoryInfoLock)
+                {
+                    _memoryInfo.Updated = DateTime.Now;
+                    _memoryInfo.TotalMemoryMB = (freeMemory + usedMemory) / 1048576;
+                    _memoryInfo.UsedMemoryMB = usedMemory / 1048576;
                 }
             }
         }
