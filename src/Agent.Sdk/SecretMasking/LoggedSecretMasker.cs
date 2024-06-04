@@ -1,7 +1,11 @@
-using Microsoft.TeamFoundation.DistributedTask.Logging;
-using System;
 
-namespace Agent.Sdk.Util
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+using System;
+using ValueEncoder = Microsoft.TeamFoundation.DistributedTask.Logging.ValueEncoder;
+using ISecretMaskerVSO = Microsoft.TeamFoundation.DistributedTask.Logging.ISecretMasker;
+
+namespace Agent.Sdk.SecretMasking
 {
     /// <summary>
     /// Extended secret masker service, that allows to log origins of secrets
@@ -10,6 +14,7 @@ namespace Agent.Sdk.Util
     {
         private ISecretMasker _secretMasker;
         private ITraceWriter _trace;
+
 
         private void Trace(string msg)
         {
@@ -47,7 +52,6 @@ namespace Agent.Sdk.Util
 
             AddValue(value);
         }
-
         public void AddRegex(string pattern)
         {
             this._secretMasker.AddRegex(pattern);
@@ -70,8 +74,9 @@ namespace Agent.Sdk.Util
             AddRegex(pattern);
         }
 
-        // We don't allow to skip secrets longer than 4 characters.
-        public int MinSecretLengthLimit => 4;
+        // We don't allow to skip secrets longer than 5 characters.
+        // Note: the secret that will be ignored is of length n-1.
+        public static int MinSecretLengthLimit => 6;
 
         public int MinSecretLength
         {
@@ -103,6 +108,7 @@ namespace Agent.Sdk.Util
             this._secretMasker.AddValueEncoder(encoder);
         }
 
+
         /// <summary>
         /// Overloading of AddValueEncoder method with additional logic for logging origin of provided secret
         /// </summary>
@@ -130,5 +136,7 @@ namespace Agent.Sdk.Util
         {
             return this._secretMasker.MaskSecrets(input);
         }
+
+        ISecretMaskerVSO ISecretMaskerVSO.Clone() => this.Clone();
     }
 }

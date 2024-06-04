@@ -8,7 +8,6 @@ using Microsoft.VisualStudio.Services.Agent.Capabilities;
 using Microsoft.VisualStudio.Services.Agent.Util;
 using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.OAuth;
-using Microsoft.VisualStudio.Services.WebApi;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,8 +17,11 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Security.AccessControl;
 using System.Security.Principal;
+using Newtonsoft.Json;
+using Microsoft.VisualStudio.Services.Agent.Listener.Telemetry;
 
 namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
 {
@@ -118,11 +120,13 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
                     break;
                 case PlatformUtil.OS.Windows:
                     // Warn and continue if .NET 4.6 is not installed.
+#pragma warning disable CA1416 // SupportedOSPlatformGuard not honored on enum members
                     if (!NetFrameworkUtil.Test(new Version(4, 6), Trace))
                     {
                         WriteSection(StringUtil.Loc("PrerequisitesSectionHeader")); // Section header.
                         _term.WriteLine(StringUtil.Loc("MinimumNetFrameworkTfvc")); // Warning.
                     }
+#pragma warning restore CA1416
 
                     break;
                 default:
@@ -154,14 +158,15 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
                 Trace.Info("cred retrieved");
                 try
                 {
-                    isHostedServer = await checkIsHostedServer(agentProvider, agentSettings, credProvider);
+                    bool skipCertValidation = command.GetSkipCertificateValidation();
+                    isHostedServer = await checkIsHostedServer(agentProvider, agentSettings, credProvider, skipCertValidation);
 
                     // Get the collection name for deployment group
                     agentProvider.GetCollectionName(agentSettings, command, isHostedServer);
 
                     // Validate can connect.
                     creds = credProvider.GetVssCredentials(HostContext);
-                    await agentProvider.TestConnectionAsync(agentSettings, creds, isHostedServer);
+                    await agentProvider.TestConnectionAsync(agentSettings, creds, isHostedServer, skipCertValidation);
                     Trace.Info("Test Connection complete.");
                     break;
                 }
@@ -176,12 +181,33 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
                 }
             }
 
-            // We want to use the native CSP of the platform for storage, so we use the RSACSP directly
+            bool rsaKeyGetConfigFromFF = global::Agent.Sdk.Knob.AgentKnobs.RsaKeyGetConfigFromFF.GetValue(UtilKnobValueContext.Instance()).AsBoolean();
+
             RSAParameters publicKey;
-            var keyManager = HostContext.GetService<IRSAKeyManager>();
-            using (var rsa = keyManager.CreateKey())
+
+            if (rsaKeyGetConfigFromFF)
             {
-                publicKey = rsa.ExportParameters(false);
+                // We want to use the native CSP of the platform for storage, so we use the RSACSP directly
+                var keyManager = HostContext.GetService<IRSAKeyManager>();
+                var ffResult = await keyManager.GetStoreAgentTokenInNamedContainerFF(HostContext, Trace, agentSettings, creds);
+                var enableAgentKeyStoreInNamedContainer = ffResult.useNamedContainer;
+                var useCng = ffResult.useCng;
+                using (var rsa = keyManager.CreateKey(enableAgentKeyStoreInNamedContainer, useCng))
+                {
+                    publicKey = rsa.ExportParameters(false);
+                }
+            }
+            else
+            {
+                // We want to use the native CSP of the platform for storage, so we use the RSACSP directly
+                var keyManager = HostContext.GetService<IRSAKeyManager>();
+                var result = keyManager.GetStoreAgentTokenConfig();
+                var enableAgentKeyStoreInNamedContainer = result.useNamedContainer;
+                var useCng = result.useCng;
+                using (var rsa = keyManager.CreateKey(enableAgentKeyStoreInNamedContainer, useCng))
+                {
+                    publicKey = rsa.ExportParameters(false);
+                }
             }
 
             // Loop getting agent name and pool name
@@ -437,6 +463,29 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
                 var serviceControlManager = HostContext.GetService<IMacOSServiceControlManager>();
                 serviceControlManager.GenerateScripts(agentSettings);
             }
+
+            try
+            {
+                var telemetryData = new Dictionary<string, string>
+                {
+                    { "AuthenticationType", credProvider.CredentialData.Scheme },
+                };
+
+                var cmd = new Command("telemetry", "publish")
+                {
+                    Data = JsonConvert.SerializeObject(telemetryData)
+                };
+                cmd.Properties.Add("area", "PipelinesTasks");
+                cmd.Properties.Add("feature", "AgentCredentialManager");
+
+                var telemetryPublisher = HostContext.GetService<IAgenetListenerTelemetryPublisher>();
+
+                await telemetryPublisher.PublishEvent(HostContext, cmd);
+            }
+            catch (Exception ex)
+            {
+                Trace.Warning($"Unable to publish credential type telemetry data. Exception: {ex}");
+            }
         }
 
         public async Task UnconfigureAsync(CommandSettings command)
@@ -517,13 +566,14 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
                    : Constants.Agent.AgentConfigurationProvider.BuildReleasesAgentConfiguration;
 
                     var extensionManager = HostContext.GetService<IExtensionManager>();
+                    var agentCertManager = HostContext.GetService<IAgentCertificateManager>();
                     IConfigurationProvider agentProvider = (extensionManager.GetExtensions<IConfigurationProvider>()).FirstOrDefault(x => x.ConfigurationProviderType == agentType);
                     ArgUtil.NotNull(agentProvider, agentType);
 
-                    bool isHostedServer = await checkIsHostedServer(agentProvider, settings, credProvider);
+                    bool isHostedServer = await checkIsHostedServer(agentProvider, settings, credProvider, agentCertManager.SkipServerCertificateValidation);
                     VssCredentials creds = credProvider.GetVssCredentials(HostContext);
 
-                    await agentProvider.TestConnectionAsync(settings, creds, isHostedServer);
+                    await agentProvider.TestConnectionAsync(settings, creds, isHostedServer, agentCertManager.SkipServerCertificateValidation);
 
                     TaskAgent agent = await agentProvider.GetAgentAsync(settings);
                     if (agent == null)
@@ -672,6 +722,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
             _term.WriteLine();
         }
 
+        [SupportedOSPlatform("windows")]
         private void CheckAgentRootDirectorySecure()
         {
             Trace.Info(nameof(CheckAgentRootDirectorySecure));
@@ -815,7 +866,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
             return agentType;
         }
 
-        private async Task<bool> checkIsHostedServer(IConfigurationProvider agentProvider, AgentSettings agentSettings, ICredentialProvider credProvider)
+        private async Task<bool> checkIsHostedServer(IConfigurationProvider agentProvider, AgentSettings agentSettings, ICredentialProvider credProvider, bool skipServerCertificateValidation)
         {
             bool isHostedServer = false;
             VssCredentials creds = credProvider.GetVssCredentials(HostContext);
@@ -823,7 +874,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
             try
             {
                 // Determine the service deployment type based on connection data. (Hosted/OnPremises)
-                await _serverUtil.DetermineDeploymentType(agentSettings.ServerUrl, creds, _locationServer);
+                await _serverUtil.DetermineDeploymentType(agentSettings.ServerUrl, creds, _locationServer, skipServerCertificateValidation);
             }
             catch (VssUnauthorizedException)
             {

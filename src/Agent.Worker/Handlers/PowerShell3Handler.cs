@@ -1,18 +1,23 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Agent.Sdk.Knob;
 using Microsoft.VisualStudio.Services.Agent.Util;
+using System;
 using System.IO;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 
 namespace Microsoft.VisualStudio.Services.Agent.Worker.Handlers
 {
     [ServiceLocator(Default = typeof(PowerShell3Handler))]
+    [SupportedOSPlatform("windows")]
     public interface IPowerShell3Handler : IHandler
     {
         PowerShell3HandlerData Data { get; set; }
     }
 
+    [SupportedOSPlatform("windows")]
     public sealed class PowerShell3Handler : Handler, IPowerShell3Handler
     {
         public PowerShell3HandlerData Data { get; set; }
@@ -33,6 +38,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Handlers
             AddVariablesToEnvironment();
             AddTaskVariablesToEnvironment();
             AddPrependPathToEnvironment();
+            RemovePSModulePathFromEnvironment();
 
             // Resolve the target script.
             ArgUtil.NotNullOrEmpty(Data.Target, nameof(Data.Target));
@@ -64,6 +70,10 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Handlers
             StepHost.OutputDataReceived += OnDataReceived;
             StepHost.ErrorDataReceived += OnDataReceived;
 
+            var sigintTimeout = TimeSpan.FromMilliseconds(AgentKnobs.ProccessSigintTimeout.GetValue(ExecutionContext).AsInt());
+            var sigtermTimeout = TimeSpan.FromMilliseconds(AgentKnobs.ProccessSigtermTimeout.GetValue(ExecutionContext).AsInt());
+            var useGracefulShutdown = AgentKnobs.UseGracefulProcessShutdown.GetValue(ExecutionContext).AsBoolean();
+
             // Execute the process. Exit code 0 should always be returned.
             // A non-zero exit code indicates infrastructural failure.
             // Task failure should be communicated over STDOUT using ## commands.
@@ -78,6 +88,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Handlers
                                             killProcessOnCancel: false,
                                             inheritConsoleHandler: !ExecutionContext.Variables.Retain_Default_Encoding,
                                             continueAfterCancelProcessTreeKillAttempt: _continueAfterCancelProcessTreeKillAttempt,
+                                            sigintTimeout: sigintTimeout,
+                                            sigtermTimeout: sigtermTimeout,
+                                            useGracefulShutdown: useGracefulShutdown,
                                             cancellationToken: ExecutionContext.CancellationToken);
             }
             finally

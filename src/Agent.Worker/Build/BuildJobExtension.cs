@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.TeamFoundation.DistributedTask.Pipelines;
+using Agent.Sdk.Knob;
 
 namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
 {
@@ -150,6 +151,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
                 executionContext.SetVariable(Constants.Variables.Build.RepoId, repoInfo.TriggeringRepository.Id);
             }
 
+            // Repo containing the pipeline.
+            executionContext.SetVariable(Constants.Variables.Build.PipelineRepoName, executionContext.GetVariableValueOrDefault(Constants.Variables.Build.RepoName));
+
             executionContext.SetVariable(Constants.Variables.Build.RepoName, repoInfo.TriggeringRepository.Properties.Get<string>(Pipelines.RepositoryPropertyNames.Name));
             executionContext.SetVariable(Constants.Variables.Build.RepoProvider, ConvertToLegacyRepositoryType(repoInfo.TriggeringRepository.Type));
             executionContext.SetVariable(Constants.Variables.Build.RepoUri, repoInfo.TriggeringRepository.Url?.AbsoluteUri);
@@ -260,9 +264,18 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
                 executionContext.SetVariable(Constants.Variables.Build.RepoGitSubmoduleCheckout, submoduleCheckout.Value.ToString());
             }
 
-            if (repoCleanFromSelf.HasValue)
+            // This condition is for maintaining backward compatibility.
+            // Remove the if-else condition and keep only the context inside the 'else' to set the default value in future releases.
+            if (AgentKnobs.DisableCleanRepoDefaultValue.GetValue(UtilKnobValueContext.Instance()).AsBoolean())
             {
-                executionContext.SetVariable(Constants.Variables.Build.RepoClean, repoCleanFromSelf.Value.ToString());
+                if (repoCleanFromSelf.HasValue)
+                {
+                    executionContext.SetVariable(Constants.Variables.Build.RepoClean, repoCleanFromSelf.Value.ToString());
+                }
+            }
+            else
+            {
+                executionContext.SetVariable(Constants.Variables.Build.RepoClean, repoCleanFromSelf.HasValue ? repoCleanFromSelf.Value.ToString() : "False");
             }
         }
 

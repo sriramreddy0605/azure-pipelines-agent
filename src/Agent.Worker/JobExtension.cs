@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.TeamFoundation.DistributedTask.Expressions;
 using Microsoft.TeamFoundation.DistributedTask.WebApi;
@@ -13,6 +14,8 @@ using System.Linq;
 using System.Diagnostics;
 using Agent.Sdk;
 using Agent.Sdk.Knob;
+using Newtonsoft.Json;
+using Microsoft.VisualStudio.Services.Agent.Worker.Telemetry;
 
 namespace Microsoft.VisualStudio.Services.Agent.Worker
 {
@@ -72,6 +75,52 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     context.Start();
                     context.Section(StringUtil.Loc("StepStarting", StringUtil.Loc("InitializeJob")));
 
+                    // Check if a system supports .NET 6
+                    PackageVersion agentVersion = new PackageVersion(BuildConstants.AgentPackage.Version);
+                    if (agentVersion.Major < 3)
+                    {
+                        try
+                        {
+                            Trace.Verbose("Checking if your system supports .NET 6");
+
+                            string systemId = PlatformUtil.GetSystemId();
+                            SystemVersion systemVersion = PlatformUtil.GetSystemVersion();
+                            string notSupportNet6Message = null;
+
+                            if (await PlatformUtil.DoesSystemPersistsInNet6Whitelist())
+                            {
+                                // Check version of the system
+                                if (!await PlatformUtil.IsNet6Supported())
+                                {
+                                    notSupportNet6Message = $"The operating system the agent is running on is \"{systemId}\" ({systemVersion}), which will not be supported by the .NET 6 based v3 agent. Please upgrade the operating system of this host to ensure compatibility with the v3 agent. See https://aka.ms/azdo-pipeline-agent-version";
+                                    if (AgentKnobs.AgentFailOnIncompatibleOS.GetValue(jobContext).AsBoolean() &&
+                                        !AgentKnobs.AcknowledgeNoUpdates.GetValue(jobContext).AsBoolean())
+                                    {
+                                        throw new UnsupportedOsException(StringUtil.Loc("FailAgentOnUnsupportedOs"));
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                notSupportNet6Message = $"The operating system the agent is running on is \"{systemId}\" ({systemVersion}), which has not been tested with the .NET 6 based v3 agent. The v2 agent wil not automatically upgrade to the v3 agent. You can manually download the .NET 6 based v3 agent from https://github.com/microsoft/azure-pipelines-agent/releases. See https://aka.ms/azdo-pipeline-agent-version";
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(notSupportNet6Message))
+                            {
+                                context.Warning(notSupportNet6Message);
+                            }
+                        }
+                        catch (UnsupportedOsException)
+                        {
+                            throw;
+                        }
+                        catch (Exception ex)
+                        {
+                            Trace.Error($"Error has occurred while checking if system supports .NET 6: {ex}");
+                            context.Warning(ex.Message);
+                        }
+                    }
+
                     // Set agent version variable.
                     context.SetVariable(Constants.Variables.Agent.Version, BuildConstants.AgentPackage.Version);
                     context.Output(StringUtil.Loc("AgentNameLog", context.Variables.Get(Constants.Variables.Agent.Name)));
@@ -100,10 +149,33 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     Trace.Info($"Run initial step from extension {this.GetType().Name}.");
                     InitializeJobExtension(context, message?.Steps, message?.Workspace);
 
+                    if (AgentKnobs.ForceCreateTasksDirectory.GetValue(context).AsBoolean())
+                    {
+                        var tasksDir = HostContext.GetDirectory(WellKnownDirectory.Tasks);
+                        try
+                        {
+                            Trace.Info($"Pre-creating {tasksDir} directory");
+                            Directory.CreateDirectory(tasksDir);
+                            IOUtil.ValidateExecutePermission(tasksDir);
+                        }
+                        catch (Exception ex)
+                        {
+                            Trace.Error(ex);
+                            context.Error(ex);
+                        }
+                    }
+
                     // Download tasks if not already in the cache
                     Trace.Info("Downloading task definitions.");
                     var taskManager = HostContext.GetService<ITaskManager>();
                     await taskManager.DownloadAsync(context, message.Steps);
+
+                    if (!AgentKnobs.DisableNode6Tasks.GetValue(context).AsBoolean() && !PlatformUtil.RunningOnAlpine)
+                    {
+                        Trace.Info("Downloading Node 6 runner.");
+                        var nodeUtil = new NodeJsUtil(HostContext);
+                        await nodeUtil.DownloadNodeRunnerAsync(context, register.Token);
+                    }
 
                     // Parse all Task conditions.
                     Trace.Info("Parsing all task's condition inputs.");
@@ -165,6 +237,25 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                         }
                     }
                     context.Output("Finished checking job knob settings.");
+
+                    // Ensure that we send git telemetry before potential path env changes during the pipeline execution
+                    var isSelfHosted =  StringUtil.ConvertToBoolean(jobContext.Variables.Get(Constants.Variables.Agent.IsSelfHosted));
+                    if (PlatformUtil.RunningOnWindows && isSelfHosted)
+                    {
+                        try
+                        {
+                            var windowsPreinstalledGitCommand = jobContext.AsyncCommands.Find(c => c != null && c.Name == Constants.AsyncExecution.Commands.Names.WindowsPreinstalledGitTelemetry);
+                            if (windowsPreinstalledGitCommand != null)
+                            {
+                                await windowsPreinstalledGitCommand.WaitAsync();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // Log the error
+                            Trace.Info($"Caught exception from async command WindowsPreinstalledGitTelemetry: {ex}");
+                        }
+                    }
 
                     if (PlatformUtil.RunningOnWindows)
                     {
@@ -379,6 +470,17 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                         }
                     }
 
+                    if (AgentKnobs.Rosetta2Warning.GetValue(jobContext).AsBoolean())
+                    {
+                        using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+                        {
+                            if (await PlatformUtil.IsRunningOnAppleSiliconAsX64Async(timeout.Token))
+                            {
+                                jobContext.Warning(StringUtil.Loc("Rosetta2Warning"));
+                            }
+                        }
+                    }
+
                     List<IStep> steps = new List<IStep>();
                     steps.AddRange(preJobSteps);
                     steps.AddRange(jobSteps);
@@ -411,10 +513,22 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 catch (OperationCanceledException ex) when (jobContext.CancellationToken.IsCancellationRequested)
                 {
                     // Log the exception and cancel the JobExtension Initialization.
-                    Trace.Error($"Caught cancellation exception from JobExtension Initialization: {ex}");
-                    context.Error(ex);
-                    context.Result = TaskResult.Canceled;
-                    throw;
+                    if (AgentKnobs.FailJobWhenAgentDies.GetValue(jobContext).AsBoolean() &&
+                        HostContext.AgentShutdownToken.IsCancellationRequested)
+                    {
+                        PublishTelemetry(jobContext, TaskResult.Failed.ToString(), "110");
+                        Trace.Error($"Caught Agent Shutdown exception from JobExtension Initialization: {ex.Message}");
+                        context.Error(ex);
+                        context.Result = TaskResult.Failed;
+                        throw;
+                    }
+                    else
+                    {
+                        Trace.Error($"Caught cancellation exception from JobExtension Initialization: {ex}");
+                        context.Error(ex);
+                        context.Result = TaskResult.Canceled;
+                        throw;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -591,5 +705,35 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 Trace.Error(ex);
             }
         }
+
+        private void PublishTelemetry(IExecutionContext context, string Task_Result, string TracePoint)
+        {
+            try
+            {
+                var telemetryData = new Dictionary<string, string>
+                {
+                    { "JobId", context.Variables.System_JobId.ToString()},
+                    { "JobResult", Task_Result },
+                    { "TracePoint", TracePoint},
+                };
+                var cmd = new Command("telemetry", "publish");
+                cmd.Data = JsonConvert.SerializeObject(telemetryData, Formatting.None);
+                cmd.Properties.Add("area", "PipelinesTasks");
+                cmd.Properties.Add("feature", "AgentShutdown");
+
+                var publishTelemetryCmd = new TelemetryCommandExtension();
+                publishTelemetryCmd.Initialize(HostContext);
+                publishTelemetryCmd.ProcessCommand(context, cmd);
+            }
+            catch (Exception ex)
+            {
+                Trace.Warning($"Unable to publish agent shutdown telemetry data. Exception: {ex}");
+            }
+        }
+    }
+
+    public class UnsupportedOsException : Exception
+    {
+        public UnsupportedOsException(string message) : base(message) { }
     }
 }

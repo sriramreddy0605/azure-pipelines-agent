@@ -13,6 +13,7 @@ using Agent.Sdk.Util;
 using CommandLine;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json;
+using System.Runtime.Versioning;
 
 namespace Microsoft.VisualStudio.Services.Agent.Listener
 {
@@ -205,6 +206,37 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                 description: StringUtil.Loc("LaunchBrowser"),
                 defaultValue: true);
         }
+
+        public string GetClientId()
+        {
+            return GetArgOrPrompt(
+                argValue: GetConfigureOrRemoveBase()?.ClientId,
+                name: Constants.Agent.CommandLine.Args.ClientId,
+                description: StringUtil.Loc("ClientId"),
+                defaultValue: string.Empty,
+                validator: Validators.NonEmptyValidator);
+        }
+
+        public string GetClientSecret()
+        {
+            return GetArgOrPrompt(
+                argValue: GetConfigureOrRemoveBase()?.ClientSecret,
+                name: Constants.Agent.CommandLine.Args.ClientSecret,
+                description: StringUtil.Loc("ClientSecret"),
+                defaultValue: string.Empty,
+                validator: Validators.NonEmptyValidator);
+        }
+
+        public string GetTenantId()
+        {
+            return GetArgOrPrompt(
+                argValue: GetConfigureOrRemoveBase()?.TenantId,
+                name: Constants.Agent.CommandLine.Args.TenantId,
+                description: StringUtil.Loc("TenantId"),
+                defaultValue: string.Empty,
+                validator: Validators.NonEmptyValidator);
+        }
+
         /// <summary>
         /// Returns EnableServiceSidTypeUnrestricted flag or prompts user to set it up
         /// </summary>
@@ -399,6 +431,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                 validator: Validators.NonEmptyValidator);
         }
 
+        [SupportedOSPlatform("windows")]
         public string GetWindowsLogonAccount(string defaultValue, string descriptionMsg)
         {
             return GetArgOrPrompt(

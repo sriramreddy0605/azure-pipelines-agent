@@ -1,8 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Agent.Sdk.Knob;
 using Microsoft.VisualStudio.Services.Agent.Util;
+using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,6 +26,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Handlers
         private volatile int _errorCount;
         private bool _foundDelimiter;
         private bool _modifyEnvironment;
+        private string _generatedScriptPath;
 
         public ProcessHandlerData Data { get; set; }
 
@@ -58,6 +62,14 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Handlers
             }
 
             Trace.Info($"Command is rooted: {isCommandRooted}");
+
+            bool disableInlineExecution = StringUtil.ConvertToBoolean(Data.DisableInlineExecution);
+            ExecutionContext.Debug($"Disable inline execution: '{disableInlineExecution}'");
+
+            if (disableInlineExecution && !File.Exists(command))
+            {
+                throw new FileNotFoundException(StringUtil.Loc("FileNotFound", command));
+            }
 
             // Determine the working directory.
             string workingDirectory;
@@ -120,21 +132,82 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Handlers
                 cmdExe = "cmd.exe";
             }
 
-            // Format the input to be invoked from cmd.exe to enable built-in shell commands. For example, RMDIR.
-            string cmdExeArgs;
-            if (_modifyEnvironment)
+            bool enableSecureArguments = AgentKnobs.ProcessHandlerSecureArguments.GetValue(ExecutionContext).AsBoolean();
+            ExecutionContext.Debug($"Enable secure arguments: '{enableSecureArguments}'");
+            bool enableNewPHLogic = AgentKnobs.ProcessHandlerEnableNewLogic.GetValue(ExecutionContext).AsBoolean();
+            ExecutionContext.Debug($"Enable new PH sanitizing logic: '{enableNewPHLogic}'");
+
+            bool enableFileArgs = disableInlineExecution && enableSecureArguments && !enableNewPHLogic;
+            if (enableFileArgs)
             {
-                // Format the command so the environment variables can be captured.
-                cmdExeArgs = $"/c \"{command} {arguments} && echo {OutputDelimiter} && set \"";
+                bool enableSecureArgumentsAudit = AgentKnobs.ProcessHandlerSecureArgumentsAudit.GetValue(ExecutionContext).AsBoolean();
+                ExecutionContext.Debug($"Enable secure arguments audit: '{enableSecureArgumentsAudit}'");
+                bool enableTelemetry = AgentKnobs.ProcessHandlerTelemetry.GetValue(ExecutionContext).AsBoolean();
+                ExecutionContext.Debug($"Enable telemetry: '{enableTelemetry}'");
+
+                if ((disableInlineExecution && (enableSecureArgumentsAudit || enableSecureArguments)) || enableTelemetry)
+                {
+                    var (processedArgs, telemetry) = ProcessHandlerHelper.ExpandCmdEnv(arguments, Environment);
+
+                    if (disableInlineExecution && enableSecureArgumentsAudit)
+                    {
+                        ExecutionContext.Warning($"The following arguments will be executed: '{processedArgs}'");
+                    }
+                    if (enableFileArgs)
+                    {
+                        GenerateScriptFile(cmdExe, command, processedArgs);
+                    }
+                    if (enableTelemetry)
+                    {
+                        ExecutionContext.Debug($"Agent PH telemetry: {JsonConvert.SerializeObject(telemetry.ToDictionary(), Formatting.None)}");
+                        PublishTelemetry(telemetry.ToDictionary(), "ProcessHandler");
+                    }
+                }
             }
-            else
+            else if (enableNewPHLogic)
             {
-                cmdExeArgs = $"/c \"{command} {arguments}\"";
+                bool shouldThrow = false;
+                try
+                {
+                    var (isValid, telemetry) = ProcessHandlerHelper.ValidateInputArguments(arguments, Environment, ExecutionContext);
+
+                    // If args are not valid - we'll throw exception.
+                    shouldThrow = !isValid;
+
+                    if (telemetry != null)
+                    {
+                        PublishTelemetry(telemetry, "ProcessHandler");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Trace.Error($"Failed to validate process handler input arguments. Publishing telemetry. Ex: {ex}");
+
+                    var telemetry = new Dictionary<string, string>
+                    {
+                        ["UnexpectedError"] = ex.Message,
+                        ["ErrorStackTrace"] = ex.StackTrace
+                    };
+                    PublishTelemetry(telemetry, "ProcessHandler");
+
+                    shouldThrow = false;
+                }
+                if (shouldThrow)
+                {
+                    throw new InvalidScriptArgsException(StringUtil.Loc("ProcessHandlerInvalidScriptArgs"));
+                }
             }
+
+            string cmdExeArgs = PrepareCmdExeArgs(command, arguments, enableFileArgs);
 
             // Invoke the process.
             ExecutionContext.Debug($"{cmdExe} {cmdExeArgs}");
-            ExecutionContext.Command($"{command} {arguments}");
+            ExecutionContext.Command($"{cmdExeArgs}");
+
+            var sigintTimeout = TimeSpan.FromMilliseconds(AgentKnobs.ProccessSigintTimeout.GetValue(ExecutionContext).AsInt());
+            var sigtermTimeout = TimeSpan.FromMilliseconds(AgentKnobs.ProccessSigtermTimeout.GetValue(ExecutionContext).AsInt());
+            var useGracefulShutdown = AgentKnobs.UseGracefulProcessShutdown.GetValue(ExecutionContext).AsBoolean();
+
             using (var processInvoker = HostContext.CreateService<IProcessInvoker>())
             {
                 processInvoker.OutputDataReceived += OnOutputDataReceived;
@@ -146,6 +219,10 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Handlers
                 {
                     processInvoker.ErrorDataReceived += OnOutputDataReceived;
                 }
+
+                processInvoker.SigintTimeout = sigintTimeout;
+                processInvoker.SigtermTimeout = sigtermTimeout;
+                processInvoker.TryUseGracefulShutdown = useGracefulShutdown;
 
                 int exitCode = await processInvoker.ExecuteAsync(workingDirectory: workingDirectory,
                                                                  fileName: cmdExe,
@@ -179,6 +256,49 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Handlers
                     throw new Exception(StringUtil.Loc("ProcessCompletedWithExitCode0", exitCode));
                 }
             }
+        }
+
+        private string PrepareCmdExeArgs(string command, string arguments, bool enableFileArgs)
+        {
+            string cmdExeArgs;
+            if (enableFileArgs)
+            {
+                cmdExeArgs = $"/c \"{_generatedScriptPath}\"";
+            }
+            else
+            {
+                // Format the input to be invoked from cmd.exe to enable built-in shell commands. For example, RMDIR.
+                cmdExeArgs = $"/c \"{command} {arguments}";
+                cmdExeArgs += _modifyEnvironment
+                ? $" && echo {OutputDelimiter} && set \""
+                : "\"";
+            }
+
+            return cmdExeArgs;
+        }
+
+        private void GenerateScriptFile(string cmdExe, string command, string arguments)
+        {
+            var scriptId = Guid.NewGuid().ToString();
+            string inputArgsEnvVarName = VarUtil.ConvertToEnvVariableFormat("AGENT_PH_ARGS_" + scriptId[..8], preserveCase: false);
+
+            System.Environment.SetEnvironmentVariable(inputArgsEnvVarName, arguments);
+
+            var agentTemp = ExecutionContext.GetVariableValueOrDefault(Constants.Variables.Agent.TempDirectory);
+            _generatedScriptPath = Path.Combine(agentTemp, $"processHandlerScript_{scriptId}.cmd");
+
+            var scriptArgs = $"/v:ON /c \"{command} !{inputArgsEnvVarName}!";
+
+            scriptArgs += _modifyEnvironment
+            ? $" && echo {OutputDelimiter} && set \""
+            : "\"";
+
+            using (var writer = new StreamWriter(_generatedScriptPath))
+            {
+                writer.WriteLine($"{cmdExe} {scriptArgs}");
+            }
+
+            ExecutionContext.Debug($"Generated script file: {_generatedScriptPath}");
         }
 
         private void FlushErrorData()

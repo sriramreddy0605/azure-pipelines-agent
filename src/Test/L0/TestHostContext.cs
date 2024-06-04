@@ -15,8 +15,9 @@ using Microsoft.TeamFoundation.DistributedTask.Logging;
 using System.Net.Http.Headers;
 using Agent.Sdk;
 using Agent.Sdk.Knob;
+using Agent.Sdk.SecretMasking;
 using Pipelines = Microsoft.TeamFoundation.DistributedTask.Pipelines;
-using Agent.Sdk.Util;
+using SecretMasker = Agent.Sdk.SecretMasking.SecretMasker;
 
 namespace Microsoft.VisualStudio.Services.Agent.Tests
 {
@@ -38,6 +39,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests
         public CancellationToken AgentShutdownToken => _agentShutdownTokenSource.Token;
         public ShutdownReason AgentShutdownReason { get; private set; }
         public ILoggedSecretMasker SecretMasker => _secretMasker;
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA2000:Dispose objects before losing scope")]
         public TestHostContext(object testClass, [CallerMemberName] string testName = "")
         {
             ArgUtil.NotNull(testClass, nameof(testClass));
@@ -47,14 +50,21 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests
             _testName = testName;
 
             // Trim the test assembly's root namespace from the test class's full name.
-            _suiteName = testClass.GetType().FullName.Substring(
-                startIndex: typeof(Tests.TestHostContext).FullName.LastIndexOf(nameof(TestHostContext)));
-            _suiteName = _suiteName.Replace(".", "_");
+            _suiteName = testClass.GetType().FullName.Replace(
+                typeof(TestHostContext).Namespace,
+                string.Empty,
+                StringComparison.OrdinalIgnoreCase);
+
+            if (_suiteName.StartsWith("."))
+            {
+                _suiteName = _suiteName[1..];
+            }
+
+            _suiteName = _suiteName.Replace(".", "_", StringComparison.OrdinalIgnoreCase);
 
             // Setup the trace manager.
-            TraceFileName = Path.Combine(
-                Path.Combine(TestUtil.GetSrcPath(), "Test", "TestLogs"),
-                $"trace_{_suiteName}_{_testName}.log");
+            TraceFileName = Path.Combine(TestUtil.GetSrcPath(), "Test", "TestLogs", $"trace_{_suiteName}_{_testName}.log");
+
             if (File.Exists(TraceFileName))
             {
                 File.Delete(TraceFileName);
@@ -347,6 +357,12 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests
                     path = Path.Combine(
                         GetDirectory(WellKnownDirectory.Root),
                         ".setup_info");
+                    break;
+
+                case WellKnownConfigFile.TaskExceptionList:
+                    path = Path.Combine(
+                        GetDirectory(WellKnownDirectory.Bin),
+                        "tasks-exception-list.json");
                     break;
 
                 default:

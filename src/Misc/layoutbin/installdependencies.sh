@@ -46,10 +46,23 @@ function print_rhel6errormessage()
     echo "https://github.com/dotnet/core/blob/main/Documentation/build-and-install-rhel6-prerequisites.md"
 }
 
+function print_rhel6depricationmessage()
+{
+    echo "Detected Operation System is not supported by .NET 6 which is required to run this software"
+    echo "You can check supported OS on the following documentation: https://github.com/dotnet/core/blob/main/release-notes/6.0/supported-os.md"
+}
+
 if [ -e /etc/os-release ]
 then
+    filepath='/etc/os-release'
+else 
+    filepath='/usr/lib/os-release'
+fi
+
+if [ -e $filepath ]
+then
     echo "--------OS Information--------"
-    cat /etc/os-release
+    cat $filepath
     echo "------------------------------"
 
     if [ -e /etc/debian_version ]
@@ -63,7 +76,7 @@ then
         command -v apt
         if [ $? -eq 0 ]
         then
-            apt update && apt install -y libkrb5-3 zlib1g debsums && (apt install -y liblttng-ust0 || apt install -y liblttng-ust1)
+            apt update && apt install -y libkrb5-3 zlib1g debsums && (apt install -y liblttng-ust1 || apt install -y liblttng-ust0)
             if [ $? -ne 0 ]
             then
                 echo "'apt' failed with exit code '$?'"
@@ -71,12 +84,13 @@ then
                 exit 1
             fi
 
+            package=$(wget -qO- http://security.ubuntu.com/ubuntu/pool/main/o/openssl/ | grep -oP '(libssl1.1_1.1.1f.*?_amd64.deb)' | head -1)
             # debian 10 uses libssl1.1
             # debian 9 uses libssl1.0.2
             # other debian linux use libssl1.0.0            
-            apt install -y libssl1.1 || apt install -y libssl1.0.2 || apt install -y libssl1.0.0 || \
-                    (wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.17_amd64.deb \
-                    && dpkg -i libssl1.1_1.1.1f-1ubuntu2.17_amd64.deb)
+            apt install -y libssl3 || apt install -y libssl1.1 || apt install -y libssl1.0.2 || apt install -y libssl1.0.0 || \
+                    (wget "http://security.ubuntu.com/ubuntu/pool/main/o/openssl/${package}" \
+                    && dpkg -i $package)
             if [ $? -ne 0 ]
             then
                 echo "'apt' failed with exit code '$?'"
@@ -96,7 +110,7 @@ then
             command -v apt-get
             if [ $? -eq 0 ]
             then
-                    apt-get update && apt-get install -y libkrb5-3 zlib1g debsums && (apt-get install -y liblttng-ust0 || apt-get install -y liblttng-ust1)
+                apt-get update && apt-get install -y libkrb5-3 zlib1g debsums && (apt-get install -y liblttng-ust1 || apt-get install -y liblttng-ust0)
                 if [ $? -ne 0 ]
                 then
                     echo "'apt-get' failed with exit code '$?'"
@@ -107,9 +121,10 @@ then
                 # debian 10 uses libssl1.1
                 # debian 9 uses libssl1.0.2
                 # other debian linux use libssl1.0.0
-                apt-get install -y libssl1.1 || apt-get install -y libssl1.0.2 || apt-get install -y libssl1.0.0 || \
-                   (wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.17_amd64.deb \
-                   && dpkg -i libssl1.1_1.1.1f-1ubuntu2.17_amd64.deb)
+                package=$(wget -qO- http://security.ubuntu.com/ubuntu/pool/main/o/openssl/ | grep -oP '(libssl1.1_1.1.1f.*?_amd64.deb)' | head -1)
+                apt-get install -y libssl3 || apt-get install -y libssl1.1 || apt-get install -y libssl1.0.2 || apt-get install -y libssl1.0.0 || \
+                   (wget "http://security.ubuntu.com/ubuntu/pool/main/o/openssl/${package}" \
+                   && dpkg -i $package)
                 if [ $? -ne 0 ]
                 then
                     echo "'apt-get' failed with exit code '$?'"
@@ -130,6 +145,22 @@ then
                 print_errormessage
                 exit 1
             fi
+        fi
+    elif [ -e /etc/alpine-release ]
+    then
+        echo "The current OS is Alpine based"
+        echo "--------Alpine Version--------"
+        cat /etc/alpine-release
+        echo "------------------------------"
+
+        command -v apk
+        if [ $? -eq 0 ]
+        then
+            apk add icu-libs
+        else
+            echo "Can not find 'apk'"
+            print_errormessage
+            exit 1
         fi
     elif [ -e /etc/redhat-release ]
     then
@@ -226,18 +257,21 @@ then
             fi
         fi
     else
-        # we might on OpenSUSE
-        OSTYPE=$(grep ^ID_LIKE /etc/os-release | cut -f2 -d=)
-        if [ -z $OSTYPE ]
+        # we might on OpenSUSE, check is it sles even if it's suse 
+        OSTYPE=$(grep ^ID_LIKE $filepath | cut -f2 -d=)
+        if ([[ -z $OSTYPE ]] || [[ $OSTYPE == *"suse"* ]])
         then
-            OSTYPE=$(grep ^ID /etc/os-release | cut -f2 -d=)
+            OSTYPE=$(grep ^ID $filepath | cut -f2 -d=)
         fi
         echo $OSTYPE
 
         # is_sles=1 if it is a SLES OS
-        [ -n $OSTYPE ] && ([ $OSTYPE == '"sles"' ] || [ $OSTYPE == '"sles_sap"' ]) && is_sles=1
+        if ([[ -n $OSTYPE ]] && ([[ $OSTYPE == *"sles"* ]] || [[ $OSTYPE == *"sles_sap"* ]]))
+        then
+            is_sles=1
+        fi
 
-        if  [[ -n $OSTYPE && ( $OSTYPE == '"suse"'  || $is_sles == 1) ]]
+        if  ([[ -n $OSTYPE ]] && ([[ $OSTYPE == *"suse"* ]]  || [[$is_sles == 1]]))
         then
             echo "The current OS is SUSE based"
             command -v zypper
@@ -284,38 +318,19 @@ then
                 exit 1
             fi
         else
-            echo "Can't detect current OS type based on /etc/os-release."
+            echo "Can't detect current OS type based on $filepath."
             print_errormessage
             exit 1
         fi
     fi
 elif [ -e /etc/redhat-release ]
 # RHEL6 doesn't have an os-release file defined, read redhat-release instead
+# We no longer support RHEL6
 then
     redhatRelease=$(</etc/redhat-release)
     if [[ $redhatRelease == "CentOS release 6."* || $redhatRelease == "Red Hat Enterprise Linux Server release 6."* ]]
-    then
-        echo "The current OS is Red Hat Enterprise Linux 6 or Centos 6"
-
-        # Install known dependencies, as a best effort.
-        # The remaining dependencies are covered by the GitHub doc that will be shown by `print_rhel6message`
-        command -v yum
-        if [ $? -eq 0 ]
-        then
-            yum install -y openssl krb5-libs zlib
-            if [ $? -ne 0 ]
-            then
-                echo "'yum' failed with exit code '$?'"
-                print_rhel6errormessage
-                exit 1
-            fi
-        else
-            echo "Can not find 'yum'"
-            print_rhel6errormessage
-            exit 1
-        fi
-
-        print_rhel6message
+    then        
+        echo "NOT SUPPORTED BY DOTNET6. The current OS is Red Hat Enterprise Linux 6 or Centos 6"
         exit 1
     else
         echo "Unknown RHEL OS version"
