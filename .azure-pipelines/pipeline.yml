@@ -123,7 +123,7 @@ extends:
               node ./run-and-verify.js \
                   --projectUrl "$(CANARY_PROJECT_URL)" \
                   --pipelineId "$(CANARY_PIPELINE_ID)" \
-                  --token "$(CANARY_PAT)" \
+                  --token "$(System.AccessToken)" \
                   --templateParameters "{ \"branch\": \"${branch}\" }"
             displayName: Test Proxy Agent
 
