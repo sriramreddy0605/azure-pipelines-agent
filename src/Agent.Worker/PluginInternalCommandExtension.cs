@@ -95,10 +95,10 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 }
 
                 // Set the default working directory to the new location of this repo if this repo was marked as the one being the default working directory
-                if(isDefaultWorkingDirectoryRepo)
+                if (isDefaultWorkingDirectoryRepo)
                 {
                     string buildDirectory = context.Variables.Get(Constants.Variables.Pipeline.Workspace);
-                    string repoRelativePath = directoryManager.GetRelativeRepositoryPath(buildDirectory, repositoryPath);
+                    string repoRelativePath = directoryManager.GetRelativeRepositoryPath(buildDirectory, repositoryPath, context);
                     string repoLocation = Path.Combine(_workDirectory, repoRelativePath);
 
                     context.SetVariable(Constants.Variables.System.DefaultWorkingDirectory, repoLocation, isFilePath: true);
