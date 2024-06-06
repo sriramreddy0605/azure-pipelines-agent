@@ -25,9 +25,8 @@ if (args.templateParameters) {
 }
 
 const config = {
-    auth: {
-        username: 'Basic',
-        password: args.token
+    headers: {
+      'Authorization': 'Bearer ' + args.token,
     }
 };
 
