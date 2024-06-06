@@ -35,6 +35,7 @@ const config = {
         await axios.post(apiUrl, data, config)
     ).data;
 
+    console.log(JSON.stringify(run, null, 2));
     const webUrl = run._links.web.href;
 
     console.log(`Pipeline run URL: ${webUrl}`);
