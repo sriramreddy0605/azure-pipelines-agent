@@ -2026,6 +2026,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";DeprecatedNodeRunner" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Task '{0}' version {1} ({2}@{1}) is dependent on a Node version ({3}) that is end-of-life. Contact the extension owner for an updated version of the task. Task maintainers should review Node upgrade guidance: https://aka.ms/node-runner-guidance]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[작업 '{0}' 버전 {1}({2}@{1})은 수명이 끝나는 노드 버전({3})에 따라 다릅니다. 업데이트된 버전의 작업에 대해서는 확장 소유자에게 문의하세요. 작업 유지 관리자는 노드 업그레이드 지침을 검토해야 합니다. https://aka.ms/node-runner-guidance]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";DeprecatedRunner" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Task '{0}' is dependent on a task runner that is end-of-life and will be removed in the future. Authors should review Node upgrade guidance: https://aka.ms/node-runner-guidance.]]></Val>
@@ -4813,6 +4822,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";ResourceUtilizationWarningsIsDisabled" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Resource Utilization warnings is disabled, switch "DISABLE_RESOURCE_UTILIZATION_WARNINGS" variable to "true" if you want to enable it]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[리소스 사용률 경고가 비활성화된 경우 활성화하려면 "DISABLE_RESOURCE_UTILIZATION_WARNINGS" 변수를 "true"로 전환하세요.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";RestartIn15SecMessage" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Restarting the machine in 15 seconds...]]></Val>
@@ -4854,6 +4872,15 @@
           <Val><![CDATA[Robocopy based publish failed with exit code: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Robocopy 기반 게시 실패: 종료 코드: {0}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";Rosetta2Warning" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[X64 emulation is known to cause hangs in the Agent process. Please use the native (ARM) Agent.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[X64 에뮬레이션은 에이전트 프로세스에서 중단을 일으키는 것으로 알려져 있습니다. 네이티브(ARM) 에이전트를 사용하세요.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

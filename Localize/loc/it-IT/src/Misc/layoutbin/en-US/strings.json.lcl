@@ -2026,6 +2026,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";DeprecatedNodeRunner" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Task '{0}' version {1} ({2}@{1}) is dependent on a Node version ({3}) that is end-of-life. Contact the extension owner for an updated version of the task. Task maintainers should review Node upgrade guidance: https://aka.ms/node-runner-guidance]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Versione '{0}' dell'attività '{1}' ({2}@{1}) dipende da una versione del nodo ({3}) che è la fine del ciclo di vita. Contattare il proprietario dell'estensione per ottenere una versione aggiornata dell'attività. I gestori attività devono rivedere le indicazioni per l'aggiornamento del nodo: https://aka.ms/node-runner-guidance]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";DeprecatedRunner" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Task '{0}' is dependent on a task runner that is end-of-life and will be removed in the future. Authors should review Node upgrade guidance: https://aka.ms/node-runner-guidance.]]></Val>
@@ -4813,6 +4822,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";ResourceUtilizationWarningsIsDisabled" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Resource Utilization warnings is disabled, switch "DISABLE_RESOURCE_UTILIZATION_WARNINGS" variable to "true" if you want to enable it]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Gli avvisi di utilizzo delle risorse sono disabilitati. Per abilitare l'opzione, impostare la variabile "DISABLE_RESOURCE_UTILIZATION_WARNINGS" su "True"]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";RestartIn15SecMessage" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Restarting the machine in 15 seconds...]]></Val>
@@ -4854,6 +4872,15 @@
           <Val><![CDATA[Robocopy based publish failed with exit code: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Pubblicazione basata su robocopy non riuscita con codice di uscita: {0}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";Rosetta2Warning" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[X64 emulation is known to cause hangs in the Agent process. Please use the native (ARM) Agent.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[L'emulazione X64 è nota per causare blocchi nel processo dell'agente. Usare l'agente nativo (ARM).]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
