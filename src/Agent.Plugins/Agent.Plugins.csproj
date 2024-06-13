@@ -15,5 +15,7 @@
   <ItemGroup>
     <PackageReference Include="azuredevops-testresultparser" Version="1.0.2" />
     <PackageReference Include="vss-api-netcore" Version="$(VssApiVersion)" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="7.0.2" />
+    <PackageReference Include="Microsoft.Azure.Storage.DataMovement" Version="2.0.5" />
   </ItemGroup>
 </Project>
