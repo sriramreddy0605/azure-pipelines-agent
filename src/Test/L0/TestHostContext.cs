@@ -111,6 +111,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests
 
         public ProductInfoHeaderValue UserAgent => new ProductInfoHeaderValue("L0Test", "0.0");
 
+        public RuntimeMode RuntimeMode { get; set; }
+
         public async Task Delay(TimeSpan delay, CancellationToken token)
         {
             await Task.Delay(TimeSpan.Zero);

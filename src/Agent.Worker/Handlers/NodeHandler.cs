@@ -224,12 +224,15 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Handlers
             var sigtermTimeout = TimeSpan.FromMilliseconds(AgentKnobs.ProccessSigtermTimeout.GetValue(ExecutionContext).AsInt());
             var useGracefulShutdown = AgentKnobs.UseGracefulProcessShutdown.GetValue(ExecutionContext).AsBoolean();
 
-            var debugTask = AgentKnobs.DebugTask.GetValue(ExecutionContext).AsString();
-            if (!string.IsNullOrEmpty(debugTask))
+            if (HostContext.RuntimeMode == RuntimeMode.DEBUG)
             {
-                if (string.Equals(Task?.Id.ToString("D"), debugTask, StringComparison.OrdinalIgnoreCase) || string.Equals(Task?.Name, debugTask, StringComparison.OrdinalIgnoreCase))
+                var debugTask = AgentKnobs.DebugTask.GetValue(ExecutionContext).AsString();
+                if (!string.IsNullOrEmpty(debugTask))
                 {
-                    arguments = $"--inspect-brk {arguments}";
+                    if (string.Equals(Task?.Id.ToString("D"), debugTask, StringComparison.OrdinalIgnoreCase) || string.Equals(Task?.Name, debugTask, StringComparison.OrdinalIgnoreCase))
+                    {
+                        arguments = $"--inspect-brk {arguments}";
+                    }
                 }
             }
 

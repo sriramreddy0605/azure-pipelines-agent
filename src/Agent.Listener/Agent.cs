@@ -216,6 +216,10 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                 Trace.Info($"Set agent startup type - {startType}");
                 HostContext.StartupType = startType;
 
+                RuntimeMode runtimeMode = command.GetDebugMode() ? RuntimeMode.DEBUG : RuntimeMode.DEFAULT;
+                Trace.Info($"Set agent runtime mode - {runtimeMode}");
+                HostContext.RuntimeMode = runtimeMode;
+
                 if (PlatformUtil.RunningOnWindows)
                 {
                     if (store.IsAutoLogonConfigured())

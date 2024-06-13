@@ -31,6 +31,7 @@ namespace Microsoft.VisualStudio.Services.Agent
     public interface IHostContext : IDisposable, IKnobValueContext
     {
         StartupType StartupType { get; set; }
+        RuntimeMode RuntimeMode { get; set; }
         CancellationToken AgentShutdownToken { get; }
         ShutdownReason AgentShutdownReason { get; }
         ILoggedSecretMasker SecretMasker { get; }
@@ -54,6 +55,12 @@ namespace Microsoft.VisualStudio.Services.Agent
         Manual,
         Service,
         AutoStartup
+    }
+
+    public enum RuntimeMode
+    {
+        DEFAULT,
+        DEBUG
     }
 
     public enum HostType
@@ -543,6 +550,8 @@ namespace Microsoft.VisualStudio.Services.Agent
                 _startupType = value;
             }
         }
+
+        public RuntimeMode RuntimeMode { get; set; }
 
         public void WritePerfCounter(string counter)
         {
