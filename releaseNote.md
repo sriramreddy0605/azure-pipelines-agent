@@ -1,3 +1,18 @@
+## Features
+ - Added option to use a checkout path of any repository as the default working directory (System.DefaultWorkingDirectory) (#3479)
+ - Check if task node runner is deprecated (#4794)
+ - Rework resource monitor (#4803)
+ - Explain error when downloading Node Alpine ARM64 (#4822)
+ - Allow running agent in debugging mode for specific node task (#4838)
+
+## Bugs
+ - Display warning when the agent is run in PowerShell Core (#4778)
+ - Changes to add tracelog for Featureflag exceptions (#4809)
+ - Bump System.Security.Cryptography.Pkcs to 7.0.2 and Microsoft.Azure.Storage.DataMovement 2.0.5 (#4839)
+
+## Misc
+
+
 
 ## Agent Downloads
 
