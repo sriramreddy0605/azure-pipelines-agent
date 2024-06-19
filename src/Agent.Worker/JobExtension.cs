@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.TeamFoundation.DistributedTask.Expressions;
 using Microsoft.TeamFoundation.DistributedTask.WebApi;
@@ -237,6 +238,25 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     }
                     context.Output("Finished checking job knob settings.");
 
+                    // Ensure that we send git telemetry before potential path env changes during the pipeline execution
+                    var isSelfHosted =  StringUtil.ConvertToBoolean(jobContext.Variables.Get(Constants.Variables.Agent.IsSelfHosted));
+                    if (PlatformUtil.RunningOnWindows && isSelfHosted)
+                    {
+                        try
+                        {
+                            var windowsPreinstalledGitCommand = jobContext.AsyncCommands.Find(c => c != null && c.Name == Constants.AsyncExecution.Commands.Names.WindowsPreinstalledGitTelemetry);
+                            if (windowsPreinstalledGitCommand != null)
+                            {
+                                await windowsPreinstalledGitCommand.WaitAsync();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // Log the error
+                            Trace.Info($"Caught exception from async command WindowsPreinstalledGitTelemetry: {ex}");
+                        }
+                    }
+
                     if (PlatformUtil.RunningOnWindows)
                     {
                         // This is for internal testing and is not publicly supported. This will be removed from the agent at a later time.
@@ -447,6 +467,17 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                             ServiceEndpoint systemConnection = context.Endpoints.Single(x => string.Equals(x.Name, WellKnownServiceEndpointNames.SystemVssConnection, StringComparison.OrdinalIgnoreCase));
                             finallyStep.AccessToken = systemConnection.Authorization.Parameters["AccessToken"];
                             postJobSteps.Add(finallyStep);
+                        }
+                    }
+
+                    if (AgentKnobs.Rosetta2Warning.GetValue(jobContext).AsBoolean())
+                    {
+                        using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+                        {
+                            if (await PlatformUtil.IsRunningOnAppleSiliconAsX64Async(timeout.Token))
+                            {
+                                jobContext.Warning(StringUtil.Loc("Rosetta2Warning"));
+                            }
                         }
                     }
 

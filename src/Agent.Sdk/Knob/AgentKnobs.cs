@@ -142,13 +142,6 @@ namespace Agent.Sdk.Knob
             new EnvironmentKnobSource("USE_GIT_SINGLE_THREAD"),
             new BuiltInDefaultKnobSource("false"));
 
-        public static readonly Knob UseLatestGitVersion = new Knob(
-            nameof(UseLatestGitVersion),
-            "When true, set path to the latest git version",
-            new RuntimeKnobSource("USE_LATEST_GIT_VERSION"),
-            new EnvironmentKnobSource("USE_LATEST_GIT_VERSION"),
-            new BuiltInDefaultKnobSource("false"));
-
         public static readonly Knob AgentTerminalEncoding = new Knob(
             nameof(AgentTerminalEncoding),
             "If the correct encoding name is specified, the encoding from the environment will be used instead of default UTF-8",
@@ -204,6 +197,12 @@ namespace Agent.Sdk.Knob
             nameof(TraceVerbose),
             "If set to anything, trace level will be verbose",
             new EnvironmentKnobSource("VSTSAGENT_TRACE"),
+            new BuiltInDefaultKnobSource(string.Empty));
+
+        public static readonly Knob DebugTask = new Knob(
+            nameof(DebugTask),
+            "If the agent executes a task which ID or name matches the value provided, it will run the task so that it will wait for debugger to attach",
+            new EnvironmentKnobSource("VSTSAGENT_DEBUG_TASK"),
             new BuiltInDefaultKnobSource(string.Empty));
 
         public static readonly Knob DumpJobEventLogs = new Knob(
@@ -553,6 +552,13 @@ namespace Agent.Sdk.Knob
             new EnvironmentKnobSource("AZP_75787_ENABLE_COLLECT"),
             new BuiltInDefaultKnobSource("false"));
 
+        public static readonly Knob UseNewNodeHandlerTelemetry = new Knob(
+            nameof(UseNewNodeHandlerTelemetry),
+            "Enables new approach to publish node handler information to the telemetry",
+            new RuntimeKnobSource("AZP_USENEWNODEHANDLERTELEMETRY"),
+            new EnvironmentKnobSource("AZP_USENEWNODEHANDLERTELEMETRY"),
+            new BuiltInDefaultKnobSource("false"));
+
         public static readonly Knob ProcessHandlerEnableNewLogic = new Knob(
             nameof(ProcessHandlerEnableNewLogic),
             "Enables new args protect logic for process handler",
@@ -633,6 +639,12 @@ namespace Agent.Sdk.Knob
             new RuntimeKnobSource("AZP_AGENT_CHECK_FOR_TASK_DEPRECATION"),
             new BuiltInDefaultKnobSource("false"));
 
+        public static readonly Knob CheckIfTaskNodeRunnerIsDeprecated = new Knob(
+            nameof(CheckIfTaskNodeRunnerIsDeprecated),
+            "If true, the agent will check in the 'Initialize job' step each task used in the job if this task has node handlers, and all of them are deprecated.",
+            new RuntimeKnobSource("AZP_AGENT_CHECK_IF_TASK_NODE_RUNNER_IS_DEPRECATED"),
+            new BuiltInDefaultKnobSource("false"));
+
         public static readonly Knob MountWorkspace = new Knob(
             nameof(MountWorkspace),
             "If true, the agent will mount the Pipeline.Workspace directory instead of the Working directory for steps which target a Docker container.",
@@ -678,13 +690,6 @@ namespace Agent.Sdk.Knob
             new EnvironmentKnobSource("AGENT_KEY_USE_CNG"),
             new BuiltInDefaultKnobSource("false"));
 
-        public static readonly Knob UseInteropToFindParentProcess = new Knob(
-            nameof(UseInteropToFindParentProcess),
-            "Uses native Windows function to find parent processes of a process.",
-            new RuntimeKnobSource("AZP_AGENT_USE_INTEROP_TO_FIND_PARENT_PROCESS"),
-            new EnvironmentKnobSource("AZP_AGENT_USE_INTEROP_TO_FIND_PARENT_PROCESS"),
-            new BuiltInDefaultKnobSource("false"));
-
         public static readonly Knob RsaKeyGetConfigFromFF = new Knob(
             nameof(RsaKeyGetConfigFromFF),
             "Get config from FF.",
@@ -696,6 +701,20 @@ namespace Agent.Sdk.Knob
             "If true, agent will not throw warnings related to high resource utilization",
             new RuntimeKnobSource("DISABLE_RESOURCE_UTILIZATION_WARNINGS"),
             new EnvironmentKnobSource("DISABLE_RESOURCE_UTILIZATION_WARNINGS"),
+            new BuiltInDefaultKnobSource("false"));
+
+        public static readonly Knob Rosetta2Warning = new Knob(
+            nameof(Rosetta2Warning),
+            "Log warning when X64 Agent is used on a Apple Silicon device.",
+            new RuntimeKnobSource("ROSETTA2_WARNING"),
+            new EnvironmentKnobSource("ROSETTA2_WARNING"),
+            new PipelineFeatureSource("Rosetta2Warning"),
+            new BuiltInDefaultKnobSource("false"));
+
+        public static readonly Knob CheckPsModulesLocations = new Knob(
+            nameof(CheckPsModulesLocations),
+            "Checks if the PSModulePath environment variable contains locations specific to PowerShell Core.",
+            new EnvironmentKnobSource("AZP_AGENT_CHECK_PSMODULES_LOCATIONS"),
             new BuiltInDefaultKnobSource("false"));
     }
 }
