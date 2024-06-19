@@ -1,6 +1,8 @@
 ﻿using Microsoft.VisualStudio.Services.Agent.Util;
 using System;
 using System.Net.Http;
+using System.Net.Security;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Xunit;
 
@@ -8,6 +10,36 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Util
 {
     public sealed class SslUtilL0
     {
+        [Fact]
+        public void AddSslPolicyErrorsMesssages_NoErrors_ShouldReturnCorrectLog()
+        {
+            // Arrange
+            var logBuilder = new SslDiagnosticsLogBuilder();
+
+            // Act
+            logBuilder.AddSslPolicyErrorsMessages(SslPolicyErrors.None);
+            var log = logBuilder.BuildLog();
+
+            // Assert
+            Assert.Contains("No SSL policy errors", log);
+        }
+
+        [Fact]
+        public void AddSslPolicyErrorsMesssages_HasErrors_ShouldReturnCorrectLog()
+        {
+            // Arrange
+            var logBuilder = new SslDiagnosticsLogBuilder();
+
+            // Act
+            logBuilder.AddSslPolicyErrorsMessages(SslPolicyErrors.RemoteCertificateNameMismatch);
+            logBuilder.AddSslPolicyErrorsMessages(SslPolicyErrors.RemoteCertificateChainErrors);
+            var log = logBuilder.BuildLog();
+
+            // Assert
+            Assert.Contains("ChainStatus has returned a non empty array", log);
+            Assert.Contains("Certificate name mismatch", log);
+        }
+
         [Fact]
         public void AddRequestMessageLog_RequestMessageIsNull_ShouldReturnCorrectLog()
         {
@@ -90,15 +122,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Util
         public void AddCertificateLog_CertificateIsNotNull_ShouldReturnCorrectLog()
         {
             // Arrange
-#pragma warning disable SYSLIB0026 // Type or member is obsolete
-            var certificate = new X509Certificate2()
-            {
-                Subject = "CN=TestSubject",
-                Issuer = "CN=TestIssuer",
-                Thumbprint = "TestThumbprint",
-                NotBefore = DateTime.Now
-            };
-#pragma warning restore SYSLIB0026 // Type or member is obsolete
+            var certificate = GenerateTestCertificate();
             var logBuilder = new SslDiagnosticsLogBuilder();
             var log = string.Empty;
 
@@ -110,11 +134,60 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Util
             }
 
             // Assert
+            Assert.Contains("Effective date: ", log);
+            Assert.Contains("Expiration date: ", log);
             Assert.Contains("Subject: ", log);
             Assert.Contains("Issuer: ", log);
             Assert.Contains("Thumbprint: ", log);
-            Assert.Contains("Valid from: ", log);
-            Assert.Contains("Valid until: ", log);
+        }
+
+        [Fact]
+        public void AddChainLog_ChainIsNull_ShouldReturnCorrectLog()
+        {
+            // Arrange
+            var logBuilder = new SslDiagnosticsLogBuilder();
+
+            // Act
+            logBuilder.AddChainLog(null);
+            var log = logBuilder.BuildLog();
+
+            // Assert
+            Assert.Equal($"ChainElements data is empty{Environment.NewLine}", log);
+        }
+
+        [Fact]
+        public void AddChainLog_ChainIsNotNull_ShouldReturnCorrectLog()
+        {
+            // Arrange
+            var certificate = GenerateTestCertificate();
+            using var chain = new X509Chain();
+            chain.Build(certificate);
+            var logBuilder = new SslDiagnosticsLogBuilder();
+            var log = string.Empty;
+
+            // Act
+            using (certificate)
+            {
+                logBuilder.AddChainLog(chain);
+                log = logBuilder.BuildLog();
+            }
+
+            // Assert
+            Assert.Contains("[ChainElements]", log);
+            Assert.Contains("Effective date: ", log);
+            Assert.Contains("Expiration date: ", log);
+            Assert.Contains("Subject: ", log);
+            Assert.Contains("Issuer: ", log);
+            Assert.Contains("Thumbprint: ", log);
+        }
+
+        private X509Certificate2 GenerateTestCertificate()
+        {
+            using var ecdsa = ECDsa.Create(); // generate asymmetric key pair
+            var req = new CertificateRequest("CN=TestSubject", ecdsa, HashAlgorithmName.SHA256);
+            var cert = req.CreateSelfSigned(DateTimeOffset.Now, DateTimeOffset.Now.AddYears(5));
+
+            return cert;
         }
     }
 }
