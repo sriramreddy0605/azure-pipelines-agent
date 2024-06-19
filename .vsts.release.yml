@@ -42,35 +42,31 @@ variables:
   - name: OneES_JobScannedCount
     value: 1
 
-extends:
-  preBuildStages:
-  - stage: Create_Release_Branch
-    displayName: Create Release Branch
-    jobs:
-    ################################################################################
-    - job: Create_Release_Branch
-    ################################################################################
-      displayName: Create Release Branch
-      variables:
-        AgentVersion: "9.99"
-      pool:
-        name: 1ES-ABTT-Shared-Pool
-        image: abtt-ubuntu-2204
-        os: linux
-      steps:
+jobs:
+################################################################################
+- job: Create_Release_Branch
+################################################################################
+  displayName: Create Release Branch
+  variables:
+    AgentVersion: "9.99"
+  pool:
+    name: 1ES-ABTT-Shared-Pool
+    image: abtt-ubuntu-2204
+    os: linux
+  steps:
 
-      - checkout: self
+  - checkout: self
 
-      - task: NodeTool@0
-        displayName: Use node 14.15.1
-        inputs:
-          versionSpec: "14.15.1"
+  - task: NodeTool@0
+    displayName: Use node 14.15.1
+    inputs:
+      versionSpec: "14.15.1"
 
-      - script: |
-          cd release
-          npm install
-          node createReleaseBranch.js $(AgentVersion) --derivedFrom=${{ parameters.derivedFrom }}
-        env:
-          EDITOR: cat
-          PAT: $(GithubToken)
-        displayName: Push release branch to GitHub
+  - script: |
+      cd release
+      npm install
+      node createReleaseBranch.js $(AgentVersion) --derivedFrom=${{ parameters.derivedFrom }}
+    env:
+      EDITOR: cat
+      PAT: $(GithubToken)
+    displayName: Push release branch to GitHub
