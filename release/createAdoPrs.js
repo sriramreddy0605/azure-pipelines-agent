@@ -166,7 +166,7 @@ async function main() {
         }
         util.verifyMinimumNodeVersion();
         util.verifyMinimumGitVersion();
-        createIntegrationFiles(agentVersion);
+        // createIntegrationFiles(agentVersion);
         util.execInForeground(`${GIT} config --global user.email "${process.env.USEREMAIL}"`, null, opt.dryrun);
         util.execInForeground(`${GIT} config --global user.name "${process.env.USERNAME}"`, null, opt.dryrun);
 
