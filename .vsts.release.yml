@@ -48,7 +48,7 @@ jobs:
 ################################################################################
   displayName: Create Release Branch
   variables:
-    AgentVersion: "9.99"
+    AgentVersion: "1.111.999"
   pool:
     name: 1ES-ABTT-Shared-Pool
     image: abtt-ubuntu-2204
