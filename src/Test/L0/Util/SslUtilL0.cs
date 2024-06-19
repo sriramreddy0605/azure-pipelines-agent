@@ -143,7 +143,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Util
 
         [Fact]
         public void AddChainLog_ChainIsNull_ShouldReturnCorrectLog()
-            {
+        {
             // Arrange
             var logBuilder = new SslDiagnosticsLogBuilder();
 
