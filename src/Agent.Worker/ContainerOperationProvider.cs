@@ -708,14 +708,43 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     Func<string, string, string, string> addUserWithIdAndGroup;
                     Func<string, string, string> addUserToGroup;
 
-                    bool userIdIsLarge = Int64.Parse(container.CurrentUserId) > 256000;
+                    bool useShadowIfAlpine = false;
 
-                    if (isAlpineBasedImage && userIdIsLarge)
+                    if (isAlpineBasedImage)
                     {
-                        await DockerExec(executionContext, container.ContainerId, "apk add shadow");
+                        List<string> shadowInfoOutput = await DockerExec(executionContext, container.ContainerId, "apk list --installed | grep shadow");
+                        bool shadowPreinstalled = false;
+
+                        foreach (string shadowInfoLine in shadowInfoOutput)
+                        {
+                            if (shadowInfoLine.Contains("{shadow}", StringComparison.Ordinal))
+                            {
+                                Trace.Info("The 'shadow' package is preinstalled and therefore will be used.");
+                                shadowPreinstalled = true;
+                                break;
+                            }
+                        }
+
+                        bool userIdIsOutsideAdduserCommandRange = Int64.Parse(container.CurrentUserId) > 256000;
+
+                        if (userIdIsOutsideAdduserCommandRange && !shadowPreinstalled)
+                        {
+                            Trace.Info("User ID is outside the range of the 'adduser' command, therefore the 'shadow' package will be installed and used.");
+
+                            try
+                            {
+                                await DockerExec(executionContext, container.ContainerId, "apk add shadow");
+                            }
+                            catch (InvalidOperationException)
+                            {
+                                throw new InvalidOperationException(StringUtil.Loc("ApkAddShadowFailed"));
+                            }
+                        }
+
+                        useShadowIfAlpine = shadowPreinstalled || userIdIsOutsideAdduserCommandRange;
                     }
 
-                    if (isAlpineBasedImage && !userIdIsLarge)
+                    if (isAlpineBasedImage && !useShadowIfAlpine)
                     {
                         addGroup = (groupName) => $"addgroup {groupName}";
                         addGroupWithId = (groupName, groupId) => $"addgroup -g {groupId} {groupName}";
