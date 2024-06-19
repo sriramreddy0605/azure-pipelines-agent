@@ -62,11 +62,15 @@ jobs:
     inputs:
       versionSpec: "14.15.1"
 
-  - script: |
+  - bash: |
+      set -x
       cd release
       npm install
-      node createReleaseBranch.js $(AgentVersion) --derivedFrom=${{ parameters.derivedFrom }}
+      ls
+      node createAdoPrs.js $(AgentVersion)
+    name: s_CreateAdoPrs
+    displayName: Create PRs in AzureDevOps and ConfigChange
     env:
-      EDITOR: cat
-      PAT: $(GithubToken)
-    displayName: Push release branch to GitHub
+      USERNAME: $(User)
+      PAT: $(System.AccessToken)
+      USEREMAIL: $(Email)
