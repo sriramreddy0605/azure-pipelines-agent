@@ -3634,11 +3634,29 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";PSModulePathLocations" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Environment variable PSModulePath contains module locations specific to PowerShell Core. Please take note that if you are going to use Windows PowerShell tasks in your pipeline you may experience errors. To resolve this issue do not start the Agent under PowerShell Core (pwsh).]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[環境變數 PSModulePath 包含 PowerShell Core 特定的模組位置。請注意，如果您要在管線中使用 Windows PowerShell 工作，可能會遇到錯誤。若要解決此問題，請勿在 PowerShell Core (pwsh) 下啟動代理程式。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";PSScriptError" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[PowerShell script completed with {0} errors.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[PowerShell 指令碼已完成，但發生 {0} 錯誤。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";ParentProcessFinderError" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Error occurred while checking if agent is running in PowerShell Core.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[檢查代理程式是否正在 PowerShell Core 中執行時發生錯誤。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
