@@ -244,6 +244,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";ApkAddShadowFailed" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The user ID is outside the range of the 'adduser' command. The alternative command 'useradd' cannot be used because the 'shadow' package is not preinstalled and the attempt to install this package failed. Check network availability or use a docker image with the 'shadow' package preinstalled.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[사용자 ID가 'adduser' 명령 범위를 벗어났습니다. 'shadow' 패키지가 사전 설치되어 있지 않고 이 패키지를 설치하려는 시도가 실패했으므로 대체 명령 'useradd'를 사용할 수 없습니다. 네트워크 가용성을 확인하거나 'shadow' 패키지가 사전 설치된 Docker 이미지를 사용하세요.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";ArgumentNeeded" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA['{0}' has to be specified.]]></Val>
