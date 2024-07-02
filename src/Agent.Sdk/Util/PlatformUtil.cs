@@ -26,6 +26,7 @@ namespace Agent.Sdk
     {
         private static UtilKnobValueContext _knobContext = UtilKnobValueContext.Instance();
         private static OperatingSystem[] net6SupportedSystems;
+        private static OperatingSystem[] netSupportedSystems;
         private static HttpClient httpClient = new HttpClient();
 
         private static readonly string[] linuxReleaseFilePaths = new string[2] { "/etc/os-release", "/usr/lib/os-release" };
@@ -393,50 +394,60 @@ namespace Agent.Sdk
             get => AgentKnobs.UseLegacyHttpHandler.GetValue(_knobContext).AsBoolean();
         }
 
-        private async static Task<OperatingSystem[]> GetNet6SupportedSystems()
+        private async static Task<OperatingSystem[]> GetNetSupportedSystems(string netVersion="net6")
         {
-            string serverFileUrl = "https://raw.githubusercontent.com/microsoft/azure-pipelines-agent/master/src/Agent.Listener/net6.json";
-            string supportOSfilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "net6.json");
+            string serverFileUrl = $"https://raw.githubusercontent.com/microsoft/azure-pipelines-agent/master/src/Agent.Listener/{netVersion}.json";
+            string supportOSfilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), netVersion, ".json");
             string supportOSfileContent;
             bool supportOSfileExists = File.Exists(supportOSfilePath);
 
             if ((!supportOSfileExists || File.GetLastWriteTimeUtc(supportOSfilePath) < DateTime.UtcNow.AddHours(-1))
-                && AgentKnobs.EnableFetchingNet6List.GetValue(_knobContext).AsBoolean())
+                && AgentKnobs.EnableFetchingNet6List.GetValue(_knobContext).AsBoolean()
+                && AgentKnobs.EnableFetchingNetList.GetValue(_knobContext).AsBoolean())
             {
                 HttpResponseMessage response = await httpClient.GetAsync(serverFileUrl);
                 if (!response.IsSuccessStatusCode)
                 {
-                    throw new Exception($"Getting file \"net6.json\" from server failed. Status code: {response.StatusCode}");
+                    throw new Exception($"Getting file \"{netVersion}.json\" from server failed. Status code: {response.StatusCode}");
                 }
                 supportOSfileContent = await response.Content.ReadAsStringAsync();
                 await File.WriteAllTextAsync(supportOSfilePath, supportOSfileContent);
             }
             else
             {
-                if (net6SupportedSystems != null)
+                if (netSupportedSystems != null)
                 {
-                    return net6SupportedSystems;
+                    return netSupportedSystems;
                 }
 
                 if (!supportOSfileExists)
                 {
-                    throw new FileNotFoundException("File with list of systems supporting .NET 6 is absent", supportOSfilePath);
+                    throw new FileNotFoundException($"File with list of systems supporting {netVersion} is absent", supportOSfilePath);
                 }
 
                 supportOSfileContent = await File.ReadAllTextAsync(supportOSfilePath);
             }
 
-            net6SupportedSystems = JsonConvert.DeserializeObject<OperatingSystem[]>(supportOSfileContent);
-            return net6SupportedSystems;
+            netSupportedSystems = JsonConvert.DeserializeObject<OperatingSystem[]>(supportOSfileContent);
+            return netSupportedSystems;
         }
 
         public async static Task<bool> IsNet6Supported()
         {
-            OperatingSystem[] net6SupportedSystems = await GetNet6SupportedSystems();
+            OperatingSystem[] net6SupportedSystems = await GetNetSupportedSystems("net6");
 
             string systemId = PlatformUtil.GetSystemId();
             SystemVersion systemVersion = PlatformUtil.GetSystemVersion();
             return net6SupportedSystems.Any((s) => s.Equals(systemId, systemVersion));
+        }
+
+        public async static Task<bool> IsNet8Supported()
+        {
+            OperatingSystem[] net8SupportedSystems = await GetNetSupportedSystems("net8");
+
+            string systemId = PlatformUtil.GetSystemId();
+            SystemVersion systemVersion = PlatformUtil.GetSystemVersion();
+            return net8SupportedSystems.Any((s) => s.Equals(systemId, systemVersion));
         }
 
         public async static Task<bool> DoesSystemPersistsInNet6Whitelist()
