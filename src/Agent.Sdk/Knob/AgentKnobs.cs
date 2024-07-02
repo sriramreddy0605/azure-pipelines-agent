@@ -591,6 +591,12 @@ namespace Agent.Sdk.Knob
             "Forces the agent to fetch list of .NET 6 supporting systems from server",
             new EnvironmentKnobSource("AGENT_ENABLE_FETCHING_NET6_LIST"),
             new BuiltInDefaultKnobSource("false"));
+        
+        public static readonly Knob EnableFetchingNetList = new Knob(
+            nameof(EnableFetchingNetList),
+            "Forces the agent to fetch list of .NET supporting systems from server",
+            new EnvironmentKnobSource("AGENT_ENABLE_FETCHING_NET_LIST"),
+            new BuiltInDefaultKnobSource("false"));
 
         public static readonly Knob EnableResourceUtilizationWarnings = new Knob(
             nameof(EnableResourceUtilizationWarnings),
