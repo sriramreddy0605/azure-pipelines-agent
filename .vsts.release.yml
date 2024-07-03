@@ -216,53 +216,53 @@ extends:
               artifactName: agent
 
           # Upload agent packages to Azure blob storage and refresh Azure CDN
-          - task: AzurePowerShell@5
-            displayName: Upload to Azure Blob
-            condition: eq(variables.IsTestRun, 'False') #todo
-            inputs:
-              azurePowerShellVersion: 'LatestVersion'
-              azureSubscription: 'azure-pipelines-agent-vstsagentpackage-oauth'
-              scriptType: 'InlineScript'
-              inline: |
-                Write-Host "Preloading Azure modules." # This is for better performance, to avoid module-autoloading.
-                Import-Module Azure, Az.Accounts, Az.Storage, Az.Cdn -ErrorAction Ignore -PassThru
-                $uploadFiles = New-Object System.Collections.ArrayList
-                Select-AzSubscription -SubscriptionId $(SubscriptionId)
-                $storageContext = New-AzStorageContext -StorageAccountName vstsagentpackage -UseConnectedAccount
-                $versionDir = "$(AgentVersion)"
-                $container = 'testagent-main'
-                if ($(IsTestRun)) {
-                  $container = 'testagent'
-                  New-AzStorageContainer -Name $container -Permission Off
-                }
-                Get-ChildItem -LiteralPath "$(System.ArtifactsDirectory)/agent" | ForEach-Object {
-                  $target=$_
-                  Get-ChildItem -LiteralPath "$(System.ArtifactsDirectory)/agent/$target" -Include "*.zip","*.tar.gz" | ForEach-Object {
-                    $executable = $_
-                    Write-Host "Uploading $executable to BlobStorage vstsagentpackage/$container/$versionDir"
-                    Set-AzStorageBlobContent -Context $storageContext -Container $container -File "$(System.ArtifactsDirectory)/agent/$target/$executable" -Blob "$versionDir/$executable" -Force
-                    $uploadFiles.Add("/$container/$versionDir/$executable")
-                  }
-                }
-                Write-Host "Purge Azure CDN Cache"
-                Clear-AzCdnEndpointContent -EndpointName vstsagentpackage -ProfileName vstsagentpackage -ResourceGroupName vstsagentpackage -ContentPath $uploadFiles
-                Write-Host "Force Refresh Azure CDN Cache"
-                Import-AzCdnEndpointContent -EndpointName vstsagentpackage -ProfileName vstsagentpackage -ResourceGroupName vstsagentpackage -ContentPath $uploadFiles
+          # - task: AzurePowerShell@5
+          #   displayName: Upload to Azure Blob
+          #   condition: eq(variables.IsTestRun, 'False') #todo
+          #   inputs:
+          #     azurePowerShellVersion: 'LatestVersion'
+          #     azureSubscription: 'azure-pipelines-agent-vstsagentpackage-oauth'
+          #     scriptType: 'InlineScript'
+          #     inline: |
+          #       Write-Host "Preloading Azure modules." # This is for better performance, to avoid module-autoloading.
+          #       Import-Module Azure, Az.Accounts, Az.Storage, Az.Cdn -ErrorAction Ignore -PassThru
+          #       $uploadFiles = New-Object System.Collections.ArrayList
+          #       Select-AzSubscription -SubscriptionId $(SubscriptionId)
+          #       $storageContext = New-AzStorageContext -StorageAccountName vstsagentpackage -UseConnectedAccount
+          #       $versionDir = "$(AgentVersion)"
+          #       $container = 'testagent-main'
+          #       if ($(IsTestRun)) {
+          #         $container = 'testagent'
+          #         New-AzStorageContainer -Name $container -Permission Off
+          #       }
+          #       Get-ChildItem -LiteralPath "$(System.ArtifactsDirectory)/agent" | ForEach-Object {
+          #         $target=$_
+          #         Get-ChildItem -LiteralPath "$(System.ArtifactsDirectory)/agent/$target" -Include "*.zip","*.tar.gz" | ForEach-Object {
+          #           $executable = $_
+          #           Write-Host "Uploading $executable to BlobStorage vstsagentpackage/$container/$versionDir"
+          #           Set-AzStorageBlobContent -Context $storageContext -Container $container -File "$(System.ArtifactsDirectory)/agent/$target/$executable" -Blob "$versionDir/$executable" -Force
+          #           $uploadFiles.Add("/$container/$versionDir/$executable")
+          #         }
+          #       }
+          #       Write-Host "Purge Azure CDN Cache"
+          #       Clear-AzCdnEndpointContent -EndpointName vstsagentpackage -ProfileName vstsagentpackage -ResourceGroupName vstsagentpackage -ContentPath $uploadFiles
+          #       Write-Host "Force Refresh Azure CDN Cache"
+          #       Import-AzCdnEndpointContent -EndpointName vstsagentpackage -ProfileName vstsagentpackage -ResourceGroupName vstsagentpackage -ContentPath $uploadFiles
 
-          # Clean up blob container with test agent version
-          - task: AzurePowerShell@5
-            displayName: Delete Azure Blob container with test agent version
-            condition: eq(variables.IsTestRun, 'False') #todo
-            inputs:
-              azurePowerShellVersion: 'LatestVersion'
-              azureSubscription: 'azure-pipelines-agent-vstsagentpackage-oauth'
-              scriptType: 'InlineScript'
-              inline: |
-                Import-Module Azure, Az.Accounts, Az.Storage -ErrorAction Ignore -PassThru
-                Select-AzSubscription -SubscriptionId $(SubscriptionId)
-                $storageContext = New-AzStorageContext -StorageAccountName vstsagentpackage -UseConnectedAccount
-                $container = 'testagent'
-                Remove-AzStorageContainer -Name $container -Context $storageContext -WhatIf
+          # # Clean up blob container with test agent version
+          # - task: AzurePowerShell@5
+          #   displayName: Delete Azure Blob container with test agent version
+          #   condition: eq(variables.IsTestRun, 'False') #todo
+          #   inputs:
+          #     azurePowerShellVersion: 'LatestVersion'
+          #     azureSubscription: 'azure-pipelines-agent-vstsagentpackage-oauth'
+          #     scriptType: 'InlineScript'
+          #     inline: |
+          #       Import-Module Azure, Az.Accounts, Az.Storage -ErrorAction Ignore -PassThru
+          #       Select-AzSubscription -SubscriptionId $(SubscriptionId)
+          #       $storageContext = New-AzStorageContext -StorageAccountName vstsagentpackage -UseConnectedAccount
+          #       $container = 'testagent'
+          #       Remove-AzStorageContainer -Name $container -Context $storageContext -WhatIf
                 
           # Download all agent hashes created in previous phases
           - task: DownloadBuildArtifacts@0
