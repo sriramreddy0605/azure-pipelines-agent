@@ -128,9 +128,9 @@ extends:
                   Write-Error "Version parameter is required for manual release." -ErrorAction Stop
                 }
               }
-              if ($isTestRun) {
+              #if ($isTestRun) {
                 $agentVersion = '0.0.0'
-              }
+              #}
               Write-Host "agentVersion = $agentVersion"
               Write-Host "##vso[task.setVariable variable=agentVersion;isOutput=true]$agentVersion"
 
@@ -152,10 +152,12 @@ extends:
       ################################################################################
         displayName: Create Release Branch
         variables:
+          IsTestRun: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isTestRun'] ]
           IsRelease: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'] ]
           ReleaseBranch: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
           AgentVersion: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.agentVersion'] ]
-        condition: and(succeeded(), eq(variables.IsRelease, 'True'))
+        condition: and(succeeded(), or(eq(variables.IsRelease, 'True'), eq(variables.IsTestRun, 'True')))
+
         pool:
           name: 1ES-ABTT-Shared-Pool
           image: abtt-ubuntu-2204
@@ -197,7 +199,7 @@ extends:
             IsRelease: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'] ]
             ReleaseBranch: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
             AgentVersion: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.agentVersion'] ]
-          condition: and(succeeded(), eq(variables.IsRelease, 'True'))
+          condition: and(succeeded(), or(eq(variables.IsRelease, 'True'), eq(variables.IsTestRun, 'True')))
           steps:
 
           # Clean
@@ -365,7 +367,7 @@ extends:
             IsRelease: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'] ]
             ReleaseBranch: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
             AgentVersion: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.agentVersion'] ]
-          condition: and(succeeded(), eq(variables.IsRelease, 'True'))
+          condition: and(succeeded(), or(eq(variables.IsRelease, 'True'), eq(variables.IsTestRun, 'True')))
           steps:
           - checkout: self
 
