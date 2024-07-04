@@ -129,7 +129,7 @@ extends:
                 }
               }
               #if ($isTestRun) {
-                $agentVersion = '0.0.0'
+                $agentVersion = '3.0.999'
               #}
               Write-Host "agentVersion = $agentVersion"
               Write-Host "##vso[task.setVariable variable=agentVersion;isOutput=true]$agentVersion"
@@ -348,6 +348,7 @@ extends:
               git -c credential.helper='!f() { echo "username=pat"; echo "password=$(GithubToken)"; };f' push --set-upstream origin ${branch}
               git branch -D $(ReleaseBranch)
               git push origin --delete $(ReleaseBranch)
+              git tag -d v$(AgentVersion)
             displayName: Clean up test release branch
             condition: and(succeeded(), eq(variables.IsTestRun, 'True'))
 
