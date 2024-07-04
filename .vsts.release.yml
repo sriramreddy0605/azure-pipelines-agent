@@ -344,8 +344,8 @@ extends:
           - powershell: |
               git config --global user.email "azure-pipelines-bot@microsoft.com"
               git config --global user.name "azure-pipelines-bot"
-              git -c credential.helper='!f() { echo "username=pat"; echo "password=$(GithubToken)"; };f' push --set-upstream origin $(ReleaseBranch)
-              git push origin --delete $(ReleaseBranch)
+              git status
+              git -c credential.helper='!f() { echo "username=pat"; echo "password=$(GithubToken)"; };f' push origin --delete $(ReleaseBranch)
               git push --delete origin v$(AgentVersion)
             displayName: Clean up test release branch
             condition: and(succeeded(), eq(variables.IsTestRun, 'True'))
