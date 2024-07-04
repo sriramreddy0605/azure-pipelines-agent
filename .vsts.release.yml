@@ -306,7 +306,7 @@ extends:
               $releaseCreated = Invoke-RestMethod @releaseParams
               Write-Host $releaseCreated
               $releaseId = $releaseCreated.id
-              Write-Host "##vso[task.setVariable variable=releaseId]$releaseId"
+              Write-Host "##vso[task.setVariable variable=releaseId;isoutput=true]$releaseId"
               $assets = [System.IO.File]::ReadAllText("$(Build.SourcesDirectory)\assets.json").Replace("<AGENT_VERSION>","$(AgentVersion)")
               $assetsParams = @{
                 Uri = "https://uploads.github.com/repos/Microsoft/azure-pipelines-agent/releases/$releaseId/assets?name=assets.json"
@@ -338,15 +338,18 @@ extends:
               $releaseDeleted = Invoke-RestMethod @releaseParams
               Write-Host $releaseDeleted.Id
             displayName: Delete test agent release from Github
-            condition: eq(variables.IsTestRun, 'True')
+            condition: and(succeeded(), eq(variables.IsTestRun, 'True'))
 
           # Clean up test release branch
           - powershell: |
+              git config --global user.email "azure-pipelines-bot@microsoft.com"
+              git config --global user.name "azure-pipelines-bot"
               git checkout master
+              git -c credential.helper='!f() { echo "username=pat"; echo "password=$(GithubToken)"; };f' push --set-upstream origin ${branch}
               git branch -D $(ReleaseBranch)
               git push origin --delete $(ReleaseBranch)
             displayName: Clean up test release branch
-            condition: eq(variables.IsTestRun, 'True')
+            condition: and(succeeded(), eq(variables.IsTestRun, 'True'))
 
       - stage: CreatePRs
         dependsOn:
