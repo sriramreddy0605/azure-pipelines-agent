@@ -59,7 +59,7 @@ extends:
   parameters:
     branch: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
     test: ${{ not(parameters.skipTests) }}
-    sign: true
+    sign: false
     publishArtifacts: true
     testProxyAgent: ${{ parameters.testProxyAgent }}
     stageDependencies:
