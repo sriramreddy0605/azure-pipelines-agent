@@ -219,7 +219,7 @@ extends:
             inputs:
               artifactName: agent
 
-          Upload agent packages to Azure blob storage and refresh Azure CDN
+          # Upload agent packages to Azure blob storage and refresh Azure CDN
           - task: AzurePowerShell@5
             displayName: Upload to Azure Blob
             condition: and(succeeded(), eq(variables.IsTestRun, 'False'))
