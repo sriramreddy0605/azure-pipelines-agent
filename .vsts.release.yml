@@ -96,7 +96,6 @@ extends:
             Write-Host "##vso[task.setVariable variable=isRelease;isOutput=true]$isRelease"
 
             $isTestRun = ($buildReason -eq 'IndividualCI' -or $buildReason -eq 'PullRequest')
-            $isTestRun = $true
             Write-Host "isTestRun = $isTestRun"
             Write-Host "##vso[task.setVariable variable=isTestRun;isOutput=true]$isTestRun"
 
@@ -128,9 +127,9 @@ extends:
                   Write-Error "Version parameter is required for manual release." -ErrorAction Stop
                 }
               }
-              #if ($isTestRun) {
+              if ($isTestRun) {
                 $agentVersion = '3.000.999'
-              #}
+              }
               Write-Host "agentVersion = $agentVersion"
               Write-Host "##vso[task.setVariable variable=agentVersion;isOutput=true]$agentVersion"
 
@@ -222,7 +221,6 @@ extends:
           # Upload agent packages to Azure blob storage and refresh Azure CDN
           - task: AzurePowerShell@5
             displayName: Upload to Azure Blob
-            condition: and(succeeded(), eq(variables.IsTestRun, 'False'))
             inputs:
               azurePowerShellVersion: 'LatestVersion'
               azureSubscription: 'azure-pipelines-agent-vstsagentpackage-oauth'
@@ -256,7 +254,7 @@ extends:
           # Clean up blob container with test agent version
           - task: AzurePowerShell@5
             displayName: Delete Azure Blob container with test agent version
-            condition: and(succeeded(), eq(variables.IsTestRun, 'False'))
+            condition: and(succeeded(), eq(variables.IsTestRun, 'True'))
             inputs:
               azurePowerShellVersion: 'LatestVersion'
               azureSubscription: 'azure-pipelines-agent-vstsagentpackage-oauth'
