@@ -27,7 +27,6 @@ namespace Agent.Sdk
     {
         private static UtilKnobValueContext _knobContext = UtilKnobValueContext.Instance();
         private static Dictionary<string, OperatingSystem[]> netSupportedSystems;
-        private static HttpClient httpClient = new HttpClient();
 
         private static readonly string[] linuxReleaseFilePaths = new string[2] { "/etc/os-release", "/usr/lib/os-release" };
 
@@ -149,7 +148,7 @@ namespace Agent.Sdk
 
         public static string GetSystemId()
         {
-            #pragma warning disable CA1416 // SupportedOSPlatformGuard not honored on enum members
+#pragma warning disable CA1416 // SupportedOSPlatformGuard not honored on enum members
             return PlatformUtil.HostOS switch
             {
                 PlatformUtil.OS.Linux => GetLinuxId(),
@@ -157,12 +156,12 @@ namespace Agent.Sdk
                 PlatformUtil.OS.Windows => GetWindowsId(),
                 _ => null
             };
-            #pragma warning restore CA1416
+#pragma warning restore CA1416
         }
 
         public static SystemVersion GetSystemVersion()
         {
-            #pragma warning disable CA1416 // SupportedOSPlatformGuard not honored on enum members
+#pragma warning disable CA1416 // SupportedOSPlatformGuard not honored on enum members
             return PlatformUtil.HostOS switch
             {
                 PlatformUtil.OS.Linux => new SystemVersion(GetLinuxName(), null),
@@ -170,7 +169,7 @@ namespace Agent.Sdk
                 PlatformUtil.OS.Windows => new SystemVersion(GetWindowsName(), GetWindowsVersion()),
                 _ => null
             };
-            #pragma warning restore CA1416
+#pragma warning restore CA1416
         }
 
         private static void DetectRHEL6()
@@ -394,69 +393,36 @@ namespace Agent.Sdk
             get => AgentKnobs.UseLegacyHttpHandler.GetValue(_knobContext).AsBoolean();
         }
 
-        private async static Task<OperatingSystem[]> GetNetSupportedSystems(string netVersion = "net6")
+        private async static Task<OperatingSystem[]> GetSupportedSystemsByNetVersion(string netVersion = "net6")
         {
-            string serverFileUrl = $"https://raw.githubusercontent.com/microsoft/azure-pipelines-agent/master/src/Agent.Listener/{netVersion}.json";
             string supportOSfilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), netVersion, ".json");
-            string supportOSfileContent;
             bool supportOSfileExists = File.Exists(supportOSfilePath);
 
-            if ((!supportOSfileExists || File.GetLastWriteTimeUtc(supportOSfilePath) < DateTime.UtcNow.AddHours(-1))
-                && AgentKnobs.EnableFetchingNet6List.GetValue(_knobContext).AsBoolean()
-                && AgentKnobs.EnableFetchingNetList.GetValue(_knobContext).AsBoolean())
+            if (netSupportedSystems != null && netSupportedSystems.ContainsKey(netVersion))
             {
-                HttpResponseMessage response = await httpClient.GetAsync(serverFileUrl);
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new Exception($"Getting file \"{netVersion}.json\" from server failed. Status code: {response.StatusCode}");
-                }
-                supportOSfileContent = await response.Content.ReadAsStringAsync();
-                await File.WriteAllTextAsync(supportOSfilePath, supportOSfileContent);
+                return netSupportedSystems[netVersion];
             }
-            else
+
+            if (!supportOSfileExists)
             {
-                if (netSupportedSystems != null && netSupportedSystems.ContainsKey(netVersion))
-                {
-                    return netSupportedSystems[netVersion];
-                }
-
-                if (!supportOSfileExists)
-                {
-                    throw new FileNotFoundException($"File with list of systems supporting {netVersion} is absent", supportOSfilePath);
-                }
-
-                supportOSfileContent = await File.ReadAllTextAsync(supportOSfilePath);
+                throw new FileNotFoundException($"File with list of systems supporting {netVersion} is absent", supportOSfilePath);
             }
+
+            string supportOSfileContent = await File.ReadAllTextAsync(supportOSfilePath);
 
             netSupportedSystems.Add(netVersion, JsonConvert.DeserializeObject<OperatingSystem[]>(supportOSfileContent));
             return netSupportedSystems[netVersion];
         }
 
-        public async static Task<bool> IsNet6Supported()
+        public async static Task<bool> IsNetVersionSupported(string netVersion)
         {
-            OperatingSystem[] net6SupportedSystems = await GetNetSupportedSystems("net6");
+            OperatingSystem[] supportedSystems = await GetSupportedSystemsByNetVersion(netVersion);
 
             string systemId = PlatformUtil.GetSystemId();
             SystemVersion systemVersion = PlatformUtil.GetSystemVersion();
-            return net6SupportedSystems.Any((s) => s.Equals(systemId, systemVersion));
+            return supportedSystems.Any((s) => s.Equals(systemId, systemVersion));
         }
 
-        public async static Task<bool> IsNet8Supported()
-        {
-            OperatingSystem[] net8SupportedSystems = await GetNetSupportedSystems("net8");
-
-            string systemId = PlatformUtil.GetSystemId();
-            SystemVersion systemVersion = PlatformUtil.GetSystemVersion();
-            return net8SupportedSystems.Any((s) => s.Equals(systemId, systemVersion));
-        }
-
-        public async static Task<bool> DoesSystemPersistsInNet6Whitelist()
-        {
-            OperatingSystem[] net6SupportedSystems = await GetNetSupportedSystems("net6");
-            string systemId = PlatformUtil.GetSystemId();
-
-            return net6SupportedSystems.Any((s) => s.Equals(systemId));
-        }
         public static bool DetectDockerContainer()
         {
             bool isDockerContainer = false;
@@ -465,7 +431,7 @@ namespace Agent.Sdk
             {
                 if (PlatformUtil.RunningOnWindows)
                 {
-                    #pragma warning disable CA1416 // SupportedOSPlatform checks not respected in lambda usage
+#pragma warning disable CA1416 // SupportedOSPlatform checks not respected in lambda usage
                     // For Windows we check Container Execution Agent Service (cexecsvc) existence
                     var serviceName = "cexecsvc";
                     ServiceController[] scServices = ServiceController.GetServices();
@@ -473,7 +439,7 @@ namespace Agent.Sdk
                     {
                         isDockerContainer = true;
                     }
-                    #pragma warning restore CA1416
+#pragma warning restore CA1416
                 }
                 else
                 {

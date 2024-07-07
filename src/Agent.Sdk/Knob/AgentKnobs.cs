@@ -375,7 +375,7 @@ namespace Agent.Sdk.Knob
 
         public static readonly Knob AgentFailOnIncompatibleOS = new Knob(
             nameof(AgentFailOnIncompatibleOS),
-            "Allow agent to fail pipelines on incampatible OS",
+            "Allow agent to fail pipelines on incompatible OS",
             new EnvironmentKnobSource("AGENT_FAIL_ON_INCOMPATIBLE_OS"),
             new RuntimeKnobSource("AGENT_FAIL_ON_INCOMPATIBLE_OS"),
             new BuiltInDefaultKnobSource("false"));
@@ -586,17 +586,6 @@ namespace Agent.Sdk.Knob
             new EnvironmentKnobSource("AGENT_DISABLE_DRAIN_QUEUES_AFTER_TASK"),
             new BuiltInDefaultKnobSource("false"));
 
-        public static readonly Knob EnableFetchingNet6List = new Knob(
-            nameof(EnableFetchingNet6List),
-            "Forces the agent to fetch list of .NET 6 supporting systems from server",
-            new EnvironmentKnobSource("AGENT_ENABLE_FETCHING_NET6_LIST"),
-            new BuiltInDefaultKnobSource("false"));
-        
-        public static readonly Knob EnableFetchingNetList = new Knob(
-            nameof(EnableFetchingNetList),
-            "Forces the agent to fetch list of .NET supporting systems from server",
-            new EnvironmentKnobSource("AGENT_ENABLE_FETCHING_NET_LIST"),
-            new BuiltInDefaultKnobSource("false"));
 
         public static readonly Knob EnableResourceUtilizationWarnings = new Knob(
             nameof(EnableResourceUtilizationWarnings),
