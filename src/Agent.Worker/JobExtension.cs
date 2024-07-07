@@ -85,22 +85,15 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                         SystemVersion systemVersion = PlatformUtil.GetSystemVersion();
                         string notSupportNet8Message = null;
 
-                        if (await PlatformUtil.DoesSystemPersistsInNet8Whitelist())
+                        // Check version of the system
+                        if (!await PlatformUtil.IsNetVersionSupported("net8"))
                         {
-                            // Check version of the system
-                            if (!await PlatformUtil.IsNet8Supported())
+                            notSupportNet8Message = $"The operating system the agent is running on is \"{systemId}\" ({systemVersion}), which will not be supported by the .NET 8. Please upgrade the operating system of this host to ensure compatibility with the v3 agent. See https://aka.ms/azdo-pipeline-agent-version";
+                            if (AgentKnobs.AgentFailOnIncompatibleOS.GetValue(jobContext).AsBoolean() &&
+                                !AgentKnobs.AcknowledgeNoUpdates.GetValue(jobContext).AsBoolean())
                             {
-                                notSupportNet8Message = $"The operating system the agent is running on is \"{systemId}\" ({systemVersion}), which will not be supported by the .NET 8. Please upgrade the operating system of this host to ensure compatibility with the v3 agent. See https://aka.ms/azdo-pipeline-agent-version";
-                                if (AgentKnobs.AgentFailOnIncompatibleOS.GetValue(jobContext).AsBoolean() &&
-                                    !AgentKnobs.AcknowledgeNoUpdates.GetValue(jobContext).AsBoolean())
-                                {
-                                    throw new UnsupportedOsException(StringUtil.Loc("FailAgentOnUnsupportedOs"));
-                                }
+                                throw new UnsupportedOsException(StringUtil.Loc("FailAgentOnUnsupportedOs"));
                             }
-                        }
-                        else
-                        {
-                            notSupportNet8Message = $"The operating system the agent is running on is \"{systemId}\" ({systemVersion}), which has not been tested with the .NET 6 based v3 agent. The v2 agent wil not automatically upgrade to the v3 agent. You can manually download the .NET 6 based v3 agent from https://github.com/microsoft/azure-pipelines-agent/releases. See https://aka.ms/azdo-pipeline-agent-version";
                         }
 
                         if (!string.IsNullOrWhiteSpace(notSupportNet8Message))
@@ -116,50 +109,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     {
                         Trace.Error($"Error has occurred while checking if system supports .NET 6: {ex}");
                         context.Warning(ex.Message);
-                    }
-                    // Check if a system supports .NET 6
-                    if (agentVersion.Major < 3)
-                    {
-                        try
-                        {
-                            Trace.Verbose("Checking if your system supports .NET 6");
-
-                            string systemId = PlatformUtil.GetSystemId();
-                            SystemVersion systemVersion = PlatformUtil.GetSystemVersion();
-                            string notSupportNet6Message = null;
-
-                            if (await PlatformUtil.DoesSystemPersistsInNet6Whitelist())
-                            {
-                                // Check version of the system
-                                if (!await PlatformUtil.IsNet6Supported())
-                                {
-                                    notSupportNet6Message = $"The operating system the agent is running on is \"{systemId}\" ({systemVersion}), which will not be supported by the .NET 6 based v3 agent. Please upgrade the operating system of this host to ensure compatibility with the v3 agent. See https://aka.ms/azdo-pipeline-agent-version";
-                                    if (AgentKnobs.AgentFailOnIncompatibleOS.GetValue(jobContext).AsBoolean() &&
-                                        !AgentKnobs.AcknowledgeNoUpdates.GetValue(jobContext).AsBoolean())
-                                    {
-                                        throw new UnsupportedOsException(StringUtil.Loc("FailAgentOnUnsupportedOs"));
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                notSupportNet6Message = $"The operating system the agent is running on is \"{systemId}\" ({systemVersion}), which has not been tested with the .NET 6 based v3 agent. The v2 agent wil not automatically upgrade to the v3 agent. You can manually download the .NET 6 based v3 agent from https://github.com/microsoft/azure-pipelines-agent/releases. See https://aka.ms/azdo-pipeline-agent-version";
-                            }
-
-                            if (!string.IsNullOrWhiteSpace(notSupportNet6Message))
-                            {
-                                context.Warning(notSupportNet6Message);
-                            }
-                        }
-                        catch (UnsupportedOsException)
-                        {
-                            throw;
-                        }
-                        catch (Exception ex)
-                        {
-                            Trace.Error($"Error has occurred while checking if system supports .NET 6: {ex}");
-                            context.Warning(ex.Message);
-                        }
                     }
 
                     // Set agent version variable.
@@ -433,7 +382,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     }
 
                     ArgUtil.NotNull(jobContext, nameof(jobContext)); // I am not sure why this is needed, but static analysis flagged all uses of jobContext below this point
-                    // create execution context for all pre-job steps
+                                                                     // create execution context for all pre-job steps
                     foreach (var step in preJobSteps)
                     {
                         if (PlatformUtil.RunningOnWindows && step is ManagementScriptStep)
