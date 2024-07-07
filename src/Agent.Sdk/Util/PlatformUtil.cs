@@ -148,7 +148,7 @@ namespace Agent.Sdk
 
         public static string GetSystemId()
         {
-#pragma warning disable CA1416 // SupportedOSPlatformGuard not honored on enum members
+            #pragma warning disable CA1416 // SupportedOSPlatformGuard not honored on enum members
             return PlatformUtil.HostOS switch
             {
                 PlatformUtil.OS.Linux => GetLinuxId(),
@@ -156,12 +156,12 @@ namespace Agent.Sdk
                 PlatformUtil.OS.Windows => GetWindowsId(),
                 _ => null
             };
-#pragma warning restore CA1416
+            #pragma warning restore CA1416
         }
 
         public static SystemVersion GetSystemVersion()
         {
-#pragma warning disable CA1416 // SupportedOSPlatformGuard not honored on enum members
+            #pragma warning disable CA1416 // SupportedOSPlatformGuard not honored on enum members
             return PlatformUtil.HostOS switch
             {
                 PlatformUtil.OS.Linux => new SystemVersion(GetLinuxName(), null),
@@ -169,7 +169,7 @@ namespace Agent.Sdk
                 PlatformUtil.OS.Windows => new SystemVersion(GetWindowsName(), GetWindowsVersion()),
                 _ => null
             };
-#pragma warning restore CA1416
+            #pragma warning restore CA1416
         }
 
         private static void DetectRHEL6()
@@ -431,7 +431,7 @@ namespace Agent.Sdk
             {
                 if (PlatformUtil.RunningOnWindows)
                 {
-#pragma warning disable CA1416 // SupportedOSPlatform checks not respected in lambda usage
+                    #pragma warning disable CA1416 // SupportedOSPlatform checks not respected in lambda usage
                     // For Windows we check Container Execution Agent Service (cexecsvc) existence
                     var serviceName = "cexecsvc";
                     ServiceController[] scServices = ServiceController.GetServices();
@@ -439,7 +439,7 @@ namespace Agent.Sdk
                     {
                         isDockerContainer = true;
                     }
-#pragma warning restore CA1416
+                    #pragma warning restore CA1416
                 }
                 else
                 {
