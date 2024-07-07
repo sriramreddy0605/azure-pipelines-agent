@@ -83,22 +83,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
                         string systemId = PlatformUtil.GetSystemId();
                         SystemVersion systemVersion = PlatformUtil.GetSystemVersion();
-                        string notSupportNet8Message = null;
 
                         // Check version of the system
                         if (!await PlatformUtil.IsNetVersionSupported("net8"))
                         {
-                            notSupportNet8Message = $"The operating system the agent is running on is \"{systemId}\" ({systemVersion}), which will not be supported by the .NET 8. Please upgrade the operating system of this host to ensure compatibility with the v3 agent. See https://aka.ms/azdo-pipeline-agent-version";
-                            if (AgentKnobs.AgentFailOnIncompatibleOS.GetValue(jobContext).AsBoolean() &&
-                                !AgentKnobs.AcknowledgeNoUpdates.GetValue(jobContext).AsBoolean())
-                            {
-                                throw new UnsupportedOsException(StringUtil.Loc("FailAgentOnUnsupportedOs"));
-                            }
-                        }
-
-                        if (!string.IsNullOrWhiteSpace(notSupportNet8Message))
-                        {
-                            context.Warning(notSupportNet8Message);
+                            context.Warning(StringUtil.Loc("UnsuppoertedOsVersionByNet8", $"{systemId} {systemVersion}"));
                         }
                     }
                     catch (UnsupportedOsException)
@@ -107,7 +96,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     }
                     catch (Exception ex)
                     {
-                        Trace.Error($"Error has occurred while checking if system supports .NET 6: {ex}");
+                        Trace.Error($"Error has occurred while checking if system supports .NET 8: {ex}");
                         context.Warning(ex.Message);
                     }
 

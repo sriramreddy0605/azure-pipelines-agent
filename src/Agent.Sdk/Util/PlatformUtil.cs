@@ -26,7 +26,7 @@ namespace Agent.Sdk
     public static class PlatformUtil
     {
         private static UtilKnobValueContext _knobContext = UtilKnobValueContext.Instance();
-        private static Dictionary<string, OperatingSystem[]> netSupportedSystems;
+        private static Dictionary<string, OperatingSystem[]> netSupportedSystems = new Dictionary<string, OperatingSystem[]>();
 
         private static readonly string[] linuxReleaseFilePaths = new string[2] { "/etc/os-release", "/usr/lib/os-release" };
 
@@ -395,7 +395,7 @@ namespace Agent.Sdk
 
         private async static Task<OperatingSystem[]> GetSupportedSystemsByNetVersion(string netVersion = "net6")
         {
-            string supportOSfilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), netVersion, ".json");
+            string supportOSfilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), $"{netVersion}.json");
             bool supportOSfileExists = File.Exists(supportOSfilePath);
 
             if (netSupportedSystems != null && netSupportedSystems.ContainsKey(netVersion))
