@@ -87,7 +87,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                         // Check version of the system
                         if (!await PlatformUtil.IsNetVersionSupported("net8"))
                         {
-                            context.Warning(StringUtil.Loc("UnsuppoertedOsVersionByNet8", $"{systemId} {systemVersion}"));
+                            context.Warning(StringUtil.Loc("UnsupportedOsVersionByNet8", $"{systemId} {systemVersion}"));
                         }
                     }
                     catch (UnsupportedOsException)
