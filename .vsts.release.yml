@@ -230,16 +230,16 @@ extends:
                 Import-Module Azure, Az.Accounts, Az.Storage, Az.Cdn -ErrorAction Ignore -PassThru
                 $uploadFiles = New-Object System.Collections.ArrayList
                 Select-AzSubscription -SubscriptionId $(SubscriptionId)
-                $storageContext = New-AzStorageContext -StorageAccountName vstsagentpackage -UseConnectedAccount
+                $ = New-AzStorageContext -StorageAccountName vstsagentpackage -UseConnectedAccount
                 $versionDir = "$(AgentVersion)"
-                
+                storageContext
                 $container = "agent"
                 $isTestContainer = "$(IsTestRun)"
                 Write-Host "isTestContainer = $isTestContainer"
 
                 if ($isTestContainer -eq "True") { 
                   $container = "testagent"
-                  New-AzStorageContainer -Context storageContext -Name $container -Permission Off
+                  New-AzStorageContainer -Context $storageContext -Name $container -Permission Off
                 }
                 Write-Host "container = $container"
                 
