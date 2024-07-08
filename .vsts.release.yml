@@ -237,8 +237,8 @@ extends:
                 $isTestContainer = $(IsTestRun) -eq 'True'
                 $isTestContainer2 = $(IsTestRun) -eq $True
                 
-                Write-Host "isTestContainer = $(isTestContainer)"
-                Write-Host "isTestContainer2 = $(isTestContainer2)"
+                Write-Host "isTestContainer = $isTestContainer"
+                Write-Host "isTestContainer2 = $isTestContainer2"
 
                 if ($isTestContainer) { 
                   $container = "testagent"
