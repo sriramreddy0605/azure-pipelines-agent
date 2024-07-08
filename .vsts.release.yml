@@ -234,12 +234,12 @@ extends:
                 $versionDir = "$(AgentVersion)"
                 
                 $container = "agent"
-                $isTestContainer = $(IsTestRun)
+                $isTestContainer = "$(IsTestRun)"
 
                 Write-Host "type = $($isTestContainer.GetType())"
                 Write-Host "isTestContainer = $isTestContainer"
 
-                if ($isTestContainer) { 
+                if ($isTestContainer -eq "True") { 
                   $container = "testagent"
                   Write-Host "container1 = $container"
                   New-AzStorageContainer -Name $container -Permission Off
