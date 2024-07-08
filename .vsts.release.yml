@@ -235,17 +235,14 @@ extends:
                 
                 $container = "agent"
                 $isTestContainer = "$(IsTestRun)"
-
-                Write-Host "type = $($isTestContainer.GetType())"
                 Write-Host "isTestContainer = $isTestContainer"
 
                 if ($isTestContainer -eq "True") { 
                   $container = "testagent"
-                  Write-Host "container1 = $container"
-                  New-AzStorageContainer -Name $container -Permission Off
+                  New-AzStorageContainer -Context storageContext -Name $container -Permission Off
                 }
-                Write-Host "IsTestRun = $(IsTestRun)"
-                Write-Host "container2 = $container"
+                Write-Host "container = $container"
+                
                 Get-ChildItem -LiteralPath "$(System.ArtifactsDirectory)/agent" | ForEach-Object {
                   $target=$_
                   Get-ChildItem -LiteralPath "$(System.ArtifactsDirectory)/agent/$target" -Include "*.zip","*.tar.gz" | ForEach-Object {
