@@ -232,13 +232,21 @@ extends:
                 Select-AzSubscription -SubscriptionId $(SubscriptionId)
                 $storageContext = New-AzStorageContext -StorageAccountName vstsagentpackage -UseConnectedAccount
                 $versionDir = "$(AgentVersion)"
-                $container = 'agent'
-                if ($(IsTestRun) -eq $True) { 
-                  $container = 'testagent'
+                
+                $container = "agent"
+                $isTestContainer = $(IsTestRun) -eq 'True'
+                $isTestContainer2 = $(IsTestRun) -eq $True
+                
+                Write-Host "isTestContainer = $(isTestContainer)"
+                Write-Host "isTestContainer2 = $(isTestContainer2)"
+
+                if ($isTestContainer) { 
+                  $container = "testagent"
+                  Write-Host "container1 = $container"
                   New-AzStorageContainer -Name $container -Permission Off
                 }
-                Write-Host "IsTestRun =$(IsTestRun)"
-                Write-Host "container = $container"
+                Write-Host "IsTestRun = $(IsTestRun)"
+                Write-Host "container2 = $container"
                 Get-ChildItem -LiteralPath "$(System.ArtifactsDirectory)/agent" | ForEach-Object {
                   $target=$_
                   Get-ChildItem -LiteralPath "$(System.ArtifactsDirectory)/agent/$target" -Include "*.zip","*.tar.gz" | ForEach-Object {
