@@ -1,3 +1,18 @@
+## Features
+ - Rework resource monitor (#4803)
+ - Allow running agent in debugging mode for specific node task (#4838)
+ - Optimize DeactivateVsoCommands regexp (#4862)
+
+## Bugs
+ - Use useradd on Alpine when user ID is large (#4851)
+ - Mask ACR token on Windows when System.Debug is true (#4868)
+
+## Misc
+ - Update docs to include information about debugging (#4852)
+ - Remove PAT from the agent CI (#4858)
+ - Remove ADO PAT for PRs (#4864)
+ - Localization update (#4877)
+
 
 ## Agent Downloads
 
