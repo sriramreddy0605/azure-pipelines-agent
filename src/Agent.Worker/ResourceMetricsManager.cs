@@ -286,12 +286,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
             if (PlatformUtil.RunningOnLinux)
             {
-                // Some compact Linux distributions like UBI may not have "free" utility installed, or it may have a custom output
-                // We don't want to break currently existing pipelines with ADO warnings
-                // so related errors thrown here will be sent to the trace or debug logs by caller methods
-
-                using var processInvoker = HostContext.CreateService<IProcessInvoker>();
-
                 using var timeoutTokenSource = new CancellationTokenSource();
                 timeoutTokenSource.CancelAfter(TimeSpan.FromMilliseconds(METRICS_UPDATE_INTERVAL));
 
@@ -299,52 +293,19 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     _context.CancellationToken,
                     timeoutTokenSource.Token);
 
-                processInvoker.OutputDataReceived += delegate (object sender, ProcessDataReceivedEventArgs message)
+                await Task.Run(() =>
                 {
-                    if (!message.Data.StartsWith("Mem:"))
-                    {
-                        return;
-                    }
-
-                    var processInvokerOutputString = message.Data;
-                    var memoryInfoString = processInvokerOutputString.Split(" ", StringSplitOptions.RemoveEmptyEntries);
-
-                    if (memoryInfoString.Length != 7)
-                    {
-                        throw new Exception("\"free\" utility has non-default output");
-                    }
+                    string memoryInfo = File.ReadAllText("/proc/meminfo");
+                    int totalMemory = int.Parse(memoryInfo.Split('\n')[0].Split(" ", StringSplitOptions.RemoveEmptyEntries)[1]);
+                    int freeMemory = int.Parse(memoryInfo.Split('\n')[1].Split(" ", StringSplitOptions.RemoveEmptyEntries)[1]);
 
                     lock (_memoryInfoLock)
                     {
                         _memoryInfo.Updated = DateTime.Now;
-                        _memoryInfo.TotalMemoryMB = long.Parse(memoryInfoString[1]);
-                        _memoryInfo.UsedMemoryMB = long.Parse(memoryInfoString[2]);
+                        _memoryInfo.TotalMemoryMB = totalMemory / 1024;
+                        _memoryInfo.UsedMemoryMB = (totalMemory - freeMemory) / 1024;
                     }
-                };
-
-                processInvoker.ErrorDataReceived += delegate (object sender, ProcessDataReceivedEventArgs message)
-                {
-                    Trace.Error($"Error on receiving memory info: {message.Data}");
-                };
-
-                try
-                {
-                    var filePath = "free";
-                    var arguments = "-m";
-                    await processInvoker.ExecuteAsync(
-                            workingDirectory: string.Empty,
-                            fileName: filePath,
-                            arguments: arguments,
-                            environment: null,
-                            requireExitCodeZero: true,
-                            outputEncoding: null,
-                            killProcessOnCancel: true,
-                            cancellationToken: linkedTokenSource.Token);
-                }
-                catch (Win32Exception ex)
-                {
-                    throw new Exception($"\"free\" utility is unavailable. Exception: {ex.Message}");
-                }
+                }, linkedTokenSource.Token);
             }
 
             if (PlatformUtil.RunningOnMacOS)
