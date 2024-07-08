@@ -233,10 +233,11 @@ extends:
                 $storageContext = New-AzStorageContext -StorageAccountName vstsagentpackage -UseConnectedAccount
                 $versionDir = "$(AgentVersion)"
                 $container = 'agent'
-                if ($(IsTestRun) -eq 'True') { 
+                if ($(IsTestRun) -eq $True) { 
                   $container = 'testagent'
                   New-AzStorageContainer -Name $container -Permission Off
                 }
+                Write-Host "IsTestRun =$(IsTestRun)"
                 Write-Host "container = $container"
                 Get-ChildItem -LiteralPath "$(System.ArtifactsDirectory)/agent" | ForEach-Object {
                   $target=$_
