@@ -232,8 +232,9 @@ extends:
                 Select-AzSubscription -SubscriptionId $(SubscriptionId)
                 $storageContext = New-AzStorageContext -StorageAccountName vstsagentpackage -UseConnectedAccount
                 $versionDir = "$(AgentVersion)"
-                $container = if ($(IsTestRun)) { 'testagent' } else { 'agent' }
-                if ($(IsTestRun)) {
+                $container = 'agent'
+                if ($(IsTestRun) -eq 'True') { 
+                  $container = 'testagent'
                   New-AzStorageContainer -Name $container -Permission Off
                 }
                 Write-Host "container = $container"
