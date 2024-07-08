@@ -232,7 +232,7 @@ extends:
                 Select-AzSubscription -SubscriptionId $(SubscriptionId)
                 $storageContext = New-AzStorageContext -StorageAccountName vstsagentpackage -UseConnectedAccount
                 $versionDir = "$(AgentVersion)"
-                $container = 'testagent-main'
+                $container = 'agent'
                 if ($(IsTestRun)) {
                   $container = 'testagent'
                   New-AzStorageContainer -Name $container -Permission Off
