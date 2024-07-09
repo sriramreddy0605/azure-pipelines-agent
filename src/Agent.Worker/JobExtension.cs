@@ -90,10 +90,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                             context.Warning(StringUtil.Loc("UnsupportedOsVersionByNet8", $"{systemId} {systemVersion}"));
                         }
                     }
-                    catch (UnsupportedOsException)
-                    {
-                        throw;
-                    }
                     catch (Exception ex)
                     {
                         Trace.Error($"Error has occurred while checking if system supports .NET 8: {ex}");
