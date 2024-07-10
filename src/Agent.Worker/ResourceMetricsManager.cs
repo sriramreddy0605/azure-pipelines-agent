@@ -144,8 +144,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
             if (PlatformUtil.RunningOnLinux)
             {
-                using var processInvoker = HostContext.CreateService<IProcessInvoker>();
-
                 using var timeoutTokenSource = new CancellationTokenSource();
                 timeoutTokenSource.CancelAfter(TimeSpan.FromMilliseconds(METRICS_UPDATE_INTERVAL));
 
@@ -153,39 +151,41 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     _context.CancellationToken,
                     timeoutTokenSource.Token);
 
-                processInvoker.OutputDataReceived += delegate (object sender, ProcessDataReceivedEventArgs message)
+                await Task.Run(async () =>
                 {
-                    var processInvokerOutput = message.Data;
+                    List<float[]> sampes = new();
+                    int samplesCount = 10;
 
-                    var cpuInfoNice = int.Parse(processInvokerOutput.Split(' ', (char)StringSplitOptions.RemoveEmptyEntries)[2]);
-                    var cpuInfoIdle = int.Parse(processInvokerOutput.Split(' ', (char)StringSplitOptions.RemoveEmptyEntries)[4]);
-                    var cpuInfoIOWait = int.Parse(processInvokerOutput.Split(' ', (char)StringSplitOptions.RemoveEmptyEntries)[5]);
+                    for (int i = 0; i < samplesCount + 1; i++)
+                    {
+                        sampes.Add(File
+                                .ReadAllLines("/proc/stat")
+                                .First()
+                                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                                .Skip(1)
+                                .Select(float.Parse)
+                                .ToArray());
+
+                        await Task.Delay(100, linkedTokenSource.Token);
+                    }
+
+                    double cpuUsage = 0.0;
+
+                    for (int i = 1; i < samplesCount + 1; i++)
+                    {
+                        double idle = sampes[i][3] - sampes[i - 1][3];
+                        double total = sampes[i].Sum() - sampes[i - 1].Sum();
+
+                        cpuUsage += 1 - (idle / total);
+                    }
 
                     lock (_cpuInfoLock)
                     {
                         _cpuInfo.Updated = DateTime.Now;
-                        _cpuInfo.Usage = (double)(cpuInfoNice + cpuInfoIdle) * 100 / (cpuInfoNice + cpuInfoIdle + cpuInfoIOWait);
+                        _cpuInfo.Usage = cpuUsage / samplesCount * 100;
                     }
-                };
-
-                processInvoker.ErrorDataReceived += delegate (object sender, ProcessDataReceivedEventArgs message)
-                {
-                    Trace.Error($"Error on receiving CPU info: {message.Data}");
-                };
-
-                var filePath = "grep";
-                var arguments = "\"cpu \" /proc/stat";
-                await processInvoker.ExecuteAsync(
-                        workingDirectory: string.Empty,
-                        fileName: filePath,
-                        arguments: arguments,
-                        environment: null,
-                        requireExitCodeZero: true,
-                        outputEncoding: null,
-                        killProcessOnCancel: true,
-                        cancellationToken: linkedTokenSource.Token);
+                }, linkedTokenSource.Token);
             }
-
             if (PlatformUtil.RunningOnMacOS)
             {
                 List<string> outputs = new List<string>();
