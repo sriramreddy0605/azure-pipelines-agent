@@ -153,12 +153,12 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
                 await Task.Run(async () =>
                 {
-                    List<float[]> sampes = new();
+                    List<float[]> samples = new();
                     int samplesCount = 10;
 
                     for (int i = 0; i < samplesCount + 1; i++)
                     {
-                        sampes.Add(File
+                        samples.Add(File
                                 .ReadAllLines("/proc/stat")
                                 .First()
                                 .Split(' ', StringSplitOptions.RemoveEmptyEntries)
@@ -170,19 +170,18 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     }
 
                     double cpuUsage = 0.0;
-
                     for (int i = 1; i < samplesCount + 1; i++)
                     {
-                        double idle = sampes[i][3] - sampes[i - 1][3];
-                        double total = sampes[i].Sum() - sampes[i - 1].Sum();
+                        double idle = samples[i][3] - samples[i - 1][3];
+                        double total = samples[i].Sum() - samples[i - 1].Sum();
 
-                        cpuUsage += 1 - (idle / total);
+                        cpuUsage += 1.0 - (idle / total);
                     }
 
                     lock (_cpuInfoLock)
                     {
                         _cpuInfo.Updated = DateTime.Now;
-                        _cpuInfo.Usage = cpuUsage / samplesCount * 100;
+                        _cpuInfo.Usage = (cpuUsage / samplesCount) * 100;
                     }
                 }, linkedTokenSource.Token);
             }
