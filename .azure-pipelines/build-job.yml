@@ -90,6 +90,8 @@ jobs:
             enabled: false
             justificationForDisabling: ${{ parameters.justificationForDisablingSdl}}
   variables:
+    ${{ if eq(parameters.disableSdl, true) }}:
+      TestCommand: true
     PACKAGE_TYPE: ${{ parameters.packageType }}
     ${{ if eq(parameters.os, 'win') }}:
       devCommand: dev.cmd
