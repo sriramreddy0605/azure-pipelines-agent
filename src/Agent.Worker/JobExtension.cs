@@ -137,7 +137,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
                         var telemetryData = new Dictionary<string, string>()
                         {
-                            { "JobId", context.Variables.System_JobId.ToString()},
+                            { "JobId", context?.Variables?.System_JobId?.ToString() ?? string.Empty },
                             { "ImageVersion", imageVersion },
                         };
 
@@ -544,7 +544,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     {
                         var telemetryData = new Dictionary<string, string>
                         {
-                            { "JobId", context.Variables.System_JobId.ToString()},
+                            { "JobId", context?.Variables?.System_JobId?.ToString() ?? string.Empty },
                             { "JobResult", TaskResult.Failed.ToString() },
                             { "TracePoint", "110" },
                         };
