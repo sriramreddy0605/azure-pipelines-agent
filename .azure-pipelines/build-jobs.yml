@@ -81,6 +81,7 @@ jobs:
     verifySigning: ${{ parameters.verifySigning }}
     publishArtifact: ${{ parameters.publishArtifacts }}
     packageType: agent
+    disableSdl: ${{ parameters.disableSdl }}
 
 - ${{ if parameters.buildAlternatePackage }}:
   - template: /.azure-pipelines/build-job.yml@self
@@ -100,3 +101,4 @@ jobs:
       verifySigning: ${{ parameters.verifySigning }}
       publishArtifact: ${{ parameters.publishArtifacts }}
       packageType: pipelines-agent
+      disableSdl: ${{ parameters.disableSdl }}
