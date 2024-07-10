@@ -296,8 +296,10 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 await Task.Run(() =>
                 {
                     string memoryInfo = File.ReadAllText("/proc/meminfo");
-                    int totalMemory = int.Parse(memoryInfo.Split('\n')[0].Split(" ", StringSplitOptions.RemoveEmptyEntries)[1]);
-                    int freeMemory = int.Parse(memoryInfo.Split('\n')[1].Split(" ", StringSplitOptions.RemoveEmptyEntries)[1]);
+
+                    var outputs = memoryInfo.Split('\n');
+                    int totalMemory = int.Parse(outputs[0].Split(" ", StringSplitOptions.RemoveEmptyEntries)[1]);
+                    int freeMemory = int.Parse(outputs[1].Split(" ", StringSplitOptions.RemoveEmptyEntries)[1]);
 
                     lock (_memoryInfoLock)
                     {
