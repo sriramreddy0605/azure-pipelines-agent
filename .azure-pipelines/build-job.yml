@@ -83,12 +83,12 @@ jobs:
     container: ${{ parameters.container }}
 
   parameters:
-    ${{ if eq(parameters.disableSdl, true) }}:
-      sdl:
-        codeql:
-          compiled:
-            enabled: false
-            justificationForDisabling: ${{ parameters.justificationForDisablingSdl}}
+    # ${{ if eq(parameters.disableSdl, true) }}:
+    sdl:
+      codeql:
+        compiled:
+          enabled: false
+          justificationForDisabling: ${{ parameters.justificationForDisablingSdl}}
   variables:
     ${{ if eq(parameters.disableSdl, true) }}:
       TestCommand: true
