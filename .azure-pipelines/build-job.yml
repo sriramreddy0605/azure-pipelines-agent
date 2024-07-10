@@ -82,8 +82,7 @@ jobs:
   ${{ if ne(parameters.container, '') }}:
     container: ${{ parameters.container }}
 
-  parameters:
-    # ${{ if eq(parameters.disableSdl, true) }}:
+  ${{ if eq(parameters.disableSdl, true) }}:
     sdl:
       codeql:
         compiled:
