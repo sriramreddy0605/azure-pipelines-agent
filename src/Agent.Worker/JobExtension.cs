@@ -81,12 +81,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     {
                         Trace.Verbose("Checking if your system supports .NET 8");
 
-                        string systemId = PlatformUtil.GetSystemId();
-                        SystemVersion systemVersion = PlatformUtil.GetSystemVersion();
-
                         // Check version of the system
-                        if (!await PlatformUtil.IsNetVersionSupported("net8"))
+                        if (!PlatformUtil.IsNetVersionSupported("net8"))
                         {
+                            string systemId = PlatformUtil.GetSystemId();
+                            SystemVersion systemVersion = PlatformUtil.GetSystemVersion();
                             context.Warning(StringUtil.Loc("UnsupportedOsVersionByNet8", $"{systemId} {systemVersion}"));
                         }
                     }
