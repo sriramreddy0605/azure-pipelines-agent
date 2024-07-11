@@ -298,13 +298,13 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
                     var outputs = memoryInfo.Split('\n');
                     int totalMemory = int.Parse(outputs[0].Split(" ", StringSplitOptions.RemoveEmptyEntries)[1]);
-                    int freeMemory = int.Parse(outputs[1].Split(" ", StringSplitOptions.RemoveEmptyEntries)[1]);
+                    int availableMemory = int.Parse(outputs[2].Split(" ", StringSplitOptions.RemoveEmptyEntries)[1]);
 
                     lock (_memoryInfoLock)
                     {
                         _memoryInfo.Updated = DateTime.Now;
                         _memoryInfo.TotalMemoryMB = totalMemory / 1024;
-                        _memoryInfo.UsedMemoryMB = (totalMemory - freeMemory) / 1024;
+                        _memoryInfo.UsedMemoryMB = (totalMemory - availableMemory) / 1024;
                     }
                 }, linkedTokenSource.Token);
             }
