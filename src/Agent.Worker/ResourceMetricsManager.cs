@@ -156,6 +156,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     List<float[]> samples = new();
                     int samplesCount = 10;
 
+                    // /proc/stat updates linearly in real time and shows CPU time counters during the whole system uptime
+                    // so we need to collect multiple samples to calculate CPU usage in the moment
                     for (int i = 0; i < samplesCount + 1; i++)
                     {
                         samples.Add(File
@@ -169,6 +171,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                         await Task.Delay(100, linkedTokenSource.Token);
                     }
 
+                    // We need to get deltas for idle and total CPU time counters using the gathered samples
+                    // and calculate the average to provide the CPU utilization in the moment
                     double cpuUsage = 0.0;
                     for (int i = 1; i < samplesCount + 1; i++)
                     {
@@ -296,6 +300,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 {
                     string memoryInfo = File.ReadAllText("/proc/meminfo");
 
+                    // The available memory counter from /proc/meminfo contains the sum of free, cached, and buffer memory
+                    // it shows more accurate information about the memory usage than the free memory counter
                     var outputs = memoryInfo.Split('\n');
                     int totalMemory = int.Parse(outputs[0].Split(" ", StringSplitOptions.RemoveEmptyEntries)[1]);
                     int availableMemory = int.Parse(outputs[2].Split(" ", StringSplitOptions.RemoveEmptyEntries)[1]);
