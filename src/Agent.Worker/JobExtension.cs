@@ -492,7 +492,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                             }
                         }
                     }
-
                     List<IStep> steps = new List<IStep>();
                     steps.AddRange(preJobSteps);
                     steps.AddRange(jobSteps);
@@ -509,7 +508,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                         // Set the VSTS_PROCESS_LOOKUP_ID env variable.
                         context.SetVariable(Constants.ProcessLookupId, _processLookupId, false, false);
                         context.Output("Start tracking orphan processes.");
-
                         // Take a snapshot of current running processes
                         Dictionary<int, Process> processes = SnapshotProcesses();
                         foreach (var proc in processes)
@@ -528,15 +526,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     if (AgentKnobs.FailJobWhenAgentDies.GetValue(jobContext).AsBoolean() &&
                         HostContext.AgentShutdownToken.IsCancellationRequested)
                     {
-                        var telemetryData = new Dictionary<string, string>
-                        {
-                            { "JobId", context?.Variables?.System_JobId?.ToString() ?? string.Empty },
-                            { "JobResult", TaskResult.Failed.ToString() },
-                            { "TracePoint", "110" },
-                        };
-
-                        PublishTelemetry(jobContext, telemetryData, "AgentShutdown");
-
+                        PublishAgentShutdownTelemetry(jobContext, context);
                         Trace.Error($"Caught Agent Shutdown exception from JobExtension Initialization: {ex.Message}");
                         context.Error(ex);
                         context.Result = TaskResult.Failed;
@@ -564,6 +554,18 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     context.Complete();
                 }
             }
+        }
+
+        private void PublishAgentShutdownTelemetry(IExecutionContext jobContext, IExecutionContext childContext)
+        {
+            var telemetryData = new Dictionary<string, string>
+            {
+                { "JobId", childContext?.Variables?.System_JobId?.ToString() ?? string.Empty },
+                { "JobResult", TaskResult.Failed.ToString() },
+                { "TracePoint", "110" },
+            };
+
+            PublishTelemetry(jobContext, telemetryData, "AgentShutdown");
         }
 
         public async Task FinalizeJob(IExecutionContext jobContext)
