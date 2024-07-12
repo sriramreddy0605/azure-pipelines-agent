@@ -134,16 +134,13 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     if (imageVersion != null)
                     {
                         context.Output(StringUtil.Loc("ImageVersionLog", imageVersion));
-
                         var telemetryData = new Dictionary<string, string>()
                         {
                             { "JobId", context?.Variables?.System_JobId?.ToString() ?? string.Empty },
                             { "ImageVersion", imageVersion },
                         };
-
                         PublishTelemetry(context, telemetryData, "ImageVersionTelemetry");
                     }
-
                     context.Output(StringUtil.Loc("UserNameLog", System.Environment.UserName));
 
                     // Print proxy setting information for better diagnostic experience
@@ -264,7 +261,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                             Trace.Info($"Caught exception from async command WindowsPreinstalledGitTelemetry: {ex}");
                         }
                     }
-
                     if (PlatformUtil.RunningOnWindows)
                     {
                         // This is for internal testing and is not publicly supported. This will be removed from the agent at a later time.
@@ -548,9 +544,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                             { "JobResult", TaskResult.Failed.ToString() },
                             { "TracePoint", "110" },
                         };
-
                         PublishTelemetry(jobContext, telemetryData, "AgentShutdown");
-
                         Trace.Error($"Caught Agent Shutdown exception from JobExtension Initialization: {ex.Message}");
                         context.Error(ex);
                         context.Result = TaskResult.Failed;
