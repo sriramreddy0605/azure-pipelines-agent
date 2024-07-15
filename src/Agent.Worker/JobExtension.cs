@@ -698,18 +698,24 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         private void OutputImageVersion(IExecutionContext context)
         {
             string imageVersion = System.Environment.GetEnvironmentVariable(Constants.ImageVersionVariable);
+            string jobId = context?.Variables?.System_JobId?.ToString() ?? string.Empty;
 
             if (imageVersion != null)
             {
                 context.Output(StringUtil.Loc("ImageVersionLog", imageVersion));
-                var telemetryData = new Dictionary<string, string>()
-                {
-                    { "JobId", context?.Variables?.System_JobId?.ToString() ?? string.Empty },
-                    { "ImageVersion", imageVersion },
-                };
-
-                PublishTelemetry(context, telemetryData, "ImageVersionTelemetry");
             }
+            else
+            {
+                Trace.Info($"Image version for job id {jobId} is not set");
+            }
+
+            var telemetryData = new Dictionary<string, string>()
+            {
+                { "JobId", jobId },
+                { "ImageVersion", imageVersion },
+            };
+
+            PublishTelemetry(context, telemetryData, "ImageVersionTelemetry");
         }
 
         private void OutputSetupInfo(IExecutionContext context)
