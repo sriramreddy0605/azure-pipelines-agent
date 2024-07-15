@@ -141,7 +141,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 int samplesCount = 10;
 
                 // /proc/stat updates linearly in real time and shows CPU time counters during the whole system uptime
-                // so we need to collect multiple samples to calculate CPU usage in the moment
+                // so we need to collect multiple samples to calculate CPU usage
                 for (int i = 0; i < samplesCount + 1; i++)
                 {
                     string[] strings = await File.ReadAllLinesAsync("/proc/stat", cancellationToken);
@@ -159,7 +159,10 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     await Task.Delay(100, cancellationToken);
                 }
 
-                // We need to get deltas for idle and total CPU time counters using the gathered samples
+                // The CPU time counters in the /proc/stat are:
+                // user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice
+                //
+                // We need to get deltas for idle and total CPU time using the gathered samples
                 // and calculate the average to provide the CPU utilization in the moment
                 double cpuUsage = 0.0;
                 for (int i = 1; i < samplesCount + 1; i++)
@@ -272,7 +275,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     return;
                 }
 
-                // The available memory counter from /proc/meminfo contains the sum of free, cached, and buffer memory
+                // The /proc/meminfo file contains several memory counters. To calculate the available memory
+                // we need to get the total memory and the available memory counters
+                // The available memory contains the sum of free, cached, and buffer memory
                 // it shows more accurate information about the memory usage than the free memory counter
                 int totalMemory = int.Parse(memoryInfo[0].Split(" ", StringSplitOptions.RemoveEmptyEntries)[1]);
                 int availableMemory = int.Parse(memoryInfo[2].Split(" ", StringSplitOptions.RemoveEmptyEntries)[1]);
