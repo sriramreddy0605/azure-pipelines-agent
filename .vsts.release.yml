@@ -1,6 +1,18 @@
 # This Yaml Document has been converted by ESAI Yaml Pipeline Conversion Tool.
-
 trigger:
+  branches:
+    include:
+    - '*'
+  paths:
+    include:
+    - release
+    - .azure-pipelines
+    - .vsts.release.yml
+
+pr:
+  branches:
+    include:
+    - '*'
   paths:
     include:
     - release
@@ -344,16 +356,6 @@ extends:
             displayName: Delete test agent release from Github
             condition: and(succeeded(), eq(variables.IsTestRun, 'True'))
 
-          # Clean up test release branch
-          - powershell: |
-              git config --global user.email "azure-pipelines-bot@microsoft.com"
-              git config --global user.name "azure-pipelines-bot"
-              git status
-              git -c credential.helper='!f() { echo "username=pat"; echo "password=$(GithubToken)"; };f' push origin --delete $(ReleaseBranch)
-              git push --delete origin v$(AgentVersion)
-            displayName: Clean up test release branch
-            condition: and(succeeded(), eq(variables.IsTestRun, 'True'))
-
       - stage: CreatePRs
         dependsOn:
         - Release
@@ -441,3 +443,33 @@ extends:
               ADO_PR_LINK: $(AdoPrLink)
               CC_PR_ID: $(CcPrId)
               CC_PR_LINK: $(CcPrLink)
+
+      - stage: Cleanup_Release_Branch
+        displayName: Cleanup Release Branch
+        dependsOn:
+        - Create_Release_Branch
+        - Release
+        jobs:
+        - job: Delete_Release_Branch
+          displayName: Delete Release Branch
+          variables:
+            IsTestRun: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isTestRun'] ]
+            IsRelease: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'] ]
+            ReleaseBranch: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
+            AgentVersion: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.agentVersion'] ]
+          condition: and(succeeded('Create_Release_Branch'), eq(variables.IsTestRun, 'True'))
+
+          pool:
+            name: 1ES-ABTT-Shared-Pool
+            image: abtt-ubuntu-2204
+            os: linux
+          steps:
+          - checkout: self
+
+          - powershell: |
+              git config --global user.email "azure-pipelines-bot@microsoft.com"
+              git config --global user.name "azure-pipelines-bot"
+              git status
+              git -c credential.helper='!f() { echo "username=pat"; echo "password=$(GithubToken)"; };f' push origin --delete $(ReleaseBranch)
+              git push --delete origin v$(AgentVersion)
+            displayName: Clean up test release branch
