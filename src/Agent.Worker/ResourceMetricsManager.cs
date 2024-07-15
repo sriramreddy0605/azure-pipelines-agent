@@ -206,11 +206,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                         killProcessOnCancel: true,
                         cancellationToken: cancellationToken);
 
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
-
                 // Use second sample for more accurate calculation
                 var cpuInfoIdle = double.Parse(outputs[1].Split(' ', (char)StringSplitOptions.RemoveEmptyEntries)[6].Trim('%'));
 
@@ -319,11 +314,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                         outputEncoding: null,
                         killProcessOnCancel: true,
                         cancellationToken: cancellationToken);
-
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
 
                 var pageSize = int.Parse(outputs[0].Split(" ", StringSplitOptions.RemoveEmptyEntries)[7]);
 
