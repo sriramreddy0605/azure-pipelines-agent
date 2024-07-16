@@ -359,6 +359,7 @@ extends:
       - stage: Cleanup_Release_Branch
         displayName: Cleanup Release Branch
         dependsOn:
+        - Verify_release
         - Create_Release_Branch
         - Release
         jobs:
@@ -369,6 +370,7 @@ extends:
             IsRelease: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'] ]
             ReleaseBranch: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
             AgentVersion: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.agentVersion'] ]
+          condition: eq(variables[IsTestRun, 'True')
 
           pool:
             name: 1ES-ABTT-Shared-Pool
@@ -390,7 +392,6 @@ extends:
                 git push --delete origin v$(AgentVersion)
               }
             displayName: Clean up test release branch
-            condition: eq(variables.IsTestRun, 'True')
 
       - stage: CreatePRs
         dependsOn:
