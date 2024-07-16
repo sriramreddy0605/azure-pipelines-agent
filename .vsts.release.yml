@@ -356,6 +356,42 @@ extends:
             displayName: Delete test agent release from Github
             condition: and(succeeded(), eq(variables.IsTestRun, 'True'))
 
+      - stage: Cleanup_Release_Branch
+        displayName: Cleanup Release Branch
+        dependsOn:
+        - Create_Release_Branch
+        - Release
+        condition: eq(variables.IsTestRun, 'True')
+        jobs:
+        - job: Delete_Release_Branch
+          displayName: Delete Release Branch
+          variables:
+            IsTestRun: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isTestRun'] ]
+            IsRelease: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'] ]
+            ReleaseBranch: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
+            AgentVersion: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.agentVersion'] ]
+
+          pool:
+            name: 1ES-ABTT-Shared-Pool
+            image: abtt-ubuntu-2204
+            os: linux
+          steps:
+          - checkout: self
+
+          - powershell: |
+              git config --global user.email "azure-pipelines-bot@microsoft.com"
+              git config --global user.name "azure-pipelines-bot"
+              git status
+              
+              if (git ls-remote --heads origin $(ReleaseBranch)) { 
+                git -c credential.helper='!f() { echo "username=pat"; echo "password=$(GithubToken)"; };f' push origin --delete $(ReleaseBranch)
+              }
+              
+              if (git ls-remote --tags origin v$(AgentVersion)) { 
+                git push --delete origin v$(AgentVersion)
+              }
+            displayName: Clean up test release branch
+
       - stage: CreatePRs
         dependsOn:
         - Release
@@ -443,39 +479,3 @@ extends:
               ADO_PR_LINK: $(AdoPrLink)
               CC_PR_ID: $(CcPrId)
               CC_PR_LINK: $(CcPrLink)
-
-      - stage: Cleanup_Release_Branch
-        displayName: Cleanup Release Branch
-        dependsOn:
-        - Create_Release_Branch
-        - Release
-        condition: eq(variables.IsTestRun, 'True')
-        jobs:
-        - job: Delete_Release_Branch
-          displayName: Delete Release Branch
-          variables:
-            IsTestRun: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isTestRun'] ]
-            IsRelease: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'] ]
-            ReleaseBranch: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
-            AgentVersion: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.agentVersion'] ]
-
-          pool:
-            name: 1ES-ABTT-Shared-Pool
-            image: abtt-ubuntu-2204
-            os: linux
-          steps:
-          - checkout: self
-
-          - powershell: |
-              git config --global user.email "azure-pipelines-bot@microsoft.com"
-              git config --global user.name "azure-pipelines-bot"
-              git status
-              
-              if (git ls-remote --heads origin $(ReleaseBranch)) { 
-                git -c credential.helper='!f() { echo "username=pat"; echo "password=$(GithubToken)"; };f' push origin --delete $(ReleaseBranch)
-              }
-              
-              if (git ls-remote --tags origin v$(AgentVersion)) { 
-                git push --delete origin v$(AgentVersion)
-              }
-            displayName: Clean up test release branch
