@@ -370,7 +370,7 @@ extends:
             IsRelease: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'] ]
             ReleaseBranch: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
             AgentVersion: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.agentVersion'] ]
-          condition: eq(variables[IsTestRun, 'True')
+          condition: eq(variables.IsTestRun, 'True')
 
           pool:
             name: 1ES-ABTT-Shared-Pool
