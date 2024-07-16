@@ -170,13 +170,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
                     // Machine specific setup info
                     OutputSetupInfo(context);
-
-                    string imageVersion = System.Environment.GetEnvironmentVariable(Constants.ImageVersionVariable);
-                    if (imageVersion != null)
-                    {
-                        context.Output(StringUtil.Loc("ImageVersionLog", imageVersion));
-                    }
-
+                    OutputImageVersion(context);
                     context.Output(StringUtil.Loc("UserNameLog", System.Environment.UserName));
 
                     // Print proxy setting information for better diagnostic experience
@@ -539,7 +533,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                             }
                         }
                     }
-
                     List<IStep> steps = new List<IStep>();
                     steps.AddRange(preJobSteps);
                     steps.AddRange(jobSteps);
@@ -556,7 +549,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                         // Set the VSTS_PROCESS_LOOKUP_ID env variable.
                         context.SetVariable(Constants.ProcessLookupId, _processLookupId, false, false);
                         context.Output("Start tracking orphan processes.");
-
                         // Take a snapshot of current running processes
                         Dictionary<int, Process> processes = SnapshotProcesses();
                         foreach (var proc in processes)
@@ -575,7 +567,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     if (AgentKnobs.FailJobWhenAgentDies.GetValue(jobContext).AsBoolean() &&
                         HostContext.AgentShutdownToken.IsCancellationRequested)
                     {
-                        PublishTelemetry(jobContext, TaskResult.Failed.ToString(), "110");
+                        PublishAgentShutdownTelemetry(jobContext, context);
                         Trace.Error($"Caught Agent Shutdown exception from JobExtension Initialization: {ex.Message}");
                         context.Error(ex);
                         context.Result = TaskResult.Failed;
@@ -603,6 +595,18 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     context.Complete();
                 }
             }
+        }
+
+        private void PublishAgentShutdownTelemetry(IExecutionContext jobContext, IExecutionContext childContext)
+        {
+            var telemetryData = new Dictionary<string, string>
+            {
+                { "JobId", childContext?.Variables?.System_JobId?.ToString() ?? string.Empty },
+                { "JobResult", TaskResult.Failed.ToString() },
+                { "TracePoint", "110" },
+            };
+
+            PublishTelemetry(jobContext, telemetryData, "AgentShutdown");
         }
 
         public async Task FinalizeJob(IExecutionContext jobContext)
@@ -732,6 +736,29 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             return snapshot;
         }
 
+        private void OutputImageVersion(IExecutionContext context)
+        {
+            string imageVersion = System.Environment.GetEnvironmentVariable(Constants.ImageVersionVariable);
+            string jobId = context?.Variables?.System_JobId?.ToString() ?? string.Empty;
+
+            if (imageVersion != null)
+            {
+                context.Output(StringUtil.Loc("ImageVersionLog", imageVersion));
+            }
+            else
+            {
+                Trace.Info($"Image version for job id {jobId} is not set");
+            }
+
+            var telemetryData = new Dictionary<string, string>()
+            {
+                { "JobId", jobId },
+                { "ImageVersion", imageVersion },
+            };
+
+            PublishTelemetry(context, telemetryData, "ImageVersionTelemetry");
+        }
+
         private void OutputSetupInfo(IExecutionContext context)
         {
             try
@@ -765,20 +792,14 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             }
         }
 
-        private void PublishTelemetry(IExecutionContext context, string Task_Result, string TracePoint)
+        private void PublishTelemetry(IExecutionContext context, Dictionary<string, string> telemetryData, string feature)
         {
             try
             {
-                var telemetryData = new Dictionary<string, string>
-                {
-                    { "JobId", context.Variables.System_JobId.ToString()},
-                    { "JobResult", Task_Result },
-                    { "TracePoint", TracePoint},
-                };
                 var cmd = new Command("telemetry", "publish");
                 cmd.Data = JsonConvert.SerializeObject(telemetryData, Formatting.None);
                 cmd.Properties.Add("area", "PipelinesTasks");
-                cmd.Properties.Add("feature", "AgentShutdown");
+                cmd.Properties.Add("feature", feature);
 
                 var publishTelemetryCmd = new TelemetryCommandExtension();
                 publishTelemetryCmd.Initialize(HostContext);
@@ -786,7 +807,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             }
             catch (Exception ex)
             {
-                Trace.Warning($"Unable to publish agent shutdown telemetry data. Exception: {ex}");
+                Trace.Warning($"Unable to publish telemetry data. Exception: {ex}");
             }
         }
     }
