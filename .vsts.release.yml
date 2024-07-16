@@ -361,7 +361,6 @@ extends:
         dependsOn:
         - Create_Release_Branch
         - Release
-        condition: eq(variables.IsTestRun, 'True')
         jobs:
         - job: Delete_Release_Branch
           displayName: Delete Release Branch
@@ -370,6 +369,7 @@ extends:
             IsRelease: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'] ]
             ReleaseBranch: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
             AgentVersion: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.agentVersion'] ]
+          condition: eq(variables.IsTestRun, 'True')
 
           pool:
             name: 1ES-ABTT-Shared-Pool
