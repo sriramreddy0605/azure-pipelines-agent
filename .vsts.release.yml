@@ -386,11 +386,11 @@ extends:
               $testTag = "v3.000.999"
               
               if (git ls-remote --heads origin $testBranch) { 
-                git -c credential.helper='!f() { echo "username=pat"; echo "password=$(GithubToken)"; };f' push origin --delete $testBranch)
+                git -c credential.helper='!f() { echo "username=pat"; echo "password=$(GithubToken)"; };f' push origin --delete $testBranch
               }
               
               if (git ls-remote --tags origin $testTag) { 
-                git -c credential.helper='!f() { echo "username=pat"; echo "password=$(GithubToken)"; };f' push --delete origin $testTag)
+                git -c credential.helper='!f() { echo "username=pat"; echo "password=$(GithubToken)"; };f' push --delete origin $testTag
               }
             displayName: Clean up test release branch
 
