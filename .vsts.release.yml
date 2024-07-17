@@ -362,6 +362,7 @@ extends:
         - Verify_release
         - Create_Release_Branch
         - Release
+        condition: always()
         jobs:
         - job: Delete_Release_Branch
           displayName: Delete Release Branch
