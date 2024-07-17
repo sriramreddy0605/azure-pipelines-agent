@@ -384,13 +384,16 @@ extends:
               git config --global user.email "azure-pipelines-bot@microsoft.com"
               git config --global user.name "azure-pipelines-bot"
               git status
+
+              $testBranch = "releases/3.000.999"
+              $testTag = "v3.000.999"
               
-              if (git ls-remote --heads origin $(ReleaseBranch)) { 
-                git -c credential.helper='!f() { echo "username=pat"; echo "password=$(GithubToken)"; };f' push origin --delete $(ReleaseBranch)
+              if (git ls-remote --heads origin $testBranch) { 
+                git -c credential.helper='!f() { echo "username=pat"; echo "password=$(GithubToken)"; };f' push origin --delete $testBranch)
               }
               
-              if (git ls-remote --tags origin v$(AgentVersion)) { 
-                git -c credential.helper='!f() { echo "username=pat"; echo "password=$(GithubToken)"; };f' push --delete origin v$(AgentVersion)
+              if (git ls-remote --tags origin $testTag) { 
+                git -c credential.helper='!f() { echo "username=pat"; echo "password=$(GithubToken)"; };f' push --delete origin $testTag)
               }
             displayName: Clean up test release branch
 
