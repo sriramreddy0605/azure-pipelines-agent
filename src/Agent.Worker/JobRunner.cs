@@ -117,16 +117,16 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 resourceDiagnosticManager = HostContext.GetService<IResourceMetricsManager>();
                 resourceDiagnosticManager.SetContext(jobContext);
 
-                var enableDebugResourceMonitor = string.Equals(systemDebug, "true", StringComparison.OrdinalIgnoreCase)
-                    && !AgentKnobs.DisableResourceMonitorDebugOutput.GetValue(jobContext).AsBoolean();
-
-                if (enableDebugResourceMonitor)
+                if (string.Equals(systemDebug, "true", StringComparison.OrdinalIgnoreCase))
                 {
-                    _ = resourceDiagnosticManager.RunDebugResourceMonitorAsync();
-                }
-                else
-                {
-                    jobContext.Debug(StringUtil.Loc("ResourceUtilizationWarningsIsDisabled"));
+                    if (!AgentKnobs.DisableResourceMonitorDebugOutput.GetValue(jobContext).AsBoolean())
+                    {
+                        _ = resourceDiagnosticManager.RunDebugResourceMonitorAsync();
+                    }
+                    else
+                    {
+                        jobContext.Debug(StringUtil.Loc("ResourceUtilizationWarningsIsDisabled"));
+                    }
                 }
 
                 agentShutdownRegistration = HostContext.AgentShutdownToken.Register(() =>
