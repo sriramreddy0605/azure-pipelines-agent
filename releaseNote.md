@@ -1,3 +1,27 @@
+## Features
+ - Added option to use a checkout path of any repository as the default working directory (System.DefaultWorkingDirectory) (#3479)
+ - Add git telemetry to job runner (#4789)
+ - Check if task node runner is deprecated (#4794)
+ - Rework resource monitor (#4803)
+ - Explain error when downloading Node Alpine ARM64 (#4822)
+ - Allow running agent in debugging mode for specific node task (#4838)
+ - Optimize DeactivateVsoCommands regexp (#4862)
+
+## Bugs
+ - Display warning when the agent is run in PowerShell Core (#4778)
+ - Bump node to 20.13.1 (#4804)
+ - Changes to add tracelog for Featureflag exceptions (#4809)
+ - Bump System.Security.Cryptography.Pkcs to 7.0.2 and Microsoft.Azure.Storage.DataMovement 2.0.5 (#4839)
+ - Use useradd on Alpine when user ID is large (#4851)
+ - Mask ACR token on Windows when System.Debug is true (#4868)
+
+## Misc
+ - Update docs to include information about debugging (#4852)
+ - Remove PAT from the agent CI (#4858)
+ - Remove ADO PAT for PRs (#4864)
+ - Localization update (#4877)
+ - Add e2e test for agent release (#4882)
+
 
 ## Agent Downloads
 
