@@ -170,7 +170,7 @@ async function main() {
         util.verifyMinimumGitVersion();
         createIntegrationFiles(agentVersion);
 
-        const dryrun = (opt.options.dryrun.toLowerCase() === "true");
+        const dryrun = (opt.options.dryrun.toString().toLowerCase() === "true");
 
         console.log(`Dry run: ${dryrun}`);
         console.log(`Type of dryrun variable: ${typeof dryrun}`);
