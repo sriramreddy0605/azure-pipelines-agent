@@ -173,13 +173,6 @@ async function main() {
         const dryrun = (opt.options.dryrun.toString().toLowerCase() === "true");
 
         console.log(`Dry run: ${dryrun}`);
-        console.log(`Type of dryrun variable: ${typeof dryrun}`);
-        if (dryrun) {
-            console.log("This is a dry run");
-        }
-        if (!dryrun) {
-            console.log("This is not a dry run");
-        }
 
         util.execInForeground(`${GIT} config --global user.email "${process.env.USEREMAIL}"`, null, dryrun);
         util.execInForeground(`${GIT} config --global user.name "${process.env.USERNAME}"`, null, dryrun);
