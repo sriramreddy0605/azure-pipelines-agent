@@ -435,7 +435,7 @@ extends:
               cd release
               npm install
               ls
-              node createAdoPrs.js $(AgentVersion) --dryrun=$(IsTestRun)
+              node createAdoPrs.js $(AgentVersion) --dryrun="$(IsTestRun)"
             name: s_CreateAdoPrs
             displayName: Create PRs in AzureDevOps and ConfigChange
             env:
