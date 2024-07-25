@@ -486,8 +486,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 string workspace = executionContext.Variables.Get(Constants.Variables.Pipeline.Workspace);
                 workspace = container.TranslateContainerPathForImageOS(PlatformUtil.HostOS, container.TranslateToContainerPath(workspace));
                 string mountWorkspace = container.TranslateToHostPath(workspace);
-                executionContext.Debug($"Workspace {workspace}");
-                executionContext.Debug($"Mount Workspace {mountWorkspace}");
+                executionContext.Debug($"Workspace: {workspace}");
+                executionContext.Debug($"Mount Workspace: {mountWorkspace}");
                 container.MountVolumes.Add(new MountVolume(mountWorkspace, workspace, readOnly: container.isReadOnlyVolume(Constants.DefaultContainerMounts.Work)));
 
                 container.MountVolumes.Add(new MountVolume(HostContext.GetDirectory(WellKnownDirectory.Temp), container.TranslateToContainerPath(HostContext.GetDirectory(WellKnownDirectory.Temp))));
