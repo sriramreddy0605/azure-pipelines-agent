@@ -718,5 +718,11 @@ namespace Agent.Sdk.Knob
             new RuntimeKnobSource("AZP_AGENT_USE_DOCKER_STDIN_PASSWORD_WINDOWS"),
             new PipelineFeatureSource("UseDockerStdinPasswordOnWindows"),
             new BuiltInDefaultKnobSource("false"));
+
+        public static readonly Knob Net8UnsupportedOsWarning = new Knob(
+            nameof(Net8UnsupportedOsWarning),
+            "Show warning message on the OS which is not supported by .NET 8",
+            new PipelineFeatureSource("Net8UnsupportedOsWarning"),
+            new BuiltInDefaultKnobSource("true"));
     }
 }

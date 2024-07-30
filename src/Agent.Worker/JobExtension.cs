@@ -76,6 +76,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     context.Section(StringUtil.Loc("StepStarting", StringUtil.Loc("InitializeJob")));
 
                     PackageVersion agentVersion = new PackageVersion(BuildConstants.AgentPackage.Version);
+                    
                     // Check if a system supports .NET 8
                     try
                     {
