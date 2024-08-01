@@ -366,7 +366,7 @@ namespace Agent.Sdk
             get => AgentKnobs.UseLegacyHttpHandler.GetValue(_knobContext).AsBoolean();
         }
 
-        public static bool IsNetVersionSupported(string netVersion)
+        public static async Task<bool> IsNetVersionSupported(string netVersion)
         {
             string supportOSfilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), $"{netVersion}.json");
 
@@ -375,7 +375,7 @@ namespace Agent.Sdk
                 throw new FileNotFoundException($"File with list of systems supporting {netVersion} is absent", supportOSfilePath);
             }
 
-            string supportOSfileContent = File.ReadAllText(supportOSfilePath);
+            string supportOSfileContent = await File.ReadAllTextAsync(supportOSfilePath);
             OperatingSystem[] supportedSystems = JsonConvert.DeserializeObject<OperatingSystem[]>(supportOSfileContent);
 
             string systemId = PlatformUtil.GetSystemId();

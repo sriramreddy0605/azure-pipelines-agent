@@ -76,14 +76,14 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     context.Section(StringUtil.Loc("StepStarting", StringUtil.Loc("InitializeJob")));
 
                     PackageVersion agentVersion = new PackageVersion(BuildConstants.AgentPackage.Version);
-                    
+
                     // Check if a system supports .NET 8
                     try
                     {
                         Trace.Verbose("Checking if your system supports .NET 8");
 
                         // Check version of the system
-                        if (!PlatformUtil.IsNetVersionSupported("net8"))
+                        if (!await PlatformUtil.IsNetVersionSupported("net8"))
                         {
                             string systemId = PlatformUtil.GetSystemId();
                             SystemVersion systemVersion = PlatformUtil.GetSystemVersion();
@@ -279,11 +279,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                         preJobSteps.Add(new JobExtensionRunner(runAsync: containerProvider.StartContainersAsync,
                                                                           condition: ExpressionManager.Succeeded,
                                                                           displayName: StringUtil.Loc("InitializeContainer"),
-                                                                          data: (object)containers));
+                                                                          data: containers));
                         postJobStepsBuilder.Push(new JobExtensionRunner(runAsync: containerProvider.StopContainersAsync,
                                                                         condition: ExpressionManager.Always,
                                                                         displayName: StringUtil.Loc("StopContainer"),
-                                                                        data: (object)containers));
+                                                                        data: containers));
                     }
 
                     Dictionary<Guid, List<TaskRestrictions>> taskRestrictionsMap = new Dictionary<Guid, List<TaskRestrictions>>();
