@@ -1,3 +1,15 @@
+## Features
+ - Show warnings for Agents that run on OS versions not supported by .NET 8 (#4885)
+
+## Bugs
+
+
+## Misc
+ - Test branch cleanup for release pipeline (#4894)
+ - Remove `AZP_AGENT_MOUNT_WORKSPACE` knob (#4906)
+ - Update dotnet sdk to v6.0.424/runtime to v6.0.32 (#4912)
+ - Use the latest version of `Azure.Core` (#4921)
+
 
 ## Agent Downloads
 
