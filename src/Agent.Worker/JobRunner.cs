@@ -119,7 +119,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
                 if (string.Equals(systemDebug, "true", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (!AgentKnobs.DisableResourceMonitorDebugOutput.GetValue(jobContext).AsBoolean())
+                    if (AgentKnobs.EnableResourceMonitorDebugOutput.GetValue(jobContext).AsBoolean())
                     {
                         _ = resourceDiagnosticManager.RunDebugResourceMonitorAsync();
                     }

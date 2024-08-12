@@ -592,6 +592,12 @@ namespace Agent.Sdk.Knob
             new EnvironmentKnobSource("AGENT_DISABLE_DRAIN_QUEUES_AFTER_TASK"),
             new BuiltInDefaultKnobSource("false"));
 
+        public static readonly Knob EnableResourceMonitorDebugOutput = new Knob(
+            nameof(EnableResourceMonitorDebugOutput),
+            "If true, agent will show the resource monitor output for debug runs",
+            new RuntimeKnobSource("AZP_ENABLE_DEBUG_RESOURCE_MONITOR"),
+            new EnvironmentKnobSource("AZP_ENABLE_DEBUG_RESOURCE_MONITOR"),
+            new BuiltInDefaultKnobSource("false"));
 
         public static readonly Knob EnableResourceUtilizationWarnings = new Knob(
             nameof(EnableResourceUtilizationWarnings),
@@ -710,13 +716,6 @@ namespace Agent.Sdk.Knob
             "If true, agent will not throw warnings related to high resource utilization",
             new RuntimeKnobSource("DISABLE_RESOURCE_UTILIZATION_WARNINGS"),
             new EnvironmentKnobSource("DISABLE_RESOURCE_UTILIZATION_WARNINGS"),
-            new BuiltInDefaultKnobSource("false"));
-
-        public static readonly Knob DisableResourceMonitorDebugOutput = new Knob(
-            nameof(DisableResourceMonitorDebugOutput),
-            "If true, agent will not show the resource monitor output for debug runs",
-            new RuntimeKnobSource("DISABLE_DEBUG_RESOURCE_MONITOR"),
-            new EnvironmentKnobSource("DISABLE_DEBUG_RESOURCE_MONITOR"),
             new BuiltInDefaultKnobSource("false"));
 
         public static readonly Knob Rosetta2Warning = new Knob(
