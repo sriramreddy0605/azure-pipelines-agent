@@ -595,8 +595,8 @@ namespace Agent.Sdk.Knob
         public static readonly Knob EnableResourceMonitorDebugOutput = new Knob(
             nameof(EnableResourceMonitorDebugOutput),
             "If true, the agent will show the resource monitor output for debug runs",
-            new RuntimeKnobSource("AZP_ENABLE_DEBUG_RESOURCE_MONITOR"),
-            new EnvironmentKnobSource("AZP_ENABLE_DEBUG_RESOURCE_MONITOR"),
+            new RuntimeKnobSource("AZP_ENABLE_RESOURCE_MONITOR_DEBUG_OUTPUT"),
+            new EnvironmentKnobSource("AZP_ENABLE_RESOURCE_MONITOR_DEBUG_OUTPUT"),
             new BuiltInDefaultKnobSource("false"));
 
         public static readonly Knob EnableResourceUtilizationWarnings = new Knob(
