@@ -125,7 +125,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     }
                     else
                     {
-                        jobContext.Debug(StringUtil.Loc("ResourceUtilizationDebugIsDisabled"));
+                        jobContext.Debug(StringUtil.Loc("ResourceUtilizationDebugOutputIsDisabled"));
                     }
                 }
 
