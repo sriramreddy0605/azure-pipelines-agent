@@ -281,7 +281,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             Constants.Variables.Agent.Name,
         };
 
-        public void ExpandValues(IDictionary<string, string> target)
+        public void ExpandValues(IDictionary<string, string> target, bool disableInputTrimmingKnob = true)
         {
             ArgUtil.NotNull(target, nameof(target));
             _trace.Entering();
@@ -292,7 +292,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 source[variable.Name] = value;
             }
 
-            VarUtil.ExpandValues(_hostContext, source, target);
+            VarUtil.ExpandValues(_hostContext, source, target, disableInputTrimmingKnob);
         }
 
         public string ExpandValue(string name, string value)

@@ -9,6 +9,10 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Services.WebApi;
 using Newtonsoft.Json.Linq;
+using Agent.Sdk.Knob;
+using System.Threading;
+using YamlDotNet.Core.Tokens;
+using Microsoft.Azure.KeyVault.Core;
 
 namespace Microsoft.VisualStudio.Services.Agent.Util
 {
@@ -142,7 +146,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
             return target.Map(mapFuncs);
         }
 
-        public static void ExpandValues(IHostContext context, IDictionary<string, string> source, IDictionary<string, string> target)
+        public static void ExpandValues(IHostContext context, IDictionary<string, string> source, IDictionary<string, string> target, bool disableInputTrimmingKnob = true)
         {
             ArgUtil.NotNull(context, nameof(context));
             ArgUtil.NotNull(source, nameof(source));
@@ -194,7 +198,16 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
                     }
                 }
 
-                target[targetKey] = targetValue ?? string.Empty;
+                // target[targetKey] = targetValue ?? string.Empty; // original code from here
+
+                if (disableInputTrimmingKnob)
+                {
+                    target[targetKey] = targetValue ?? string.Empty;
+                }
+                else
+                {
+                    target[targetKey] = targetValue?.Trim() ?? string.Empty;
+                }
             }
         }
 
