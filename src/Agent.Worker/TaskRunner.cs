@@ -230,7 +230,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     }
                 }
 
-                System.Diagnostics.Debugger.Launch();
                 // Expand the inputs.
                 Trace.Verbose("Expanding inputs.");
                 runtimeVariables.ExpandValues(target: inputs, disableInputTrimmingKnob);

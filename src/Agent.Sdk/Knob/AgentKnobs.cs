@@ -403,6 +403,7 @@ namespace Agent.Sdk.Knob
             nameof(DisableInputTrimming),
             "By default, the agent trims whitespace and new line characters from all task inputs. Setting this to true disables this behavior.",
             new EnvironmentKnobSource("DISABLE_INPUT_TRIMMING"),
+            new RuntimeKnobSource("DISABLE_INPUT_TRIMMING"),
             new BuiltInDefaultKnobSource("false"));
 
         public static readonly Knob DecodePercents = new Knob(

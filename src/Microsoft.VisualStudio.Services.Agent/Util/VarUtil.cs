@@ -9,14 +9,10 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Services.WebApi;
 using Newtonsoft.Json.Linq;
-using Agent.Sdk.Knob;
-using System.Threading;
-using YamlDotNet.Core.Tokens;
-using Microsoft.Azure.KeyVault.Core;
 
 namespace Microsoft.VisualStudio.Services.Agent.Util
 {
-  public static class VarUtil
+    public static class VarUtil
     {
         public static StringComparer EnvironmentVariableKeyComparer
         {
@@ -197,8 +193,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
                         startIndex = prefixIndex + 1;
                     }
                 }
-
-                // target[targetKey] = targetValue ?? string.Empty; // original code from here
 
                 if (disableInputTrimmingKnob)
                 {
