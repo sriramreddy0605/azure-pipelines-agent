@@ -1,3 +1,19 @@
+## Features
+ - Improve CPU resource monitor for Linux systems (#4888)
+ - Enable stream and file logs output (#4920)
+ - Bring back debugging capabilities on the agent (#4926)
+ - Add package type info to telemetry messages (#4930)
+
+## Bugs
+ - Support for PowerShell CLM (#4923)
+ - Add handling of timeout exceptions for FF provider (#4928)
+
+## Misc
+ - Localization update (#4909)
+ - Add PipelineFeatureSource CheckIfTaskNodeRunnerIsDeprecated (#4924)
+ - Fix for release pipeline (#4925)
+ - Use `node20_1` for `sleepCommand` when running container (#4929)
+
 
 ## Agent Downloads
 
