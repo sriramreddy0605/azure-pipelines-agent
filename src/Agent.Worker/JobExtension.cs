@@ -105,6 +105,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     // Machine specific setup info
                     OutputSetupInfo(context);
                     OutputImageVersion(context);
+                    PublishKnobsInfo(jobContext);
                     context.Output(StringUtil.Loc("UserNameLog", System.Environment.UserName));
 
                     // Print proxy setting information for better diagnostic experience
@@ -724,6 +725,33 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 context.Output($"Fail to load and print machine setup info: {ex.Message}");
                 Trace.Error(ex);
             }
+        }
+
+        private void PublishKnobsInfo(IExecutionContext jobContext)
+        {
+            Debugger.Launch();
+            string jobId = jobContext?.Variables?.System_JobId?.ToString() ?? string.Empty;
+
+            var telemetryData = new Dictionary<string, string>()
+            {
+                { "JobId", jobId }
+            };
+
+            foreach (var knob in Knob.GetAllKnobsFor<AgentKnobs>())
+            {
+                var value = knob.GetValue(jobContext);
+                if (value.Source.GetType() != typeof(BuiltInDefaultKnobSource))
+                {
+                    var stringValue = value.AsString();
+                    if (knob is SecretKnob)
+                    {
+                        HostContext.SecretMasker.AddValue(stringValue, $"JobExtension_InitializeJob_{knob.Name}");
+                    }
+                    telemetryData.Add($"{knob.Name}-{value.Source.GetDisplayString()}", stringValue);
+                }
+            }
+
+            PublishTelemetry(jobContext, telemetryData, "KnobsStatus");
         }
 
         private void PublishTelemetry(IExecutionContext context, Dictionary<string, string> telemetryData, string feature)
