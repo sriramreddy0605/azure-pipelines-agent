@@ -207,6 +207,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 }
 
                 bool disableInputTrimmingKnob = AgentKnobs.DisableInputTrimming.GetValue(ExecutionContext).AsBoolean();
+                bool enableVariableInputTrimmingKnob = AgentKnobs.EnableVariableInputTrimming.GetValue(ExecutionContext).AsBoolean();
 
                 // Load the default input values from the definition.
                 Trace.Verbose("Loading default inputs.");
@@ -232,7 +233,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
                 // Expand the inputs.
                 Trace.Verbose("Expanding inputs.");
-                runtimeVariables.ExpandValues(target: inputs, disableInputTrimmingKnob);
+                runtimeVariables.ExpandValues(target: inputs, enableVariableInputTrimmingKnob);
 
                 // We need to verify inputs of the tasks that were injected by decorators, to check if they contain secrets,
                 // for security reasons execution of tasks in this case should be skipped.

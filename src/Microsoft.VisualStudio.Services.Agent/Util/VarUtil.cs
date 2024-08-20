@@ -142,7 +142,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
             return target.Map(mapFuncs);
         }
 
-        public static void ExpandValues(IHostContext context, IDictionary<string, string> source, IDictionary<string, string> target, bool disableInputTrimmingKnob = true)
+        public static void ExpandValues(IHostContext context, IDictionary<string, string> source, IDictionary<string, string> target, bool enableVariableInputTrimming = false)
         {
             ArgUtil.NotNull(context, nameof(context));
             ArgUtil.NotNull(source, nameof(source));
@@ -194,13 +194,13 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
                     }
                 }
 
-                if (disableInputTrimmingKnob)
+                if (enableVariableInputTrimming)
                 {
-                    target[targetKey] = targetValue ?? string.Empty;
+                    target[targetKey] = targetValue?.Trim() ?? string.Empty;
                 }
                 else
                 {
-                    target[targetKey] = targetValue?.Trim() ?? string.Empty;
+                    target[targetKey] = targetValue ?? string.Empty;
                 }
             }
         }
