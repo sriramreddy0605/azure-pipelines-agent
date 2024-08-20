@@ -206,12 +206,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     }
                 }
 
-                bool disableInputTrimmingKnob = AgentKnobs.DisableInputTrimming.GetValue(ExecutionContext).AsBoolean();
-                bool enableVariableInputTrimmingKnob = AgentKnobs.EnableVariableInputTrimming.GetValue(ExecutionContext).AsBoolean();
-
                 // Load the default input values from the definition.
                 Trace.Verbose("Loading default inputs.");
-                var inputs = LoadDefaultInputs(definition, disableInputTrimmingKnob);
+                var inputs = LoadDefaultInputs(definition);
 
                 // Merge the instance inputs.
                 Trace.Verbose("Loading instance inputs.");
@@ -220,7 +217,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     string key = input.Key?.Trim() ?? string.Empty;
                     if (!string.IsNullOrEmpty(key))
                     {
-                        if (disableInputTrimmingKnob)
+                        if (AgentKnobs.DisableInputTrimming.GetValue(ExecutionContext).AsBoolean())
                         {
                             inputs[key] = input.Value ?? string.Empty;
                         }
@@ -233,6 +230,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
                 // Expand the inputs.
                 Trace.Verbose("Expanding inputs.");
+                bool enableVariableInputTrimmingKnob = AgentKnobs.EnableVariableInputTrimming.GetValue(ExecutionContext).AsBoolean();
                 runtimeVariables.ExpandValues(target: inputs, enableVariableInputTrimmingKnob);
 
                 // We need to verify inputs of the tasks that were injected by decorators, to check if they contain secrets,
@@ -451,7 +449,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             }
         }
 
-        private  Dictionary<string, string> LoadDefaultInputs(Definition definition, bool disableInputTrimmingKnob)
+        private  Dictionary<string, string> LoadDefaultInputs(Definition definition)
         {
             Trace.Verbose("Loading default inputs.");
             var inputs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -460,7 +458,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 string key = input?.Name?.Trim() ?? string.Empty;
                 if (!string.IsNullOrEmpty(key))
                 {
-                    if (disableInputTrimmingKnob)
+                    if (AgentKnobs.DisableInputTrimming.GetValue(ExecutionContext).AsBoolean())
                     {
                         inputs[key] = input.DefaultValue ?? string.Empty;
                     }

@@ -183,6 +183,10 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
                             variableValue ?? string.Empty,
                             targetValue.Substring(suffixIndex + Constants.Variables.MacroSuffix.Length));
 
+                        targetValue = enableVariableInputTrimming
+                            ? targetValue?.Trim() ?? string.Empty
+                            : targetValue ?? string.Empty;
+
                         // Bump the start index to prevent recursive replacement.
                         startIndex = prefixIndex + (variableValue ?? string.Empty).Length;
                     }
@@ -194,14 +198,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
                     }
                 }
 
-                if (enableVariableInputTrimming)
-                {
-                    target[targetKey] = targetValue?.Trim() ?? string.Empty;
-                }
-                else
-                {
-                    target[targetKey] = targetValue ?? string.Empty;
-                }
+                target[targetKey] = targetValue ?? string.Empty;
             }
         }
 
