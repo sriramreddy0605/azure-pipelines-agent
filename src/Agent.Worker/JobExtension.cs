@@ -729,7 +729,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
         private void PublishKnobsInfo(IExecutionContext jobContext)
         {
-            Debugger.Launch();
             string jobId = jobContext?.Variables?.System_JobId?.ToString() ?? string.Empty;
 
             var telemetryData = new Dictionary<string, string>()
