@@ -228,6 +228,12 @@ namespace Agent.Plugins.Repository
                 await teeUtil.DownloadTeeIfAbsent();
             }
 
+            if (AgentKnobs.InstallLegacyTfExe.GetValue(executionContext).AsBoolean())
+            {
+                string externalsPath = Path.Combine(executionContext.Variables.GetValueOrDefault("agent.homedirectory")?.Value, "externals");
+                await TfUtil.DownloadTfLegacyAsync(externalsPath, executionContext.Debug, token);
+            }
+
             ISourceProvider sourceProvider = SourceProviderFactory.GetSourceProvider(repo.Type);
             await sourceProvider.GetSourceAsync(executionContext, repo, token);
         }

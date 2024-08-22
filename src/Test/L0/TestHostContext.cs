@@ -217,6 +217,12 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests
                         Constants.Path.TfDirectory);
                     break;
 
+                case WellKnownDirectory.TfLegacy:
+                    path = Path.Combine(
+                        GetDirectory(WellKnownDirectory.Externals),
+                        Constants.Path.TfLegacyDirectory);
+                    break;
+
                 case WellKnownDirectory.Tee:
                     path = Path.Combine(
                         GetDirectory(WellKnownDirectory.Externals),
