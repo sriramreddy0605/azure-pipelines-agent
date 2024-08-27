@@ -267,7 +267,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
                     if (AgentKnobs.InstallLegacyTfExe.GetValue(jobContext).AsBoolean())
                     {
-                        await TfUtil.DownloadTfLegacyAsync(context);
+                        await TfUtil.DownloadLegacyTfToolsAsync(context);
                     }
 
                     // build up 3 lists of steps, pre-job, job, post-job
