@@ -211,6 +211,12 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests
                         Constants.Path.ServerOMDirectory);
                     break;
 
+                case WellKnownDirectory.ServerOMLegacy:
+                    path = Path.Combine(
+                        GetDirectory(WellKnownDirectory.Externals),
+                        Constants.Path.ServerOMLegacyDirectory);
+                    break;
+
                 case WellKnownDirectory.Tf:
                     path = Path.Combine(
                         GetDirectory(WellKnownDirectory.Externals),

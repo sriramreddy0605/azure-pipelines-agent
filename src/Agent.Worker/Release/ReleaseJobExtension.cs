@@ -231,7 +231,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Release
 
             if (AgentKnobs.InstallLegacyTfExe.GetValue(executionContext).AsBoolean())
             {
-                await TfUtil.DownloadLegacyTfToolsAsync(executionContext);
+                await TfManager.DownloadLegacyTfToolsAsync(executionContext);
             }
 
             try
