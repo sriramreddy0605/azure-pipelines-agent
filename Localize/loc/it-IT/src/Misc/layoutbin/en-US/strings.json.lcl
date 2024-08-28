@@ -1099,6 +1099,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";CommandLineHelp_Configure[19]" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[ --disableLogUploads               Don't stream or send console log output to the server. Instead, you may retrieve them from the agent host's filesystem after the job completes. NOTE: Cannot be used with --reStreamLogsToFiles, it will cause an error.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[ --disableLogUploads               Non esegue lo streaming o invia l'output del log della console al server. È invece possibile recuperarli dal file system dell'agente host una volta completato il processo. NOTA: non può essere usato con --reStreamLogsToFiles. Verrà generato un errore.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";CommandLineHelp_Configure[1]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[.{0}config.{1} [options]5D;]]></Val>
@@ -1110,113 +1119,161 @@
       </Item>
       <Item ItemId=";CommandLineHelp_Configure[20]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[CLI-WIDTH-OPTIONS-(35-CHARS)-------CLI-WIDTH-DESCRIPTION-(70-CHARS)--------------------------------------]]></Val>
+          <Val><![CDATA[ --reStreamLogsToFiles             Stream or send console log output to the server as well as a log file on the agent host's filesystem. NOTE: Cannot be used with --disableLogUploads, it will cause an error.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[ --reStreamLogsToFiles             Trasmette o invia l'output del registro della console al server, nonché un file di log nel file system dell'host dell'agente. NOTA: non può essere usato con --disableLogUploads. Verrà generato un errore.]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
             <Val><![CDATA[CLI-WIDTH-OPTIONS-(35-CHARS)-------CLI-WIDTH-DESCRIPTION-(70-CHARS)--------------------------------------]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";CommandLineHelp_Configure[21]" ItemType="0" PsrId="306" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Startup options (Windows only):]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Opzioni di avvio (solo Windows):]]></Val>
-          </Tgt>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CommandLineHelp_Configure[22]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[ --runAsService                    Configure the agent to run as a Windows service. Requires]]></Val>
+          <Val><![CDATA[CLI-WIDTH-OPTIONS-(35-CHARS)-------CLI-WIDTH-DESCRIPTION-(70-CHARS)--------------------------------------]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ --runAsService                    Configura l'agente per l'esecuzione come servizio Windows. Richiede]]></Val>
+            <Val><![CDATA[CLI-WIDTH-OPTIONS-(35-CHARS)-------CLI-WIDTH-DESCRIPTION-(70-CHARS)--------------------------------------]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[ --runAsService                    Configure the agent to run as a Windows service. Requires]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CommandLineHelp_Configure[23]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[                                   administrator permission.]]></Val>
+          <Val><![CDATA[Startup options (Windows only):]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[                                   autorizzazione di amministratore.]]></Val>
+            <Val><![CDATA[Opzioni di avvio (solo Windows):]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[                                   administrator permission.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CommandLineHelp_Configure[24]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[ --preventServiceStart             Configure Windows service to not run immediately after configuration.]]></Val>
+          <Val><![CDATA[ --runAsService                    Configure the agent to run as a Windows service. Requires]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ --preventServiceStart             Configura il servizio di Windows in modo che non venga eseguito immediatamente dopo la configurazione.]]></Val>
+            <Val><![CDATA[ --runAsService                    Configura l'agente per l'esecuzione come servizio Windows. Richiede]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[ --preventServiceStart             Configure Windows service to not run immediately after configuration.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CommandLineHelp_Configure[25]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[ --runAsAutoLogon                  Configure auto logon and run the agent on startup. Requires]]></Val>
+          <Val><![CDATA[                                   administrator permission.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ --runAsAutoLogon                 Configura l'accesso automatico ed esegui l'agente all'avvio. Richiede]]></Val>
+            <Val><![CDATA[                                   autorizzazione di amministratore.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[ --runAsAutoLogon                  Configure auto logon and run the agent on startup. Requires]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CommandLineHelp_Configure[26]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[                                   administrator permission.]]></Val>
+          <Val><![CDATA[ --preventServiceStart             Configure Windows service to not run immediately after configuration.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[                                   autorizzazione di amministratore.]]></Val>
+            <Val><![CDATA[ --preventServiceStart             Configura il servizio di Windows in modo che non venga eseguito immediatamente dopo la configurazione.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[                                   administrator permission.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CommandLineHelp_Configure[27]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[ --windowsLogonAccount <account>   Used with --runAsService or --runAsAutoLogon. Specify the Windows user]]></Val>
+          <Val><![CDATA[ --runAsAutoLogon                  Configure auto logon and run the agent on startup. Requires]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ --windowsLogonAccount <account>   Usato con --runAsService o --runAsAutoLogon. Specificare l'utente Windows]]></Val>
+            <Val><![CDATA[ --runAsAutoLogon                 Configura l'accesso automatico ed esegui l'agente all'avvio. Richiede]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[ --windowsLogonAccount <account>   Used with --runAsService or --runAsAutoLogon. Specify the Windows user]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CommandLineHelp_Configure[28]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[                                   name in the format: domain\userName or userName@domain.com]]></Val>
+          <Val><![CDATA[                                   administrator permission.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[                                   nome nel formato: dominio\nomeutente o userName@domain.com]]></Val>
+            <Val><![CDATA[                                   autorizzazione di amministratore.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[                                   name in the format: domain\userName or userName@domain.com]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CommandLineHelp_Configure[29]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[ --windowsLogonPassword <password> Used with --runAsService or --runAsAutoLogon. Windows logon password.]]></Val>
+          <Val><![CDATA[ --windowsLogonAccount <account>   Used with --runAsService or --runAsAutoLogon. Specify the Windows user]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ --windowsLogonPassword <password> Utilizzato con --runAsService o --runAsAutoLogon. Password di accesso a Windows.]]></Val>
+            <Val><![CDATA[ --windowsLogonAccount <account>   Usato con --runAsService o --runAsAutoLogon. Specificare l'utente Windows]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[ --windowsLogonPassword <password> Used with --runAsService or --runAsAutoLogon. Windows logon password.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CommandLineHelp_Configure[30]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[ --overwriteAutoLogon              Used with --runAsAutoLogon. Overwrite any existing auto logon on the]]></Val>
+          <Val><![CDATA[                                   name in the format: domain\userName or userName@domain.com]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ --overwriteAutoLogon              Usato con --runAsAutoLogon. Sovrascrivi qualsiasi accesso automatico esistente in]]></Val>
+            <Val><![CDATA[                                   nome nel formato: dominio\nomeutente o userName@domain.com]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[ --overwriteAutoLogon              Used with --runAsAutoLogon. Overwrite any existing auto logon on the]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CommandLineHelp_Configure[31]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[                                   machine.]]></Val>
+          <Val><![CDATA[ --windowsLogonPassword <password> Used with --runAsService or --runAsAutoLogon. Windows logon password.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[                                   computer.]]></Val>
+            <Val><![CDATA[ --windowsLogonPassword <password> Utilizzato con --runAsService o --runAsAutoLogon. Password di accesso a Windows.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[                                   machine.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CommandLineHelp_Configure[32]" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[ --overwriteAutoLogon              Used with --runAsAutoLogon. Overwrite any existing auto logon on the]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[ --overwriteAutoLogon              Usato con --runAsAutoLogon. Sovrascrivi qualsiasi accesso automatico esistente in]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[ --noRestart                       Used with --runAsAutoLogon. Do not restart after configuration]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CommandLineHelp_Configure[33]" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[                                   machine.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[                                   computer.]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[                                   completes.]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CommandLineHelp_Configure[34]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[ --noRestart                       Used with --runAsAutoLogon. Do not restart after configuration]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1225,57 +1282,51 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[33]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[35]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[                                   completes.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[                                   completa.]]></Val>
           </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";CommandLineHelp_Configure[35]" ItemType="0" PsrId="306" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[CLI-WIDTH-OPTIONS-(35-CHARS)-------CLI-WIDTH-DESCRIPTION-(70-CHARS)--------------------------------------]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Prev Cat="Text">
             <Val><![CDATA[CLI-WIDTH-OPTIONS-(35-CHARS)-------CLI-WIDTH-DESCRIPTION-(70-CHARS)--------------------------------------]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";CommandLineHelp_Configure[36]" ItemType="0" PsrId="306" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Deployment group options:]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Opzioni del gruppo di distribuzione:]]></Val>
-          </Tgt>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CommandLineHelp_Configure[37]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[ --deploymentGroup                 Configure the agent as a deployment group agent.]]></Val>
+          <Val><![CDATA[CLI-WIDTH-OPTIONS-(35-CHARS)-------CLI-WIDTH-DESCRIPTION-(70-CHARS)--------------------------------------]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ --deploymentGroup                 Configura l'agente come un agente del gruppo di distribuzione.]]></Val>
+            <Val><![CDATA[CLI-WIDTH-OPTIONS-(35-CHARS)-------CLI-WIDTH-DESCRIPTION-(70-CHARS)--------------------------------------]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[ --deploymentGroup                 Configure the agent as a deployment group agent.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CommandLineHelp_Configure[38]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[ --projectName <name>              Used with --deploymentGroup. Team project name.]]></Val>
+          <Val><![CDATA[Deployment group options:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ --projectName <name>              Usato con --deploymentGroup. Nome del progetto team.]]></Val>
+            <Val><![CDATA[Opzioni del gruppo di distribuzione:]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[ --projectName <name>              Used with --deploymentGroup. Team project name.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CommandLineHelp_Configure[39]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[ --addDeploymentGroupTags          Used with --deploymentGroup. Specify to add deployment group tags.]]></Val>
+          <Val><![CDATA[ --deploymentGroup                 Configure the agent as a deployment group agent.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ --addDeploymentGroupTags          Usato con --deploymentGroup. Specificare per aggiungere i tag del gruppo di distribuzione.]]></Val>
+            <Val><![CDATA[ --deploymentGroup                 Configura l'agente come un agente del gruppo di distribuzione.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[ --addDeploymentGroupTags          Used with --deploymentGroup. Specify to add deployment group tags.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1290,14 +1341,41 @@
       </Item>
       <Item ItemId=";CommandLineHelp_Configure[40]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[ --deploymentGroupName <name>      Used with --deploymentGroup. Deployment group for the agent to join.]]></Val>
+          <Val><![CDATA[ --projectName <name>              Used with --deploymentGroup. Team project name.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ --deploymentGroupName <name>      Usato con --deploymentGroup. Gruppo di distribuzione a cui aggiungere l'agente.]]></Val>
+            <Val><![CDATA[ --projectName <name>              Usato con --deploymentGroup. Nome del progetto team.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[ --deploymentGroupName <name>      Used with --deploymentGroup. Deployment group for the agent to join.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CommandLineHelp_Configure[41]" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[ --addDeploymentGroupTags          Used with --deploymentGroup. Specify to add deployment group tags.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[ --addDeploymentGroupTags          Usato con --deploymentGroup. Specificare per aggiungere i tag del gruppo di distribuzione.]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[ --deploymentGroupTags <tags>      Used with --addDeploymentGroupTags. A comma separated list of tags for]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CommandLineHelp_Configure[42]" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[ --deploymentGroupName <name>      Used with --deploymentGroup. Deployment group for the agent to join.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[ --deploymentGroupName <name>      Usato con --deploymentGroup. Gruppo di distribuzione a cui aggiungere l'agente.]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[                                   the deployment group agent. For example "web, db".]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CommandLineHelp_Configure[43]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[ --deploymentGroupTags <tags>      Used with --addDeploymentGroupTags. A comma separated list of tags for]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1306,25 +1384,31 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[42]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[44]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[                                   the deployment group agent. For example "web, db".]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[                                   l'agente del gruppo di distribuzione. Ad esempio "web, db".]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[{3}]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[44]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[46]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{3}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[{3}]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[CLI-WIDTH-UNLIMITED-FOR-EXAMPLES-----]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[46]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[48]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[CLI-WIDTH-UNLIMITED-FOR-EXAMPLES-----]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1333,16 +1417,19 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[47]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[49]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unattended configuration examples:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Esempi di configurazione automatica:]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[VSTS authentication]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[49]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[51]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[VSTS authentication]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1351,16 +1438,19 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[50]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[52]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[.{0}config.{1} --unattended --url https://myaccount.visualstudio.com --auth pat --token myToken --pool default --agent myAgent --acceptTeeEula]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[.{0}config.{1} --unattended --url https://myaccount.visualstudio.com --auth pat --token myToken --pool default --agent myAgent --acceptTeeEula]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[On-premises TFS with integrated authentication (Windows only)]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[52]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[54]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[On-premises TFS with integrated authentication (Windows only)]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1369,16 +1459,19 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[53]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[55]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[.\config.cmd --unattended --url http://mylocaltfsserver:8080/tfs --auth integrated --pool default --agent myAgent]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[.\config.cmd --unattended --url http://mylocaltfsserver:8080/tfs --auth integrated --pool default --agent myAgent]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[On-premises TFS with negotiate authentication]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[55]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[57]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[On-premises TFS with negotiate authentication]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1387,30 +1480,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[56]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[58]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[.{0}config.{1} --unattended --url http://mylocaltfsserver:8080/tfs --auth negotiate --userName myDomain\myUserName --password myPassword --pool default --agent myAgent --acceptTeeEula]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[.{0}config.{1} --unattended --url http://mylocaltfsserver:8080/tfs --auth negotiate --userName myDomain\myUserName --password myPassword --pool default --agent myAgent --acceptTeeEula]]></Val>
           </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";CommandLineHelp_Configure[58]" ItemType="0" PsrId="306" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Replace existing agent with the same agent name]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Sostituisci l'agente esistente con lo stesso nome agente]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";CommandLineHelp_Configure[59]" ItemType="0" PsrId="306" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[.{0}config.{1} --unattended --url https://myaccount.visualstudio.com --auth pat --token myToken --pool default --agent myAgent --replace --acceptTeeEula]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[.{0}config.{1} --unattended --url https://myaccount.visualstudio.com --auth pat --token myToken --pool default --agent myAgent --replace --acceptTeeEula]]></Val>
-          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Replace existing agent with the same agent name]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1423,7 +1501,28 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";CommandLineHelp_Configure[60]" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Replace existing agent with the same agent name]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Sostituisci l'agente esistente con lo stesso nome agente]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";CommandLineHelp_Configure[61]" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[.{0}config.{1} --unattended --url https://myaccount.visualstudio.com --auth pat --token myToken --pool default --agent myAgent --replace --acceptTeeEula]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[.{0}config.{1} --unattended --url https://myaccount.visualstudio.com --auth pat --token myToken --pool default --agent myAgent --replace --acceptTeeEula]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Specify the agent work directory (Windows)]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CommandLineHelp_Configure[63]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Specify the agent work directory (Windows)]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1432,16 +1531,19 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[62]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[64]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[.\config.cmd --unattended --url https://myaccount.visualstudio.com --auth pat --token myToken --pool default --agent myAgent --work D:\agent_work]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[.\config.cmd --unattended --url https://myaccount.visualstudio.com --auth pat --token myToken --pool default --agent myAgent --work D:\agent_work]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Specify the agent work directory (macOS and Linux)]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[64]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[66]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Specify the agent work directory (macOS and Linux)]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1450,16 +1552,19 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[65]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[67]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[./config.sh --unattended  --url https://myaccount.visualstudio.com --auth pat --token myToken --pool default --agent myAgent --work usr/local/agent_work]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[./config.sh --unattended  --url https://myaccount.visualstudio.com --auth pat --token myToken --pool default --agent myAgent --work usr/local/agent_work]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Run as a Windows service that logs on as NetworkService (Windows only)]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[67]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[69]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Run as a Windows service that logs on as NetworkService (Windows only)]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1468,16 +1573,19 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[68]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[70]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[.\config.cmd --unattended --url https://myaccount.visualstudio.com --auth pat --token myToken --pool default --agent myAgent --runAsService]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[.\config.cmd --unattended --url https://myaccount.visualstudio.com --auth pat --token myToken --pool default --agent myAgent --runAsService]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Run as a Windows service that logs on as a domain account (Windows only)]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[70]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[72]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Run as a Windows service that logs on as a domain account (Windows only)]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1486,16 +1594,19 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[71]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[73]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[.\config.cmd --unattended --url https://myaccount.visualstudio.com --auth pat --token myToken --pool default --agent myAgent --runAsService --windowsLogonAccount myDomain\myUserName --windowsLogonPassword myPassword]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[.\config.cmd --unattended --url https://myaccount.visualstudio.com --auth pat --token myToken --pool default --agent myAgent --runAsService --windowsLogonAccount myDomain\myUserName --windowsLogonPassword myPassword]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Run as a Windows service that logs on as a domain account (Windows only) and doesn't start service immediately]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[73]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[75]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Run as a Windows service that logs on as a domain account (Windows only) and doesn't start service immediately]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1504,16 +1615,19 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[74]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[76]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[.\config.cmd --unattended --url https://myaccount.visualstudio.com --auth pat --token myToken --pool default --agent myAgent --runAsService --preventServiceStart --windowsLogonAccount myDomain\myUserName --windowsLogonPassword myPassword ]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[.\config.cmd --unattended --url https://myaccount.visualstudio.com --auth pat --token myToken --pool default --agent myAgent --runAsService --preventServiceStart --windowsLogonAccount myDomain\myUserName --windowsLogonPassword myPassword ]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Run as an auto logon agent (Windows only)]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[76]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[78]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Run as an auto logon agent (Windows only)]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1522,21 +1636,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[77]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[79]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[.\config.cmd --unattended --url https://myaccount.visualstudio.com --auth pat --token myToken --pool default --agent myAgent --runAsAutoLogon --windowsLogonAccount myDomain\myUserName --windowsLogonPassword myPassword]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[.\config.cmd --unattended --url https://myaccount.visualstudio.com --auth pat --token myToken --pool default --agent myAgent --runAsAutoLogon --windowsLogonAccount myDomain\myUserName --windowsLogonPassword myPassword]]></Val>
           </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";CommandLineHelp_Configure[79]" ItemType="0" PsrId="306" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Run as an auto logon agent and do not restart after configuration (Windows only)]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Esegui come agente di accesso automatico e non riavviare dopo la configurazione (solo Windows)]]></Val>
-          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Run as an auto logon agent and do not restart after configuration (Windows only)]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1549,16 +1657,28 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[80]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[81]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[.\config.cmd --unattended --url https://myaccount.visualstudio.com --auth pat --token myToken --pool default --agent myAgent --runAsAutoLogon --windowsLogonAccount myDomain\myUserName --windowsLogonPassword myPassword --noRestart]]></Val>
+          <Val><![CDATA[Run as an auto logon agent and do not restart after configuration (Windows only)]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[.\config.cmd --unattended --url https://myaccount.visualstudio.com --auth pat --token myToken --pool default --agent myAgent --runAsAutoLogon --windowsLogonAccount myDomain\myUserName --windowsLogonPassword myPassword --noRestart]]></Val>
+            <Val><![CDATA[Esegui come agente di accesso automatico e non riavviare dopo la configurazione (solo Windows)]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CommandLineHelp_Configure[82]" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[.\config.cmd --unattended --url https://myaccount.visualstudio.com --auth pat --token myToken --pool default --agent myAgent --runAsAutoLogon --windowsLogonAccount myDomain\myUserName --windowsLogonPassword myPassword --noRestart]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[.\config.cmd --unattended --url https://myaccount.visualstudio.com --auth pat --token myToken --pool default --agent myAgent --runAsAutoLogon --windowsLogonAccount myDomain\myUserName --windowsLogonPassword myPassword --noRestart]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Deployment group agent run as Windows service that logs on as Local System (Windows only)]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CommandLineHelp_Configure[84]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Deployment group agent run as Windows service that logs on as Local System (Windows only)]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1567,16 +1687,19 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[83]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[85]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[.\config.cmd --unattended --deploymentGroup --url https://myaccount.visualstudio.com --auth pat --token myToken --projectName myProject --deploymentGroupName myDeploymentGroup --agent myAgent --addDeploymentGroupTags --deploymentGroupTags "web, db" --runAsService --windowsLogonAccount "NT AUTHORITY\SYSTEM"]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[.\config.cmd --unattended --deploymentGroup --url https://myaccount.visualstudio.com --auth pat --token myToken --projectName myProject --deploymentGroupName myDeploymentGroup --agent myAgent --addDeploymentGroupTags --deploymentGroupTags "web, db" --runAsService --windowsLogonAccount "NT AUTHORITY\SYSTEM"]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Deployment group agent with tags]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[85]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[87]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Deployment group agent with tags]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1585,7 +1708,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CommandLineHelp_Configure[86]" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";CommandLineHelp_Configure[88]" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[.{0}config.{1} --unattended --deploymentGroup --url https://myaccount.visualstudio.com --auth pat --token myToken --projectName myProject --deploymentGroupName myDeploymentGroup --agent myAgent --addDeploymentGroupTags --deploymentGroupTags "web, db" --runAsService --windowsLogonAccount "NT AUTHORITY\SYSTEM" --acceptTeeEula]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1815,15 +1938,6 @@
           <Val><![CDATA[Connecting to server ...]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Connessione al server...]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";ContainerJobRequireSystemDefaultWorkDir" ItemType="0" PsrId="306" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[System.DefaultWorkingDirectory is required for running a container job.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Per l'esecuzione di un processo contenitore è richiesto System.DefaultWorkingDirectory.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -2439,15 +2553,6 @@
           <Val><![CDATA[Expected mapping[{0}]5D; server path: '{1}'. Actual: '{2}']]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Percorso server di mapping[{2}]5D; previsto: '{0}'. Effettivo: '{1}']]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";FailAgentOnUnsupportedOs" ItemType="0" PsrId="306" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[This operating system will stop receiving updates of the Pipelines Agent in the future. To be able to continue to run pipelines please upgrade the operating system or set an environment variable or agent knob "AGENT_ACKNOWLEDGE_NO_UPDATES" to "true". See https://aka.ms/azdo-pipeline-agent-v2-eos for more information.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Questo sistema operativo interromperà la ricezione degli aggiornamenti dell'agente pipeline in futuro. Per continuare a eseguire le pipeline, aggiornare il sistema operativo o impostare una variabile di ambiente o la manopola dell'agente "AGENT_ACKNOWLEDGE_NO_UPDATES" su "true". Per altre informazioni, vedere https://aka.ms/azdo-pipeline-agent-v2-eos.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3222,6 +3327,15 @@
           <Val><![CDATA[Cannot find local system account]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Impossibile trovare l'account di sistema locale]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";LogOutputMessage" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The agent has enabled uploading logs as well as saving log to file. After the job completes, you can retrieve this step's logs at {0} on the agent.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[L'agente ha abilitato il caricamento dei log e il salvataggio del log nel file. Al termine del processo, è possibile recuperare i log di questo passaggio in {0} sull'agente.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -4669,6 +4783,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";ReStreamLogsToFilesError" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[You cannot use --disableloguploads and --reStreamLogsToFiles at the same time!]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Non è possibile usare --disableloguploads e --reStreamLogsToFiles contemporaneamente.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";ReadOnlyTaskVariable" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Overwriting readonly task variable '{0}' is not permitted. See https://github.com/microsoft/azure-pipelines-yaml/blob/master/design/readonly-variables.md for details.]]></Val>
@@ -4849,12 +4972,24 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";ResourceUtilizationDebugOutputIsDisabled" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Resource Utilization output for debug runs is disabled, switch "AZP_ENABLE_RESOURCE_MONITOR_DEBUG_OUTPUT" variable to "true" if you want to enable it]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[L'output di utilizzo delle risorse per le esecuzioni di debug è disabilitato, impostare la variabile "AZP_ENABLE_RESOURCE_MONITOR_DEBUG_OUTPUT" su "true" per abilitarla]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";ResourceUtilizationWarningsIsDisabled" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Resource Utilization warnings is disabled, switch "DISABLE_RESOURCE_UTILIZATION_WARNINGS" variable to "true" if you want to enable it]]></Val>
+          <Val><![CDATA[Resource Utilization warnings is disabled, switch "DISABLE_RESOURCE_UTILIZATION_WARNINGS" variable to "false" if you want to enable it]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Gli avvisi di utilizzo delle risorse sono disabilitati. Per abilitare l'opzione, impostare la variabile "DISABLE_RESOURCE_UTILIZATION_WARNINGS" su "True"]]></Val>
+            <Val><![CDATA[Gli avvisi sull'utilizzo delle risorse sono disabilitati, impostare la variabile "DISABLE_RESOURCE_UTILIZATION_WARNINGS" su "false" per abilitarla]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Resource Utilization warnings is disabled, switch "DISABLE_RESOURCE_UTILIZATION_WARNINGS" variable to "true" if you want to enable it]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5721,6 +5856,15 @@
           <Val><![CDATA[Your current Git LFS version is '{0}', which is unsupported by the agent. Please upgrade to at least version '{1}'. See https://github.com/git-lfs/git-lfs/issues/3571 for more details.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[La versione LFS corrente di GIT è '{0}', ma non è supportata dall'agente. Eseguire l'aggiornamento almeno alla versione '{1}'. Per maggiori dettagli, vedere https://github.com/git-lfs/git-lfs/issues/3571.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";UnsupportedOsVersionByNet8" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The operating system version this agent is running on ({0}) is not supported on an upcoming update to the Pipelines Agent. For supported operating system versions, see https://aka.ms/azdo-pipeline-agent-net8.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[La versione del sistema operativo in cui è in esecuzione l'agente ({0}) non è supportata in un prossimo aggiornamento dell'agente Pipelines. Per le versioni del sistema operativo supportate, vedere https://aka.ms/azdo-pipeline-agent-net8.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
