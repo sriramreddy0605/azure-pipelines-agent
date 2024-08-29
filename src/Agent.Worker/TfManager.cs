@@ -14,7 +14,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         int Limit { get; init; }
     }
 
-    public class RetryOptions : IRetryOptions
+    public record RetryOptions : IRetryOptions
     {
         public int CurrentCount { get; set; }
         public int Limit { get; init; }
