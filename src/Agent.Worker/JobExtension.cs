@@ -729,11 +729,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
         private void PublishKnobsInfo(IExecutionContext jobContext)
         {
-            string jobId = jobContext?.Variables?.System_JobId?.ToString() ?? string.Empty;
-
             var telemetryData = new Dictionary<string, string>()
             {
-                { "JobId", jobId }
+                { "JobId", jobContext?.Variables?.System_JobId }
             };
 
             foreach (var knob in Knob.GetAllKnobsFor<AgentKnobs>())
@@ -742,10 +740,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 if (value.Source.GetType() != typeof(BuiltInDefaultKnobSource))
                 {
                     var stringValue = value.AsString();
-                    if (knob is SecretKnob)
-                    {
-                        HostContext.SecretMasker.AddValue(stringValue, $"JobExtension_InitializeJob_{knob.Name}");
-                    }
                     telemetryData.Add($"{knob.Name}-{value.Source.GetDisplayString()}", stringValue);
                 }
             }
