@@ -16,6 +16,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
     {
         private const string VstsomLegacy = "vstsom-legacy";
         private const string TfLegacy = "tf-legacy";
+        private const string VstsHostLegacy = "vstshost-legacy";
 
         [Fact]
         [Trait("Level", "L0")]
@@ -34,6 +35,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
             string externalsPath = hostContext.GetDirectory(WellKnownDirectory.Externals);
             string tfPath = Path.Combine(externalsPath, TfLegacy);
             string vstsomPath = Path.Combine(externalsPath, VstsomLegacy);
+            string vstsHostPath = Path.Combine(externalsPath, VstsHostLegacy);
 
             // Act
             await TfManager.DownloadLegacyTfToolsAsync(executionContext.Object);
@@ -47,9 +49,14 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
             Assert.True(File.Exists(Path.Combine(vstsomPath, "TF.exe")));
             Assert.False(Directory.Exists(Path.Combine(externalsPath, "vstsom_download_temp")));
 
+            Assert.True(Directory.Exists(vstsHostPath));
+            Assert.True(File.Exists(Path.Combine(vstsHostPath, "LegacyVSTSPowerShellHost.exe")));
+            Assert.False(Directory.Exists(Path.Combine(externalsPath, "vstshost_download_temp")));
+
             // Cleanup
             IOUtil.DeleteDirectory(tfPath, CancellationToken.None);
             IOUtil.DeleteDirectory(vstsomPath, CancellationToken.None);
+            IOUtil.DeleteDirectory(vstsHostPath, CancellationToken.None);
         }
 
         [Fact]

@@ -201,6 +201,12 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests
                         Constants.Path.LegacyPSHostDirectory);
                     break;
 
+                case WellKnownDirectory.LegacyPSHostLegacy:
+                    path = Path.Combine(
+                        GetDirectory(WellKnownDirectory.Externals),
+                        Constants.Path.LegacyPSHostLegacyDirectory);
+                    break;
+
                 case WellKnownDirectory.Root:
                     path = new DirectoryInfo(GetDirectory(WellKnownDirectory.Bin)).Parent.FullName;
                     break;
