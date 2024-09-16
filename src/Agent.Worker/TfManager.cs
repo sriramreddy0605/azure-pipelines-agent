@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.Services.Agent.Util;
+using Microsoft.VisualStudio.Services.Agent.Worker;
 using System;
 using System.IO;
 using System.IO.Compression;
@@ -55,6 +56,20 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             else
             {
                 executionContext.Debug($"vstsom-legacy download already exists at {vstsomLegacyExternalsPath}.");
+            }
+
+            string vstsHostLegacyExternalsPath = Path.Combine(externalsPath, "vstshost-legacy");
+
+            if (!Directory.Exists(vstsHostLegacyExternalsPath))
+            {
+                const string vstsHostDownloadUrl = "https://vstsagenttools.blob.core.windows.net/tools/vstshost/m122_887c6659/vstshost.zip";
+                string tempVstsHostDirectory = Path.Combine(externalsPath, "vstshost_download_temp");
+
+                await DownloadAsync(executionContext, vstsHostDownloadUrl, tempVstsHostDirectory, vstsHostLegacyExternalsPath, retryOptions);
+            }
+            else
+            {
+                executionContext.Debug($"vstshost-legacy download already exists at {vstsHostLegacyExternalsPath}.");
             }
         }
 

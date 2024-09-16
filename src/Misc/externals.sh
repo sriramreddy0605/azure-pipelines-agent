@@ -163,7 +163,7 @@ if [[ "$PACKAGERUNTIME" == "win-x"* ]]; then
         BIT="64"
 
         acquireExternalTool "$CONTAINER_URL/azcopy/1/azcopy.zip" azcopy
-        acquireExternalTool "$CONTAINER_URL/vstshost/m122_887c6659/vstshost.zip" vstshost
+        acquireExternalTool "$CONTAINER_URL/vstshost/m122_887c6659_binding_redirect_patched/vstshost.zip" vstshost
         acquireExternalTool "$CONTAINER_URL/vstsom/m153_47c0856d_adhoc/vstsom.zip" vstsom
     fi
 
