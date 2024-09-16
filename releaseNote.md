@@ -1,3 +1,20 @@
+## Features
+ - Add .NET 8 target framework for building the agent (#4943)
+ - Add Red Hat based distros to supported list (#4946)
+ - Parser changes for test results (#4974)
+
+## Bugs
+ - Fix inputs trimming for variables (#4940)
+ - Bump node version (#4968)
+ - Fix Node runner deprecation check (#4969)
+ - Fix the release pipeline (#4983)
+ - Add AlmaLinux to the list of supported OS for .NET 8 (#4986)
+
+## Misc
+ - Add telemetry publisher about Knob values per Job request (#4945)
+ - Localization update (#4967)
+ - Add libicu74 to `installdependencies.sh` to account for Ubuntu 24 (#4973)
+
 
 ## Agent Downloads
 
