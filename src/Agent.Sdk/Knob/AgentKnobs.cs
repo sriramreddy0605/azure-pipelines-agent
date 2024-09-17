@@ -761,9 +761,10 @@ namespace Agent.Sdk.Knob
 
         public static readonly Knob InstallLegacyTfExe = new Knob(
             nameof(InstallLegacyTfExe),
-            "If true, agent will install the previous version of TF.exe in the tf-legacy and vstsom-legacy directories",
+            "If true, the agent will install the legacy versions of TF, vstsom and vstshost",
             new RuntimeKnobSource("AGENT_INSTALL_LEGACY_TF_EXE"),
             new EnvironmentKnobSource("AGENT_INSTALL_LEGACY_TF_EXE"),
+            new PipelineFeatureSource("InstallLegacyTfExe"),
             new BuiltInDefaultKnobSource("false"));
     }
 }
