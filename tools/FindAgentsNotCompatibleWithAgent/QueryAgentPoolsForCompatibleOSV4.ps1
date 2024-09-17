@@ -14,7 +14,7 @@
     For more information, go to https://aka.ms/azdo-pipeline-agent-version.
 
 .EXAMPLE
-    ./QueryAgentPoolsForCompatibleOS.ps1 -Token "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    ./QueryAgentPoolsForCompatibleOSV4.ps1 -Token "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 .EXAMPLE
     $env:AZURE_DEVOPS_EXT_PAT = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     ./QueryAgentPoolsForCompatibleOSV4.ps1 -PoolId 1234 -Filter V4InCompatible -Verbose -OpenCsv
@@ -323,7 +323,7 @@ function Validate-OS {
                 return $result
             }
         }
-        # Windows 10 / Server 2016+ "Microsoft Windows 10.0.20348"
+        # Windows 10 / 11 / Server 2016+ "Microsoft Windows 10.0.20348"
         "(?im)^(Microsoft Windows|Windows_NT) (?<Major>[\d]+)(\.(?<Minor>[\d]+))(\.(?<Build>[\d]+)).*$" {
             [int]$windowsMajorVersion = $Matches["Major"]
             [int]$windowsMinorVersion = $Matches["Minor"]
