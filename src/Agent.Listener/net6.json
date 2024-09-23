@@ -3,7 +3,7 @@
     "id": "alpine",
     "versions": [
       {
-        "name": "3.17+"
+        "name": "3.13+"
       }
     ]
   },
@@ -12,9 +12,14 @@
     "versions": [
       {
         "name": "2"
-      },
+      }
+    ]
+  },
+  {
+    "id": "centos",
+    "versions": [
       {
-        "name": "2023"
+        "name": "7+"
       }
     ]
   },
@@ -22,7 +27,7 @@
     "id": "debian",
     "versions": [
       {
-        "name": "11+"
+        "name": "10+"
       }
     ]
   },
@@ -30,15 +35,7 @@
     "id": "fedora",
     "versions": [
       {
-        "name": "39+"
-      }
-    ]
-  },
-  {
-    "id": "ol",
-    "versions": [
-      {
-        "name": "8+"
+        "name": "33+"
       }
     ]
   },
@@ -46,7 +43,7 @@
     "id": "macOS",
     "versions": [
       {
-        "name": "12+"
+        "name": "10.15+"
       }
     ]
   },
@@ -54,7 +51,7 @@
     "id": "mariner",
     "versions": [
       {
-        "name": "2.0+"
+        "name": "1.0+"
       }
     ]
   },
@@ -62,15 +59,7 @@
     "id": "opensuse-leap",
     "versions": [
       {
-        "name": "15.5+"
-      }
-    ]
-  },
-  {
-    "id": "almalinux",
-    "versions": [
-      {
-        "name": "8+"
+        "name": "15+"
       }
     ]
   },
@@ -78,7 +67,7 @@
     "id": "rhel",
     "versions": [
       {
-        "name": "8+"
+        "name": "7+"
       }
     ]
   },
@@ -86,7 +75,7 @@
     "id": "sles",
     "versions": [
       {
-        "name": "15+"
+        "name": "12.2+"
       }
     ]
   },
@@ -94,28 +83,30 @@
     "id": "ubuntu",
     "versions": [
       {
-        "name": "20.04"
+        "name": "16.04"
       },
       {
-        "name": "22.04"
+        "name": "18.04"
       },
       {
-        "name": "23.10"
-      },
-      {
-        "name": "24.04"
+        "name": "20.04+"
       }
+
     ]
   },
   {
     "id": "Windows Client",
     "versions": [
       {
-        "name": "10",
-        "version": "1607+"
+        "name": "7",
+        "version": "7601+"
       },
       {
-        "name": "11"
+        "name": "8.1"
+      },
+      {
+        "name": "10",
+        "version": "14393+"
       }
     ]
   },
@@ -123,7 +114,7 @@
     "id": "Windows Nano Server",
     "versions": [
       {
-        "version": "1809+"
+        "version": "17763+"
       }
     ]
   },
@@ -131,7 +122,7 @@
     "id": "Windows Server",
     "versions": [
       {
-        "name": "2016+"
+        "name": "2012+"
       }
     ]
   },
@@ -139,7 +130,7 @@
     "id": "Windows Server Core",
     "versions": [
       {
-        "name": "2016+"
+        "name": "2012+"
       }
     ]
   }
