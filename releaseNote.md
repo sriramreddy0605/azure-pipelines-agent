@@ -1,3 +1,16 @@
+## Features
+
+
+## Bugs
+ - Add the credential environment configuration to the Git checkout command (#4965)
+ - Add System.Security.Cryptography.Xml package to fix CVE-2022-34716 (#4996)
+
+## Misc
+ - Fallback from Node 20 to Node 16 on container startup (#4987)
+ - Added reauth command to refresh existing agent credentials (#4991)
+ - Add script for checking if agents support upgrade to v4 (#4995)
+ - Rename FF `CheckIfTaskNodeRunnerIsDeprecated` (#5003)
+
 
 ## Agent Downloads
 
