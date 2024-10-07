@@ -77,23 +77,26 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
                     PackageVersion agentVersion = new PackageVersion(BuildConstants.AgentPackage.Version);
 
-                    // Check if a system supports .NET 8
-                    try
+                    if (!AgentKnobs.Net8UnsupportedOsWarning.GetValue(context).AsBoolean())
                     {
-                        Trace.Verbose("Checking if your system supports .NET 8");
-
-                        // Check version of the system
-                        if (!await PlatformUtil.IsNetVersionSupported("net8"))
+                        // Check if a system supports .NET 8
+                        try
                         {
-                            string systemId = PlatformUtil.GetSystemId();
-                            SystemVersion systemVersion = PlatformUtil.GetSystemVersion();
-                            context.Warning(StringUtil.Loc("UnsupportedOsVersionByNet8", $"{systemId} {systemVersion}"));
+                            Trace.Verbose("Checking if your system supports .NET 8");
+
+                            // Check version of the system
+                            if (!await PlatformUtil.IsNetVersionSupported("net8"))
+                            {
+                                string systemId = PlatformUtil.GetSystemId();
+                                SystemVersion systemVersion = PlatformUtil.GetSystemVersion();
+                                context.Warning(StringUtil.Loc("UnsupportedOsVersionByNet8", $"{systemId} {systemVersion}"));
+                            }
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        Trace.Error($"Error has occurred while checking if system supports .NET 8: {ex}");
-                        context.Warning(ex.Message);
+                        catch (Exception ex)
+                        {
+                            Trace.Error($"Error has occurred while checking if system supports .NET 8: {ex}");
+                            context.Warning(ex.Message);
+                        }
                     }
 
                     // Set agent version variable.
@@ -105,6 +108,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     // Machine specific setup info
                     OutputSetupInfo(context);
                     OutputImageVersion(context);
+                    PublishKnobsInfo(jobContext);
                     context.Output(StringUtil.Loc("UserNameLog", System.Environment.UserName));
 
                     // Print proxy setting information for better diagnostic experience
@@ -263,6 +267,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                             var gitManager = HostContext.GetService<IGitManager>();
                             await gitManager.DownloadAsync(context, gitVersion);
                         }
+                    }
+
+                    if (AgentKnobs.InstallLegacyTfExe.GetValue(jobContext).AsBoolean())
+                    {
+                        await TfManager.DownloadLegacyTfToolsAsync(context);
                     }
 
                     // build up 3 lists of steps, pre-job, job, post-job
@@ -724,6 +733,26 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 context.Output($"Fail to load and print machine setup info: {ex.Message}");
                 Trace.Error(ex);
             }
+        }
+
+        private void PublishKnobsInfo(IExecutionContext jobContext)
+        {
+            var telemetryData = new Dictionary<string, string>()
+            {
+                { "JobId", jobContext?.Variables?.System_JobId }
+            };
+
+            foreach (var knob in Knob.GetAllKnobsFor<AgentKnobs>())
+            {
+                var value = knob.GetValue(jobContext);
+                if (value.Source.GetType() != typeof(BuiltInDefaultKnobSource))
+                {
+                    var stringValue = value.AsString();
+                    telemetryData.Add($"{knob.Name}-{value.Source.GetDisplayString()}", stringValue);
+                }
+            }
+
+            PublishTelemetry(jobContext, telemetryData, "KnobsStatus");
         }
 
         private void PublishTelemetry(IExecutionContext context, Dictionary<string, string> telemetryData, string feature)
