@@ -1,3 +1,13 @@
+## Features
+ - Updated vssapi version to publish the custom test fields while creating a merged test run (#5009)
+
+## Bugs
+
+
+## Misc
+ - Add script for checking if agents support upgrade to v4 (#4995)
+ - Rename FF `CheckIfTaskNodeRunnerIsDeprecated` (#5003)
+
 
 ## Agent Downloads
 
