@@ -1,3 +1,14 @@
+## Features
+ - Updated vssapi version to publish the custom test fields while creating a merged test run (#5009)
+ - Support sparse checkout (#5015)
+
+## Bugs
+ - Fix CVE-2024-43485 in System.Text.Json 6.0.9 (#5013)
+
+## Misc
+ - Add script for checking if agents support upgrade to v4 (#4995)
+ - Rename FF `CheckIfTaskNodeRunnerIsDeprecated` (#5003)
+
 
 ## Agent Downloads
 
