@@ -787,35 +787,42 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
 
             hc.SetSingleton(new TaskRestrictionsChecker() as ITaskRestrictionsChecker);
 
-            Environment.SetEnvironmentVariable("http_proxy", "http://admin:password@localhost.com");
-
-            var expectedEvent = new Dictionary<string, object>()
+            try
             {
-                { "JobId", null },
-                { "ProxyAddress-${http_proxy}", "http://admin:***@localhost.com"},
-            };
+                Environment.SetEnvironmentVariable("http_proxy", "http://admin:password@localhost.com");
 
-            var actualEvents = new List<CustomerIntelligenceEvent[]>();
+                var expectedEvent = new Dictionary<string, object>()
+                {
+                    { "JobId", null },
+                    { "ProxyAddress-${http_proxy}", "http://admin:***@localhost.com"},
+                };
 
-            _mockCiService.Setup(s => s.PublishEventsAsync(It.IsAny<CustomerIntelligenceEvent[]>()))
-                .Callback<CustomerIntelligenceEvent[]>(actualEvents.Add)
-                .Returns(Task.CompletedTask);
+                var actualEvents = new List<CustomerIntelligenceEvent[]>();
+
+                _mockCiService.Setup(s => s.PublishEventsAsync(It.IsAny<CustomerIntelligenceEvent[]>()))
+                    .Callback<CustomerIntelligenceEvent[]>(actualEvents.Add)
+                    .Returns(Task.CompletedTask);
 
 
-            TestJobExtension testExtension = new TestJobExtension();
-            testExtension.Initialize(hc);
-            await testExtension.InitializeJob(_jobEc, _message);
+                TestJobExtension testExtension = new TestJobExtension();
+                testExtension.Initialize(hc);
+                await testExtension.InitializeJob(_jobEc, _message);
 
-            var result = actualEvents.Where(w => w[0].Properties.ContainsKey("ProxyAddress-${http_proxy}"));
+                var result = actualEvents.Where(w => w[0].Properties.ContainsKey("ProxyAddress-${http_proxy}"));
 
-            Assert.True(result?.Count() == 1);
+                Assert.True(result?.Count() == 1);
 
-            Assert.True(
-                !expectedEvent.Except(result.First()[0].Properties).Any(),
-                $"Event does not match. " +
-                $"Expected:{JsonSerializer.Serialize(expectedEvent)};" +
-                $"Actual:{JsonSerializer.Serialize(result.First()[0].Properties)}"
-            );
+                Assert.True(
+                    !expectedEvent.Except(result.First()[0].Properties).Any(),
+                    $"Event does not match. " +
+                    $"Expected:{JsonSerializer.Serialize(expectedEvent)};" +
+                    $"Actual:{JsonSerializer.Serialize(result.First()[0].Properties)}"
+                );
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("http_proxy", "");
+            }
         }
     }
 }
