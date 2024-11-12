@@ -311,17 +311,17 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.TestResults
         private async Task PublishTestRunDataAsync(string teamProject, TestRunContext testRunContext)
         {
             bool isTestRunOutcomeFailed = false;
-        
+
             _telemetryProperties.Add("UsePublishTestResultsLib", _publishTestResultsLibFeatureState);
             var connection = WorkerUtilities.GetVssConnection(_executionContext);
-        
+
             try
             {
                 if (_publishTestResultsLibFeatureState)
                 {
                     var publisher = _executionContext.GetHostContext().GetService<ITestDataPublisher>();
                     publisher.InitializePublisher(_executionContext, teamProject, connection, _testRunner);
-        
+
                     if (_enableAzureTestPlanFeatureState && !_testCaseResults.IsNullOrEmpty() && !_testPlanId.IsNullOrEmpty())
                     {
                         isTestRunOutcomeFailed = await publisher.PublishAsync(testRunContext, _testResultFiles, _testCaseResults, GetPublishOptions(), _executionContext.CancellationToken);
@@ -335,16 +335,16 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.TestResults
                 {
                     var publisher = _executionContext.GetHostContext().GetService<ILegacyTestRunDataPublisher>();
                     publisher.InitializePublisher(_executionContext, teamProject, connection, _testRunner, _publishRunLevelAttachments);
-        
+
                     isTestRunOutcomeFailed = await publisher.PublishAsync(testRunContext, _testResultFiles, _runTitle, _executionContext.Variables.Build_BuildId, _mergeResults);
                 }
-        
+
                 if (isTestRunOutcomeFailed && _failTaskOnFailedTests)
                 {
                     _executionContext.Result = TaskResult.Failed;
                     _executionContext.Error(StringUtil.Loc("FailedTestsInResults"));
                 }
-        
+
                 await PublishEventsAsync(connection);
                 if (_triggerCoverageMergeJobFeatureState)
                 {
