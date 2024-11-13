@@ -1,3 +1,15 @@
+## Features
+ - Support sparse checkout (#5015)
+
+## Bugs
+ - Fix CVE-2024-43485 in System.Text.Json 6.0.9 (#5013)
+ - Fix an issue with pipeline timeline update (#5022)
+ - Bump git to 2.47.0.2 (#5026)
+ - Fix agent hangs if agent fails to get FF state (#5027)
+
+## Misc
+ - Mask URL with credentials on publish telemetry (#5024)
+
 
 ## Agent Downloads
 
