@@ -1,3 +1,15 @@
+## Features
+ - [Agent] Support for Windows ARM 64 - AB#2143637 (#5021)
+ - Mask base64 values of secrets in pipeline logs  (#5030)
+ - Add support for AzureLinux 3 to installdependencies (#5036)
+ - [Agent] CI Trigger for Windows ARM 64 - AB#2143637 (#5046)
+
+## Bugs
+
+
+## Misc
+
+
 
 ## Agent Downloads
 
