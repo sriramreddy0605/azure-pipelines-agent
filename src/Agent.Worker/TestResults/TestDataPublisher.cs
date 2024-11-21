@@ -41,7 +41,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.TestResults
         private IFeatureFlagService _featureFlagService;
         private string _testRunner;
         private bool _calculateTestRunSummary;
-        private bool _
+        private bool _isFlakyCheckEnabled;
         private TestRunDataPublisherHelper _testRunPublisherHelper;
         private ITestResultsServer _testResultsServer;
 
@@ -60,6 +60,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.TestResults
             _featureFlagService = HostContext.GetService<IFeatureFlagService>();
             _featureFlagService.InitializeFeatureService(_executionContext, connection);
             _calculateTestRunSummary = _featureFlagService.GetFeatureFlagState(TestResultsConstants.CalculateTestRunSummaryFeatureFlag, TestResultsConstants.TFSServiceInstanceGuid);
+            _isFlakyCheckEnabled = _featureFlagService.GetFeatureFlagState(TestResultsConstants.EnableFlakyCheckInAgentFeatureFlag, TestResultsConstants.TCMServiceInstanceGuid); ;
             _parser = (extensionManager.GetExtensions<IParser>()).FirstOrDefault(x => _testRunner.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
             _testRunPublisherHelper = new TestRunDataPublisherHelper(_executionContext, _testRunPublisher, null, _testResultsServer);
             Trace.Leaving();
@@ -88,8 +89,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.TestResults
 
                     IList<TestRun> publishedRuns = publishtestRunDataTask.Result;
 
-                    _calculateTestRunSummary = _featureFlagService.GetFeatureFlagState(TestResultsConstants.CalculateTestRunSummaryFeatureFlag, TestResultsConstants.TFSServiceInstanceGuid);
-
                     var isTestRunOutcomeFailed = GetTestRunOutcome(_executionContext, testRunData, out TestRunSummary testRunSummary);
 
                     // Storing testrun summary in environment variable, which will be read by PublishPipelineMetadataTask and publish to evidence store.
@@ -98,11 +97,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.TestResults
                         TestResultUtils.StoreTestRunSummaryInEnvVar(_executionContext, testRunSummary, _testRunner, "PublishTestResults");
                     }
 
-                    // Check failed results for flaky aware
-                    // Fallback to flaky aware if there are any failures.
-                    bool isFlakyCheckEnabled = _featureFlagService.GetFeatureFlagState(TestResultsConstants.EnableFlakyCheckInAgentFeatureFlag, TestResultsConstants.TCMServiceInstanceGuid);
-
-                    if (isTestRunOutcomeFailed && isFlakyCheckEnabled)
+                    if (isTestRunOutcomeFailed && _isFlakyCheckEnabled)
                     {
                         var runOutcome = _testRunPublisherHelper.CheckRunsForFlaky(publishedRuns, _projectName);
                         if (runOutcome != null && runOutcome.HasValue)
@@ -191,8 +186,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.TestResults
 
                     IList<TestRun> publishedRuns = publishtestRunDataTask.Result;
 
-                    _calculateTestRunSummary = _featureFlagService.GetFeatureFlagState(TestResultsConstants.CalculateTestRunSummaryFeatureFlag, TestResultsConstants.TFSServiceInstanceGuid);
-
                     var isTestRunOutcomeFailed = GetTestRunOutcome(_executionContext, testRunData, out TestRunSummary testRunSummary);
 
                     // Storing testrun summary in environment variable, which will be read by PublishPipelineMetadataTask and publish to evidence store.
@@ -203,9 +196,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.TestResults
 
                     // Check failed results for flaky aware
                     // Fallback to flaky aware if there are any failures.
-                    bool isFlakyCheckEnabled = _featureFlagService.GetFeatureFlagState(TestResultsConstants.EnableFlakyCheckInAgentFeatureFlag, TestResultsConstants.TCMServiceInstanceGuid);
-
-                    if (isTestRunOutcomeFailed && isFlakyCheckEnabled)
+                    if (isTestRunOutcomeFailed && _isFlakyCheckEnabled)
                     {
                         var runOutcome = _testRunPublisherHelper.CheckRunsForFlaky(publishedRuns, _projectName);
                         if (runOutcome != null && runOutcome.HasValue)
