@@ -120,7 +120,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.TestResults
 
         public async Task<bool> PublishAsync(TestRunContext runContext, List<string> testResultFiles, TestCaseResult[] testCaseResults, PublishOptions publishOptions, CancellationToken cancellationToken = default(CancellationToken))
         {
-            await Task.Delay(50000);
             try
             {
                 TestDataProvider testDataProvider = ParseTestResultsFile(runContext, testResultFiles);
