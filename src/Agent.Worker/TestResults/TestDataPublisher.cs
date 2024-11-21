@@ -41,6 +41,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.TestResults
         private IFeatureFlagService _featureFlagService;
         private string _testRunner;
         private bool _calculateTestRunSummary;
+        private bool _
         private TestRunDataPublisherHelper _testRunPublisherHelper;
         private ITestResultsServer _testResultsServer;
 
@@ -58,6 +59,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.TestResults
             var extensionManager = HostContext.GetService<IExtensionManager>();
             _featureFlagService = HostContext.GetService<IFeatureFlagService>();
             _featureFlagService.InitializeFeatureService(_executionContext, connection);
+            _calculateTestRunSummary = _featureFlagService.GetFeatureFlagState(TestResultsConstants.CalculateTestRunSummaryFeatureFlag, TestResultsConstants.TFSServiceInstanceGuid);
             _parser = (extensionManager.GetExtensions<IParser>()).FirstOrDefault(x => _testRunner.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
             _testRunPublisherHelper = new TestRunDataPublisherHelper(_executionContext, _testRunPublisher, null, _testResultsServer);
             Trace.Leaving();
@@ -123,6 +125,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.TestResults
 
         public async Task<bool> PublishAsync(TestRunContext runContext, List<string> testResultFiles, TestCaseResult[] testCaseResults, PublishOptions publishOptions, CancellationToken cancellationToken = default(CancellationToken))
         {
+            await Task.Delay(50000);
             try
             {
                 TestDataProvider testDataProvider = ParseTestResultsFile(runContext, testResultFiles);

@@ -60,6 +60,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.LegacyTestResults
 
         public async Task<bool> PublishAsync(TestRunContext runContext, List<string> testResultFiles, string runTitle, int? buildId, bool mergeResults)
         {
+            await Task.Delay(50000);
             ArgUtil.NotNull(runContext, nameof(runContext));
             ArgUtil.NotNull(testResultFiles, nameof(testResultFiles));
             if (mergeResults)
