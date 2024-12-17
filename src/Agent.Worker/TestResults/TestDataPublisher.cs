@@ -130,7 +130,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.TestResults
                 if (testDataProvider != null)
                 {
                     var testRunData = testDataProvider.GetTestRunData();
-                    
+
                     if (!testCaseResults.IsNullOrEmpty())
                     {
                         //Dictionary because FQN to Test Case Results is 1 to many
