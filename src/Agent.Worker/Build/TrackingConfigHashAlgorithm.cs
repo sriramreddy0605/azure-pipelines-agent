@@ -55,9 +55,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
 
         private static string CreateHash(string hashInput)
         {
-            using (SHA1 sha1Hash = SHA1.Create())
+            using (SHA256 sha256Hash = SHA256.Create())
             {
-                byte[] data = sha1Hash.ComputeHash(Encoding.UTF8.GetBytes(hashInput));
+                byte[] data = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(hashInput));
                 StringBuilder hexString = new StringBuilder();
                 for (int i = 0; i < data.Length; i++)
                 {
