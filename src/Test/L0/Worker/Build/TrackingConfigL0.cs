@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.Services.Agent.Worker;
 using Microsoft.VisualStudio.Services.Agent.Worker.Build;
 using Moq;
 using Xunit;
+using Agent.Sdk;
 
 namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker.Build
 {
@@ -44,6 +45,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker.Build
             using (TestHostContext tc = Setup(out Mock<IExecutionContext> mockExecutionContext))
             {
                 // Arrange.
+                mockExecutionContext.Setup(x => x.GetScopedEnvironment()).Returns(new SystemEnvironment());
                 var legacyConfig = new LegacyTrackingConfig
                 {
                     BuildDirectory = Path.Combine("path", "_work", "123"),
@@ -84,6 +86,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker.Build
         {
             using (TestHostContext tc = Setup(out Mock<IExecutionContext> mockExecutionContext))
             {
+                mockExecutionContext.Setup(x => x.GetScopedEnvironment()).Returns(new SystemEnvironment());
                 // Arrange.
                 var repository = new RepositoryResource() { Type = RepositoryTypes.Git, Url = new Uri(RepositoryUrl) };
 
@@ -119,6 +122,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker.Build
             using (TestHostContext tc = Setup(out Mock<IExecutionContext> mockExecutionContext))
             {
                 // Arrange.
+                mockExecutionContext.Setup(x => x.GetScopedEnvironment()).Returns(new SystemEnvironment());
                 var repository = new RepositoryResource() { Type = RepositoryTypes.Git, Url = new Uri(RepositoryUrl) };
 
                 // Act.
