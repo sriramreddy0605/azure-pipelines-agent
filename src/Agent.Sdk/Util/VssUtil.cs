@@ -164,6 +164,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
             return true;
         }
 
+        // The function is to check if the custom server certificate validation is supported on the current platform.
         private static bool CheckSupportOfCustomServerCertificateValidation(ITraceWriter trace)
         {
             using (var handler = new HttpClientHandler())
@@ -175,10 +176,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
                     try
                     {
                         client.GetAsync(_testUri).GetAwaiter().GetResult();
+                        trace.Verbose("Custom Server Validation Callback Successful, SSL diagnostic data collection is enabled.");
                     }
                     catch (Exception e)
                     {
-                        trace.Verbose($"SSL diagnostic data collection is disabled, due to issue:\n{e.Message}");
+                        trace.Verbose($"Custom Server Validation Callback Unsuccessful, SSL diagnostic data collection is disabled, due to issue:\n{e.Message}");
                         return false;
                     }
                     return true;
