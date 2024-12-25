@@ -60,6 +60,7 @@ extends:
   parameters:
     publishArtifacts: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
     buildAlternatePackage: false
+    sign: true
     testProxyAgent: ${{ parameters.testProxyAgent }}
     win_x64: ${{ parameters.win_x64 }}
     win_x86: ${{ parameters.win_x86 }}
