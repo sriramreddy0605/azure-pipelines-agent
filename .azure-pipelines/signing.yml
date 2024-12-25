@@ -57,6 +57,7 @@ steps:
     Pattern: |
       Agent.*.dll
       Agent.*.exe
+      *.dylib
       Microsoft.VisualStudio.Services.Agent.dll
       AgentService.exe
       **\AgentService.resources.dll
