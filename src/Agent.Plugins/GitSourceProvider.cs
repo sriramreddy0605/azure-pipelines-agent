@@ -16,6 +16,8 @@ using System.Linq;
 using Microsoft.TeamFoundation.DistributedTask.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
 using Microsoft.VisualStudio.Services.Agent.Util;
+using Microsoft.Identity.Client;
+using Microsoft.VisualStudio.Services.Common;
 
 namespace Agent.Plugins.Repository
 {
@@ -188,6 +190,13 @@ namespace Agent.Plugins.Repository
         private const string _remoteRefsPrefix = "refs/remotes/origin/";
         private const string _pullRefsPrefix = "refs/pull/";
         private const string _remotePullRefsPrefix = "refs/remotes/pull/";
+
+       /* private const string _tenantId = "tenantid";
+        private const string _clientId = "servicePrincipalId";
+        private const string _activeDirectoryServiceEndpointResourceId = "activeDirectoryServiceEndpointResourceId";
+        private const string _workloadIdentityFederationScheme = "WorkloadIdentityFederation";
+        private const string _managedServiceIdentityScheme = "ManagedServiceIdentity";
+*/
 
         // min git version that support add extra auth header.
         protected Version _minGitVersionSupportAuthHeader = new Version(2, 9);
@@ -459,6 +468,39 @@ namespace Agent.Plugins.Repository
                             // we have username, but no password
                             password = string.Empty;
                         }
+                        break;
+                    case EndpointAuthorizationSchemes.WorkloadIdentityFederation:
+                        var tenantId = "";
+                        var clientId = "";
+                        //endpoint.Authorization?.Parameters?.TryGetValue(_tenantId, out tenantId);
+                        //endpoint.Authorization?.Parameters?.TryGetValue(_clientId, out clientId);
+
+                        var app = ConfidentialClientApplicationBuilder.Create(clientId)
+                            .WithAuthority($"https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token")
+                            .WithRedirectUri("urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
+                            .WithClientAssertion(async (AssertionRequestOptions options) =>
+                            {
+                                var systemConnection = executionContext.Endpoints.SingleOrDefault(x => string.Equals(x.Name, WellKnownServiceEndpointNames.SystemVssConnection, StringComparison.Ordinal));
+                                ArgUtil.NotNull(systemConnection, nameof(systemConnection));
+                                VssCredentials vssCredentials = VssUtil.GetVssCredential(systemConnection);
+                                var collectionUri = new Uri(executionContext.Variables.GetValueOrDefault("system.collectionuri")?.Value);
+                                using VssConnection vssConnection = VssUtil.CreateConnection(collectionUri, vssCredentials, trace: null);
+                                TaskHttpClient taskClient = vssConnection.GetClient<TaskHttpClient>();
+                                var idToken = await taskClient.CreateOidcTokenAsync(
+                                    scopeIdentifier: new Guid(executionContext.Variables.GetValueOrDefault("system.teamprojectid")?.Value),
+                                    hubName: executionContext.Variables.GetValueOrDefault("system.hosttype")?.Value,
+                                    planId: new Guid(executionContext.Variables.GetValueOrDefault("system.planid")?.Value),
+                                    jobId: new Guid(executionContext.Variables.GetValueOrDefault("system.jobId")?.Value),
+                                    serviceConnectionId: endpoint.Id,
+                                    claims: null,
+                                    cancellationToken: cancellationToken
+                                );
+                                return idToken.OidcToken;
+                            })
+                            .Build();
+                        var authenticationResult = await app.AcquireTokenForClient(new string[] { $"499b84ac-1321-427f-aa17-267ca6975798/.default" }).ExecuteAsync(cancellationToken);
+                        username = EndpointAuthorizationSchemes.WorkloadIdentityFederation;
+                        password = authenticationResult.AccessToken;
                         break;
                     default:
                         executionContext.Warning($"Unsupport endpoint authorization schemes: {endpoint.Authorization.Scheme}");
