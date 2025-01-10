@@ -2,7 +2,7 @@
 
 ###############################################################################
 #
-#  ./dev.sh build/layout/test/package [Debug/Release] [optional: runtime ID]
+#  ./dev.sh build/layout/test/package [Debug/Release] [optional: net6.0/net8.0] [optional: runtime ID e.g. win-arm64]
 #
 ###############################################################################
 
