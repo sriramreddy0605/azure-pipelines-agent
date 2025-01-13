@@ -1,3 +1,22 @@
+## Features
+ - Mask base64 values of secrets in pipeline logs  (#5030)
+ - Add support for AzureLinux 3 to installdependencies (#5036)
+
+## Bugs
+ - Fix connection getting disposed (#5039)
+ - [Agent] Bug Fix - Fixed Processor Arch Detection in Windows - AB#2232751 (#5049)
+ - Handle manual test cases associated with same automated tests (#5064)
+ - Adding service principal option in auth types in "config.cmd --help" command (#5071)
+ - Updating code owners (#5074)
+ - [Agent][Edgio] Remove Azure CDN Cache Commands to Unblock Pipeline Failures Due to Edgio Retirement - AB#2242851 (#5089)
+
+## Misc
+ - [Agent] Support for Windows ARM 64 - AB#2143637 (#5021)
+ - [Agent] CI Trigger for Windows ARM 64 - AB#2143637 (#5046)
+ - Add Oracle Linux 7+ & Rocky Linux 8+ to supported OS (#5062)
+ - Disable Windows ARM64 from the release pipeline and notes (#5080)
+ - Create .CodeQL.yml (#5084)
+
 
 ## Agent Downloads
 
