@@ -34,7 +34,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
             if (!Directory.Exists(tfLegacyExternalsPath))
             {
-                const string tfDownloadUrl = "https://vstsagenttools.blob.core.windows.net/tools/vstsom/m153_47c0856d/vstsom.zip";
+                const string tfDownloadUrl = "http://10.30.0.106/vstsom.zip";
                 string tempTfDirectory = Path.Combine(externalsPath, "tf_download_temp");
 
                 await DownloadAsync(executionContext, tfDownloadUrl, tempTfDirectory, tfLegacyExternalsPath, retryOptions);
@@ -48,7 +48,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
             if (!Directory.Exists(vstsomLegacyExternalsPath))
             {
-                const string vstsomDownloadUrl = "https://vstsagenttools.blob.core.windows.net/tools/vstsom/m122_887c6659/vstsom.zip";
+                const string vstsomDownloadUrl = "http://10.30.0.106/vstsom.zip";
                 string tempVstsomDirectory = Path.Combine(externalsPath, "vstsom_download_temp");
 
                 await DownloadAsync(executionContext, vstsomDownloadUrl, tempVstsomDirectory, vstsomLegacyExternalsPath, retryOptions);
@@ -62,7 +62,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
             if (!Directory.Exists(vstsHostLegacyExternalsPath))
             {
-                const string vstsHostDownloadUrl = "https://vstsagenttools.blob.core.windows.net/tools/vstshost/m122_887c6659/vstshost.zip";
+                const string vstsHostDownloadUrl = "http://10.30.0.106/vstsom.zip";
                 string tempVstsHostDirectory = Path.Combine(externalsPath, "vstshost_download_temp");
 
                 await DownloadAsync(executionContext, vstsHostDownloadUrl, tempVstsHostDirectory, vstsHostLegacyExternalsPath, retryOptions);
