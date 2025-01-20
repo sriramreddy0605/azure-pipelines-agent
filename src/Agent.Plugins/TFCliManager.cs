@@ -61,6 +61,8 @@ namespace Agent.Plugins.Repository
             ExecutionContext.Debug("Restore default tf.exe.config.");
             IOUtil.DeleteFile(AppConfigFile);
             File.Copy(AppConfigRestoreFile, AppConfigFile);
+            Console.WriteLine("TFCliManager.cs Line 64: " + TfPath + ", " + AppConfigRestoreFile);
+
         }
 
         public Task EulaAsync()

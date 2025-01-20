@@ -38,6 +38,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 string tempTfDirectory = Path.Combine(externalsPath, "tf_download_temp");
 
                 await DownloadAsync(executionContext, tfDownloadUrl, tempTfDirectory, tfLegacyExternalsPath, retryOptions);
+                Console.WriteLine("TFManager.cs Line 41: " + tfDownloadUrl + " , " + tempTfDirectory + " , " + tfLegacyExternalsPath);
             }
             else
             {
@@ -52,6 +53,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 string tempVstsomDirectory = Path.Combine(externalsPath, "vstsom_download_temp");
 
                 await DownloadAsync(executionContext, vstsomDownloadUrl, tempVstsomDirectory, vstsomLegacyExternalsPath, retryOptions);
+                Console.WriteLine("TFManager.cs Line 56: " + vstsomDownloadUrl + " , " + tempVstsomDirectory + " , " + vstsomLegacyExternalsPath);
             }
             else
             {
@@ -66,6 +68,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 string tempVstsHostDirectory = Path.Combine(externalsPath, "vstshost_download_temp");
 
                 await DownloadAsync(executionContext, vstsHostDownloadUrl, tempVstsHostDirectory, vstsHostLegacyExternalsPath, retryOptions);
+                Console.WriteLine("TFManager.cs Line 71: " + vstsHostDownloadUrl + " , " + tempVstsHostDirectory + " , " + vstsHostLegacyExternalsPath);
             }
             else
             {
