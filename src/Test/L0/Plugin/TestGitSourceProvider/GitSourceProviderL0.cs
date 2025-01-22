@@ -58,8 +58,6 @@ public sealed class TestPluginGitSourceProviderL0
     [Fact]
     [Trait("Level", "L0")]
     [Trait("Category", "Plugin")]
-    [Trait("SkipOn", "darwin")]
-    [Trait("SkipOn", "linux")]
     public void TestSetWSICConnection()
     {
         using TestHostContext hc = new(this);

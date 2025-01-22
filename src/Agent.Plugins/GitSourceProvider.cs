@@ -192,8 +192,17 @@ namespace Agent.Plugins.Repository
         private const string _pullRefsPrefix = "refs/pull/";
         private const string _remotePullRefsPrefix = "refs/remotes/pull/";
 
-         private const string _tenantId = "tenantid";
-         private const string _clientId = "servicePrincipalId";
+        private const string _tenantId = "tenantid";
+        private const string _clientId = "servicePrincipalId";
+
+        // client assertion type for jwt based token request required for authenticating work load identity auth scheme
+        private const string _clientAssertionType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
+
+        // entra URI to authenticate app registration/managed identity users
+        private const string _entraURI = "https://login.microsoftonline.com/{0}/oauth2/v2.0/token";
+
+        // All scopes for the Azure DevOps API resource
+        private const string _scopeId = "499b84ac-1321-427f-aa17-267ca6975798/.default";
 
         // min git version that support add extra auth header.
         protected Version _minGitVersionSupportAuthHeader = new Version(2, 9);
@@ -1645,8 +1654,8 @@ namespace Agent.Plugins.Repository
             endpoint.Authorization?.Parameters?.TryGetValue(_clientId, out clientId);
 
             var app = ConfidentialClientApplicationBuilder.Create(clientId)
-                .WithAuthority($"https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token")
-                .WithRedirectUri("urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
+                .WithAuthority(string.Format(_entraURI, tenantId))
+                .WithRedirectUri(_clientAssertionType)
                 .WithClientAssertion(async (AssertionRequestOptions options) =>
                 {
                     var systemConnection = executionContext.Endpoints.SingleOrDefault(x => string.Equals(x.Name, WellKnownServiceEndpointNames.SystemVssConnection, StringComparison.Ordinal));
@@ -1667,7 +1676,7 @@ namespace Agent.Plugins.Repository
                     return idToken.OidcToken;
                 })
                 .Build();
-            var authenticationResult = app.AcquireTokenForClient(new string[] { $"499b84ac-1321-427f-aa17-267ca6975798/.default" }).ExecuteAsync(cancellationToken).GetAwaiter().GetResult();
+            var authenticationResult = app.AcquireTokenForClient(new string[] { _scopeId }).ExecuteAsync(cancellationToken).GetAwaiter().GetResult();
             return authenticationResult.AccessToken;
         }
         private async Task SetAuthTokenInGitConfig(AgentTaskPluginExecutionContext executionContext,
