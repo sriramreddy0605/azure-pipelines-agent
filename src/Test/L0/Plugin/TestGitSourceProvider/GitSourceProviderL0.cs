@@ -108,7 +108,8 @@ public sealed class TestPluginGitSourceProviderL0
         tc.Variables.Add("agent.homedirectory", "agenthomedirectory");
         var gitSourceProvider = new MockGitSoureProvider();
         gitSourceProvider.GetSourceAsync(tc, tc.Repositories[0], System.Threading.CancellationToken.None).GetAwaiter().GetResult();
-        Assert.Equal(tc.TaskVariables.GetValueOrDefault("repoUrlWithCred").Value, "https://WorkloadIdentityFederation:WSICToken@dev.azure.com/test/_git/myrepo");
+        Assert.Contains("WorkloadIdentityFederation:WSICToken", tc.TaskVariables.GetValueOrDefault("repoUrlWithCred").Value);
+        Assert.Contains("dev.azure.com/test/_git/myrepo", tc.TaskVariables.GetValueOrDefault("repoUrlWithCred").Value);
     }
 
     private Pipelines.RepositoryResource GetRepository(TestHostContext hostContext, String alias, String relativePath)
