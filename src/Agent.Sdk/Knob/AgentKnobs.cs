@@ -783,6 +783,7 @@ namespace Agent.Sdk.Knob
         public static readonly Knob UseSha256InComputeHash = new Knob(
             nameof(UseSha256InComputeHash),
             "If true, agent will use SHA256 algorithm in ComputeHash.",
+            new PipelineFeatureSource("UseSha256InComputeHash"),
             new RuntimeKnobSource("AGENT_USE_SHA256_IN_COMPUTE_HASH"),
             new EnvironmentKnobSource("AGENT_USE_SHA256_IN_COMPUTE_HASH"),
             new BuiltInDefaultKnobSource("true"));
