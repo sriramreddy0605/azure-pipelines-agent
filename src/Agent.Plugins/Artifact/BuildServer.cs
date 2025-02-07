@@ -18,8 +18,7 @@ namespace Agent.Plugins
 
         public BuildServer(VssConnection connection)
         {
-            connection.Settings.SendTimeout = TimeSpan.FromSeconds(15 * 60); // Setting the timeout to 15 minutes to account for slowness from azure storage and retries.
-            ArgUtil.NotNull(connection, nameof(connection));
+            connection.Settings.SendTimeout = TimeSpan.FromSeconds(AgentKnobs.ArtifactAssociateTimeout.GetValue(UtilKnobValueContext.Instance()).AsInt());
             _buildHttpClient = connection.GetClient<BuildHttpClient>();
         }
 
