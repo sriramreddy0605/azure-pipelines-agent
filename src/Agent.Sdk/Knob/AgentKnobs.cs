@@ -786,6 +786,6 @@ namespace Agent.Sdk.Knob
             new PipelineFeatureSource("UseSha256InComputeHash"),
             new RuntimeKnobSource("AGENT_USE_SHA256_IN_COMPUTE_HASH"),
             new EnvironmentKnobSource("AGENT_USE_SHA256_IN_COMPUTE_HASH"),
-            new BuiltInDefaultKnobSource("true"));
+            new BuiltInDefaultKnobSource("false"));
     }
 }
