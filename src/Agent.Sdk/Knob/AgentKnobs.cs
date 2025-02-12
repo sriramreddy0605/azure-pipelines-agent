@@ -780,6 +780,7 @@ namespace Agent.Sdk.Knob
             new RuntimeKnobSource("AGENT_USE_SPARSE_CHECKOUT_IN_CHECKOUT_TASK"),
             new BuiltInDefaultKnobSource("false"));
 
+
         public static readonly Knob UseSha256InComputeHash = new Knob(
             nameof(UseSha256InComputeHash),
             "If true, agent will use SHA256 algorithm in ComputeHash.",
@@ -787,5 +788,12 @@ namespace Agent.Sdk.Knob
             new RuntimeKnobSource("AGENT_USE_SHA256_IN_COMPUTE_HASH"),
             new EnvironmentKnobSource("AGENT_USE_SHA256_IN_COMPUTE_HASH"),
             new BuiltInDefaultKnobSource("false"));
+
+        // Artifact associate timeout for pipeline artifact.
+        public static readonly Knob ArtifactAssociateTimeout = new Knob(
+            nameof(ArtifactAssociateTimeout),
+            "Timeout for channel communication between agent listener and worker processes.",
+            new EnvironmentKnobSource("PIPELINE_ARTIFACT_ASSOCIATE_TIMEOUT"),
+            new BuiltInDefaultKnobSource("900")); // 15 * 60 - Setting the timeout to 15 minutes to account for slowness from azure storage and retries.
     }
 }
