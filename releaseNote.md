@@ -1,3 +1,16 @@
+## Features
+ - Added WIF support for checkout task (#5085)
+ - Increase timeout for artifact associate for pipeline artifact (#5109)
+
+## Bugs
+ - FIX: [CodeQL: SM02184] Server certificate validation disabled in VssUtil.cs (#5068)
+ -  FIX: Tasks on MacOS agents not completing but marked as succeeded. (#5092)
+ - [Checkout] Configure sparse checkouts before fetch (#5106)
+
+## Misc
+ - Upgrade runner image in pipeline from macos-12 to macos-14 (#5093)
+ - Adding registry key for VS telemetry to identify if Agent is installed on the same machine as VS (#5102)
+
 
 ## Agent Downloads
 
