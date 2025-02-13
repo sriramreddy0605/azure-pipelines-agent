@@ -11,6 +11,7 @@ using Microsoft.VisualStudio.Services.Agent.Worker.Build;
 using Moq;
 using Xunit;
 using Agent.Sdk;
+using Agent.Sdk.Knob;
 
 namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker.Build
 {
@@ -92,6 +93,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker.Build
 
                 // Act.
                 var config = new TrackingConfig(mockExecutionContext.Object, new[] { repository }, DefinitionId);
+                var useSha256 = AgentKnobs.UseSha256InComputeHash.GetValue(mockExecutionContext.Object).AsBoolean();
                 // Assert.
                 Assert.Equal(Path.Combine("322", "a"), config.ArtifactsDirectory);
                 Assert.Equal("322", config.BuildDirectory);
@@ -101,7 +103,14 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker.Build
                 Assert.Equal(DefinitionName, config.DefinitionName);
                 Assert.Equal(3, config.FileFormatVersion);
                 Assert.Equal(null, config.FileLocation);
-                Assert.Equal("9706446cf81dbb09854838b405618476576051bf54b5cbf6ce493c180c0a0a87", config.HashKey);
+                if (useSha256)
+                {
+                    Assert.Equal("9706446cf81dbb09854838b405618476576051bf54b5cbf6ce493c180c0a0a87", config.HashKey);
+                }
+                else
+                {
+                    Assert.Equal("ea7c71421cca06c927f73627b66d6b4f4c3a5f4a", config.HashKey);
+                }
                 Assert.Equal(RepositoryTypes.Git, config.RepositoryType);
                 Assert.Equal(RepositoryUrl, config.RepositoryUrl);
                 Assert.Equal(Path.Combine("322", "s"), config.SourcesDirectory);
@@ -128,6 +137,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker.Build
                 // Act.
                 var config = new TrackingConfig(mockExecutionContext.Object, new[] { repository }, DefinitionId);
                 var clone = config.Clone();
+                var useSha256 = AgentKnobs.UseSha256InComputeHash.GetValue(mockExecutionContext.Object).AsBoolean();
                 // Assert.
                 // Verify the original first
                 Assert.Equal(Path.Combine("322", "a"), config.ArtifactsDirectory);
@@ -138,7 +148,14 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker.Build
                 Assert.Equal(DefinitionName, config.DefinitionName);
                 Assert.Equal(3, config.FileFormatVersion);
                 Assert.Equal(null, config.FileLocation);
-                Assert.Equal("9706446cf81dbb09854838b405618476576051bf54b5cbf6ce493c180c0a0a87", config.HashKey);
+                if (useSha256)
+                {
+                    Assert.Equal("9706446cf81dbb09854838b405618476576051bf54b5cbf6ce493c180c0a0a87", config.HashKey);
+                }
+                else
+                {
+                    Assert.Equal("ea7c71421cca06c927f73627b66d6b4f4c3a5f4a", config.HashKey);
+                }
                 Assert.Equal(RepositoryTypes.Git, config.RepositoryType);
                 Assert.Equal(RepositoryUrl, config.RepositoryUrl);
                 Assert.Equal(Path.Combine("322", "s"), config.SourcesDirectory);
@@ -157,7 +174,14 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker.Build
                 Assert.Equal(DefinitionName, clone.DefinitionName);
                 Assert.Equal(3, clone.FileFormatVersion);
                 Assert.Equal(null, clone.FileLocation);
-                Assert.Equal("9706446cf81dbb09854838b405618476576051bf54b5cbf6ce493c180c0a0a87", clone.HashKey);
+                if (useSha256)
+                {
+                    Assert.Equal("9706446cf81dbb09854838b405618476576051bf54b5cbf6ce493c180c0a0a87", config.HashKey);
+                }
+                else
+                {
+                    Assert.Equal("ea7c71421cca06c927f73627b66d6b4f4c3a5f4a", config.HashKey);
+                }
                 Assert.Equal(RepositoryTypes.Git, clone.RepositoryType);
                 Assert.Equal(RepositoryUrl, clone.RepositoryUrl);
                 Assert.Equal(Path.Combine("322", "s"), clone.SourcesDirectory);
