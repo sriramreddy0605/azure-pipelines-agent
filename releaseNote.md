@@ -1,3 +1,22 @@
+## Features
+ - Added WIF support for checkout task (#5085)
+ - Increase timeout for artifact associate for pipeline artifact (#5109)
+ - Changes to skip Not Executed state test in result.publish() command (#5116)
+ - Updated Node 20 version to safe version (#5118)
+ - Custom tasks that use Node 16 runner version should emit a warning (#5125)
+
+## Bugs
+ - FIX: [CodeQL: SM02184] Server certificate validation disabled in VssUtil.cs (#5068)
+ -  FIX: Tasks on MacOS agents not completing but marked as succeeded. (#5092)
+ - [Checkout] Configure sparse checkouts before fetch (#5106)
+ - Suppressing CodeQL [SM02196] warning (#5122)
+
+## Misc
+ - Upgrade runner image in pipeline from macos-12 to macos-14 (#5093)
+ - Adding registry key for VS telemetry to identify if Agent is installed on the same machine as VS (#5102)
+ - Update ADO Client package to 251 (#5112)
+ - Check git version before running sparse checkout (#5117)
+
 
 ## Agent Downloads
 
