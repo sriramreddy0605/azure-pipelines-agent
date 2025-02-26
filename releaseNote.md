@@ -1,3 +1,15 @@
+## Features
+ - Changes to skip Not Executed state test in result.publish() command (#5116)
+ - Updated Node 20 version to safe version (#5118)
+ - Custom tasks that use Node 16 runner version should emit a warning (#5125)
+
+## Bugs
+ - Suppressing CodeQL [SM02196] warning (#5122)
+
+## Misc
+ - Update ADO Client package to 251 (#5112)
+ - Check git version before running sparse checkout (#5117)
+
 
 ## Agent Downloads
 
