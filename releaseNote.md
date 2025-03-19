@@ -1,3 +1,13 @@
+## Features
+ - Optionally use max parallelism value from the client settings API (#5132)
+ - Add output variable for type of artifact downloaded. (#5133)
+
+## Bugs
+
+
+## Misc
+ - add Ubuntu 20 to the list of deprecated iamges (#5148)
+
 
 ## Agent Downloads
 
