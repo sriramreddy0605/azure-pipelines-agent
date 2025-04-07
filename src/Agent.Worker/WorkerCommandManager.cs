@@ -108,7 +108,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 Trace.Info($"Value of flag: {extension.SupportedHostTypes.HasFlag(context.Variables.System_HostType)}.");
                 if (!extension.SupportedHostTypes.HasFlag(context.Variables.System_HostType))
                 {
-                    Trace.Info($"Extension {extension} does not support host type {context.Variables.System_HostType}.");
                     Trace.Info($"Command area {command.Area} is not supported on host type {context.Variables.System_HostType} by {extension}.");
                     context.Error(StringUtil.Loc("CommandNotSupported", command.Area, context.Variables.System_HostType));
                     context.CommandResult = TaskResult.Failed;
