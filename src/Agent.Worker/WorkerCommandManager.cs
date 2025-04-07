@@ -88,16 +88,28 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 return false;
             }
 
+            Trace.Info($"command area: {0}, command event: {1}", command.Area, command.Event);
+
             IWorkerCommandExtension extension = null;
             if (_invokePluginInternalCommand && string.Equals(command.Area, _pluginInternalCommandExtensions.CommandArea, StringComparison.OrdinalIgnoreCase))
             {
                 extension = _pluginInternalCommandExtensions;
             }
 
+            if(extension != null)
+            {
+                Trace.Info($"Extension is not null and is {extension}.");
+            }
             if (extension != null || _commandExtensions.TryGetValue(command.Area, out extension))
             {
+                Trace.Info($"Extension is {extension}.");
+                Trace.Info($"Supported host types are {extension.SupportedHostTypes}.");
+                Trace.Info($"Current host type is {context.Variables.System_HostType}.");
+                Trace.Info($"Value of flag: {extension.SupportedHostTypes.HasFlag(context.Variables.System_HostType)}.");
                 if (!extension.SupportedHostTypes.HasFlag(context.Variables.System_HostType))
                 {
+                    Trace.Info($"Extension {extension} does not support host type {context.Variables.System_HostType}.");
+                    Trace.Info($"Command area {command.Area} is not supported on host type {context.Variables.System_HostType} by {extension}.");
                     context.Error(StringUtil.Loc("CommandNotSupported", command.Area, context.Variables.System_HostType));
                     context.CommandResult = TaskResult.Failed;
                     return false;
