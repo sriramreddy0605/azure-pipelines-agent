@@ -88,7 +88,13 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 return false;
             }
 
-            Trace.Info($"command area: {0}, command event: {1}", command.Area, command.Event);
+            Trace.Info($"command area: {command.Area}, command event: {command.Event}.");
+
+            Trace.Info($"All the worker command extensions are: ");
+            foreach (var commandExt in _commandExtensions)
+            {
+                Trace.Info($"Command area: {commandExt.Key}, command extension: {commandExt.Value}.");
+            }
 
             IWorkerCommandExtension extension = null;
             if (_invokePluginInternalCommand && string.Equals(command.Area, _pluginInternalCommandExtensions.CommandArea, StringComparison.OrdinalIgnoreCase))
