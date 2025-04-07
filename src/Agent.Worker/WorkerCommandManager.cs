@@ -50,6 +50,12 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     _pluginInternalCommandExtensions = commandExt;
                 }
             }
+
+            Trace.Info($"All the worker command extensions are: ");
+            foreach (var commandExt in _commandExtensions)
+            {
+                Trace.Info($"Command area: {commandExt.Key}, command extension: {commandExt.Value}.");
+            }
         }
 
         public void EnablePluginInternalCommand(bool enable)
@@ -89,12 +95,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             }
 
             Trace.Info($"command area: {command.Area}, command event: {command.Event}.");
-
-            Trace.Info($"All the worker command extensions are: ");
-            foreach (var commandExt in _commandExtensions)
-            {
-                Trace.Info($"Command area: {commandExt.Key}, command extension: {commandExt.Value}.");
-            }
 
             IWorkerCommandExtension extension = null;
             if (_invokePluginInternalCommand && string.Equals(command.Area, _pluginInternalCommandExtensions.CommandArea, StringComparison.OrdinalIgnoreCase))
