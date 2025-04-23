@@ -131,7 +131,7 @@ async function fetchPRsForSHAsGraphQL(commitSHAs) {
     }
 }
 
-async function fetchPRsInHeadNotInBaseAndEditReleaseNotes(newRelease, callback) {
+async function fetchPRsSincePreviousReleaseAndEditReleaseNotes(newRelease, callback) {
     try {
         var latestReleases = await octokit.repos.listReleases({
             owner: OWNER,
@@ -325,7 +325,7 @@ async function main() {
         await verifyNewReleaseTagOk(newRelease);
         checkGitStatus();
         writeAgentVersionFile(newRelease);
-        await fetchPRsInHeadNotInBaseAndEditReleaseNotes(newRelease);
+        await fetchPRsSincePreviousReleaseAndEditReleaseNotes(newRelease);
         commitAgentChanges(path.join(__dirname, '..'), newRelease);
         console.log('done.');
     }
@@ -336,9 +336,3 @@ async function main() {
 }
 
 main();
-
-
-
-
-
-
