@@ -71,28 +71,8 @@ function writeAgentVersionFile(newRelease) {
 async function fetchPRsForSHAsGraphQL(commitSHAs) {
 
     var queryParts = commitSHAs.map((sha, index) => `
-    commit${index + 1}: object(expression: "${sha}") {
-      ... on Commit {
-        associatedPullRequests(first: 1) {
-          edges {
-            node {
-              title
-              number
-              createdAt
-              closedAt
-              labels(first: 10) {
-                edges {
-                  node {
-                    name
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-`);
+    commit${index + 1}: object(expression: "${sha}") { ... on Commit { associatedPullRequests(first: 1) { 
+    edges { node { title number createdAt closedAt labels(first: 10) { edges { node { name } } } } } } } }`);
 
     var fullQuery = `
         query ($repo: String!, $owner: String!) {
