@@ -27,7 +27,7 @@ process.env.EDITOR = process.env.EDITOR === undefined ? 'code --wait' : process.
 
 var opt = require('node-getopt').create([
     ['', 'dryrun', 'Dry run only, do not actually commit new release'],
-    ['', 'derivedFrom=version', 'Used to get PRs merged since this release was created', ''],
+    ['', 'derivedFrom=version', 'Used to get PRs merged since this release was created', 'lastMinorRelease'],
     ['', 'branch=branch', 'Branch to select PRs merged into', 'master'],
     ['h', 'help', 'Display this help'],
 ])
@@ -168,12 +168,17 @@ async function fetchPRsSinceLastReleaseAndEditReleaseNotes(newRelease, callback)
     try {
         var releaseInfo;
 
-        if (derivedFrom.length === 0) {
+        // If derivedFrom is 'lastMinorRelease', fetch PRs by comparing with the previous release.
+        // For example:
+        // - If newRelease = 4.255.0, it will compare changes with the latest RELEASE/PRE-RELEASE tag starting with 4.xxx.xxx.
+        // - If newRelease = 3.255.1, it will compare changes with the latest RELEASE/PRE-RELEASE tag starting with 3.xxx.xxx.
+        if (derivedFrom === 'lastMinorRelease') {   
+    
             console.log("Fetching PRs by comparing with the previous release.")
             await fetchPRsSincePreviousReleaseAndEditReleaseNotes(newRelease, callback);
             return;
         }
-        else if (derivedFrom !== 'latest') {
+        else if (derivedFrom !== 'latest') {   
             var tag = 'v' + derivedFrom;
 
             console.log(`Getting release by tag ${tag}`);
