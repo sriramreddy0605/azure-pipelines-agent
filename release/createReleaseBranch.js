@@ -27,7 +27,7 @@ process.env.EDITOR = process.env.EDITOR === undefined ? 'code --wait' : process.
 
 var opt = require('node-getopt').create([
     ['', 'dryrun', 'Dry run only, do not actually commit new release'],
-    ['', 'derivedFrom=version', 'Used to get PRs merged since this release was created', 'latest'],
+    ['', 'derivedFrom=version', 'Used to get PRs merged since this release was created', ''],
     ['', 'branch=branch', 'Branch to select PRs merged into', 'master'],
     ['h', 'help', 'Display this help'],
 ])
@@ -123,7 +123,7 @@ async function fetchPRsSincePreviousReleaseAndEditReleaseNotes(newRelease, callb
         var releaseTagPrefix = 'v' + newRelease.split('.')[0];
         console.log(`Getting latest release starting with ${releaseTagPrefix}`);
 
-        var latestReleaseInfo = filteredReleases.find(release => release.tag_name.toLowerCase().startsWith(releaseTagPrefix.toLowerCase()))
+        var latestReleaseInfo = filteredReleases.find(release => release.tag_name.toLowerCase().startsWith(releaseTagPrefix.toLowerCase()));
         console.log(`Previous release tag with ${latestReleaseInfo.tag_name} and published date is: ${latestReleaseInfo.published_at}`)
 
         var headBranchTag = 'v' + newRelease
@@ -168,7 +168,12 @@ async function fetchPRsSinceLastReleaseAndEditReleaseNotes(newRelease, callback)
     try {
         var releaseInfo;
 
-        if (derivedFrom !== 'latest') {
+        if (derivedFrom.length === 0) {
+            console.log("Fetching PRs by comparing with the previous release.")
+            await fetchPRsSincePreviousReleaseAndEditReleaseNotes(newRelease, callback);
+            return;
+        }
+        else if (derivedFrom !== 'latest') {
             var tag = 'v' + derivedFrom;
 
             console.log(`Getting release by tag ${tag}`);
@@ -210,6 +215,7 @@ async function fetchPRsSinceLastReleaseAndEditReleaseNotes(newRelease, callback)
         process.exit(-1);
     }
 }
+
 
 function editReleaseNotesFile(body) {
     var releaseNotesFile = path.join(__dirname, '..', 'releaseNote.md');
@@ -305,7 +311,7 @@ async function main() {
         await verifyNewReleaseTagOk(newRelease);
         checkGitStatus();
         writeAgentVersionFile(newRelease);
-        await fetchPRsSincePreviousReleaseAndEditReleaseNotes(newRelease);
+        await fetchPRsSinceLastReleaseAndEditReleaseNotes(newRelease);
         commitAgentChanges(path.join(__dirname, '..'), newRelease);
         console.log('done.');
     }
