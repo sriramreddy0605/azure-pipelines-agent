@@ -172,13 +172,12 @@ async function fetchPRsSinceLastReleaseAndEditReleaseNotes(newRelease, callback)
         // For example:
         // - If newRelease = 4.255.0, it will compare changes with the latest RELEASE/PRE-RELEASE tag starting with 4.xxx.xxx.
         // - If newRelease = 3.255.1, it will compare changes with the latest RELEASE/PRE-RELEASE tag starting with 3.xxx.xxx.
-        if (derivedFrom === 'lastMinorRelease') {   
-    
+        if (derivedFrom === 'lastMinorRelease') {
             console.log("Fetching PRs by comparing with the previous release.")
             await fetchPRsSincePreviousReleaseAndEditReleaseNotes(newRelease, callback);
             return;
         }
-        else if (derivedFrom !== 'latest') {   
+        else if (derivedFrom !== 'latest') {
             var tag = 'v' + derivedFrom;
 
             console.log(`Getting release by tag ${tag}`);
