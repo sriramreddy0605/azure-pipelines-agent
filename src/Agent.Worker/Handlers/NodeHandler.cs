@@ -225,16 +225,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Handlers
             var agentSettings = configStore.GetSettings();
             if (agentSettings.DebugMode)
             {
-                var debugTask = AgentKnobs.DebugTask.GetValue(ExecutionContext).AsString();
-                if (!string.IsNullOrEmpty(debugTask))
-                {
-                    if (string.Equals(Task?.Id.ToString("D"), debugTask, StringComparison.OrdinalIgnoreCase) || string.Equals(Task?.Name, debugTask, StringComparison.OrdinalIgnoreCase))
-                    {
-                        arguments = $"--inspect-brk {arguments}";
-                    }
-                }
+                arguments = $"--inspect-brk {arguments}";
             }
-            
 
             try
             {
