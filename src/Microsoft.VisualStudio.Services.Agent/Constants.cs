@@ -483,7 +483,7 @@ namespace Microsoft.VisualStudio.Services.Agent
                 public static readonly string DisableRobocopy = "release.disableRobocopy";
                 public static readonly string ReleaseDefinitionId = "release.definitionId";
                 public static readonly string ReleaseDefinitionName = "release.definitionName";
-                public static readonly string ReleaseDeploymentRequestedForEmail = "release.Deployment.requestedForEmail";
+                public static readonly string ReleaseDeploymentRequestedForEmail = "release.deployment.requestedForEmail";
                 public static readonly string ReleaseDescription = "release.releaseDescription";
                 public static readonly string ReleaseDownloadBufferSize = "release.artifact.download.buffersize";
                 public static readonly string ReleaseEnvironmentName = "release.environmentName";
