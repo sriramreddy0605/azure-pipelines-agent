@@ -1,5 +1,5 @@
-### **Issue**
-_Describe the issue this PR resolves. Include links to Azure DevOps Work Items or GitHub issues._  
+### **Context**
+_Explain the context or motivation behind this PR. Include links to any related Azure DevOps Work Items or GitHub issues._  
 📌 [How to link to ADO Work Items](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops)
 
 ---
