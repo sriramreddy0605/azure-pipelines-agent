@@ -1,3 +1,16 @@
+## Features
+ - Updated Agent code to handling '+' sign in file path for build configs (#5175)
+ - Prevent using vso commands with Build.SourceVersionAuthor variable (#5184)
+ - Agent ARM64 - Enabled Agent Windows ARM64 Build - AB#2143637 (#5198)
+
+## Bugs
+
+
+## Misc
+ - Deactivate Base64 Encoded Vso Commands AB#2008236 (#5158)
+ - Updated ADO PR template to not use windows ARM64 (#5187)
+ - Agent Release - Replaced Download .NET Vanity URL with Actual URL (#5201)
+
 
 ## Agent Downloads
 
