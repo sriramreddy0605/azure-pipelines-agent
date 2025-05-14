@@ -1324,11 +1324,7 @@ namespace Agent.Plugins.Repository
             }
 
             //Check if Git author name, email, or commit message contains VSO commands.
-            bool vSoCommadPresent = await gitCommandManager.GitCheckVsoCommands(executionContext, targetPath);
-            if (vSoCommadPresent)
-            {
-                throw new InvalidOperationException($"Git author name, email, or commit message contains VSO commands.");
-            }
+            await gitCommandManager.GitCheckVsoCommands(executionContext, targetPath);
 
             await RunGitStatusIfSystemDebug(executionContext, gitCommandManager, targetPath);
         }
