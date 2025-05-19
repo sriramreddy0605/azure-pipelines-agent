@@ -19,5 +19,15 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.PipelineCaching
             startInfo.FileName = "ThisProcessObviouslyWillFail";
             await Assert.ThrowsAsync<InvalidOperationException>(async () => await TarUtils.RunProcessAsync(new AgentTaskPluginExecutionContext(), startInfo, (p, ct) => null, () => { }, new CancellationToken()));
         }
+
+        [Fact]
+        [Trait("Level", "L0")]
+        [Trait("Category", "Plugin")]
+        public async Task Tar_ArchiveFilesToTarAsync_ThrowsDirectoryNotFoundException()
+        {
+            await Assert.ThrowsAsync<DirectoryNotFoundException>(async () =>
+                await TarUtils.ArchiveFilesToTarAsync(new AgentTaskPluginExecutionContext(), "nonexistentpath", CancellationToken.None)
+            );
+        }
     }
 }
