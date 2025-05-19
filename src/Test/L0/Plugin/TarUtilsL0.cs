@@ -5,6 +5,7 @@ using System.Threading;
 using Agent.Sdk;
 using Agent.Plugins.PipelineCache;
 using System.Diagnostics;
+using System.IO;
 
 namespace Microsoft.VisualStudio.Services.Agent.Tests.PipelineCaching
 {
@@ -26,7 +27,10 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.PipelineCaching
         public async Task Tar_ArchiveFilesToTarAsync_ThrowsDirectoryNotFoundException()
         {
             await Assert.ThrowsAsync<DirectoryNotFoundException>(async () =>
-                await TarUtils.ArchiveFilesToTarAsync(new AgentTaskPluginExecutionContext(), "nonexistentpath", CancellationToken.None)
+                await TarUtils.ArchiveFilesToTarAsync(
+                    new AgentTaskPluginExecutionContext(),
+                    Path.Combine(Environment.CurrentDirectory, "nonexistentpath"),
+                    CancellationToken.None)
             );
         }
     }
