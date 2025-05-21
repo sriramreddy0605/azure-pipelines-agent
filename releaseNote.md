@@ -1,3 +1,12 @@
+## Features
+
+
+## Bugs
+
+
+## Misc
+ - Revert "Upgrate new version of tf.exe - vstsom.zip - AB#2257240 (#5138)" (#5217)
+
 
 ## Agent Downloads
 
