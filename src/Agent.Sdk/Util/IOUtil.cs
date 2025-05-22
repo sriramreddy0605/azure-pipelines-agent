@@ -585,20 +585,39 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
 
             try
             {
-                // Use OS-specific commands to recursively set ownership to the current user
-                System.Diagnostics.Process process = new System.Diagnostics.Process();
-                process.StartInfo.FileName = "chown";
-                process.StartInfo.Arguments = $"-R $(id -u):$(id -g) \"{directoryPath}\"";
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.RedirectStandardError = true;
-                process.Start();
-                process.WaitForExit();
+                // First get the current user and group ID
+                System.Diagnostics.Process idProcess = new System.Diagnostics.Process();
+                idProcess.StartInfo.FileName = "id";
+                idProcess.StartInfo.Arguments = "-u";
+                idProcess.StartInfo.UseShellExecute = false;
+                idProcess.StartInfo.RedirectStandardOutput = true;
+                idProcess.Start();
+                string userId = idProcess.StandardOutput.ReadToEnd().Trim();
+                idProcess.WaitForExit();
+
+                idProcess = new System.Diagnostics.Process();
+                idProcess.StartInfo.FileName = "id";
+                idProcess.StartInfo.Arguments = "-g";
+                idProcess.StartInfo.UseShellExecute = false;
+                idProcess.StartInfo.RedirectStandardOutput = true;
+                idProcess.Start();
+                string groupId = idProcess.StandardOutput.ReadToEnd().Trim();
+                idProcess.WaitForExit();
+
+                // Now use chown with the explicit UIDs
+                System.Diagnostics.Process chownProcess = new System.Diagnostics.Process();
+                chownProcess.StartInfo.FileName = "chown";
+                chownProcess.StartInfo.Arguments = $"-R {userId}:{groupId} \"{directoryPath}\"";
+                chownProcess.StartInfo.UseShellExecute = false;
+                chownProcess.StartInfo.RedirectStandardOutput = true;
+                chownProcess.StartInfo.RedirectStandardError = true;
+                chownProcess.Start();
+                chownProcess.WaitForExit();
 
                 // Log error if the command failed
-                if (process.ExitCode != 0)
+                if (chownProcess.ExitCode != 0)
                 {
-                    Trace.Error($"Failed to set directory ownership for '{directoryPath}'. Exit code: {process.ExitCode}");
+                    Trace.Error($"Failed to set directory ownership for '{directoryPath}'. Exit code: {chownProcess.ExitCode}");
                 }
             }
             catch (Exception ex)
