@@ -303,6 +303,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
 
             // move staging to target
             Directory.Move(stagingDir, targetDir);
+
+            // On Linux, ensure the target directory has the correct ownership
+            EnsureDirectoryOwnership(targetDir);
         }
 
         /// <summary>
@@ -466,6 +469,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
                     target: Path.Combine(target, subDir.Name),
                     cancellationToken: cancellationToken);
             }
+
+            // On Linux, ensure the target directory has the correct ownership
+            EnsureDirectoryOwnership(target);
         }
 
         public static void ValidateExecutePermission(string directory)
@@ -566,6 +572,39 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
             {
                 FileAttributes newAttributes = item.Attributes & ~FileAttributes.ReadOnly;
                 SetAttributesWithDiagnostics(item, newAttributes);
+            }
+        }
+
+        public static void EnsureDirectoryOwnership(string directoryPath)
+        {
+            // Only apply ownership fix on Linux platforms
+            if (!PlatformUtil.RunningOnLinux)
+            {
+                return;
+            }
+
+            try
+            {
+                // Use OS-specific commands to recursively set ownership to the current user
+                System.Diagnostics.Process process = new System.Diagnostics.Process();
+                process.StartInfo.FileName = "chown";
+                process.StartInfo.Arguments = $"-R $(id -u):$(id -g) \"{directoryPath}\"";
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                process.Start();
+                process.WaitForExit();
+
+                // Log error if the command failed
+                if (process.ExitCode != 0)
+                {
+                    Trace.Error($"Failed to set directory ownership for '{directoryPath}'. Exit code: {process.ExitCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log but don't fail the operation if ownership change fails
+                Trace.Error($"Exception while trying to set directory ownership for '{directoryPath}': {ex.Message}");
             }
         }
 
