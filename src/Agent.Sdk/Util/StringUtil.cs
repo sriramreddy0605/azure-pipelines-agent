@@ -321,13 +321,22 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
             }
             byte[] decodedBytes = Convert.FromBase64String(input);
             string decodedString = Encoding.UTF8.GetString(decodedBytes);
-            decodedString = ScrapVsoCommands(decodedString);
-            return Convert.ToBase64String(Encoding.UTF8.GetBytes(decodedString));
+            string cleanedString = ScrapVsoCommands(decodedString);
+            if (object.ReferenceEquals(decodedString, cleanedString))
+            {
+                // No vso commands found in the decoded string, return original input.
+                return input;
+            }
+            return Convert.ToBase64String(Encoding.UTF8.GetBytes(cleanedString));
         }
 
         private static string ScrapVsoCommands(string input)
         {
-            return Regex.Replace(input, "##vso", "**vso", RegexOptions.IgnoreCase);
+            if (!input.Contains("##vso", StringComparison.OrdinalIgnoreCase))
+            {
+                return input; // No vso commands found, return original input
+            }
+            return input.Replace("##vso", "**vso", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

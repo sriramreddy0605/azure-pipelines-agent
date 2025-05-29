@@ -25,6 +25,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Util
         [InlineData("", "")]
         [InlineData(null, "")]
         [InlineData(" ", "")]
+        [InlineData("gA==", "gA==")]
         public void DeactivateVsoCommandsFromStringTest(string input, string expected)
         {
             var result = StringUtil.DeactivateVsoCommands(input);
