@@ -204,13 +204,15 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
             }
         }
 
-        [Fact]
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
         [Trait("Level", "L0")]
         [Trait("Category", "Worker")]
-        public void ExpressionTracingMasksSecrets()
+        public void ExpressionTracingMasksSecrets(bool useNewSecretMasker)
         {
             // Arrange.
-            using (TestHostContext hc = CreateTestContext())
+            using (TestHostContext hc = CreateTestContext(useNewSecretMasker: useNewSecretMasker))
             {
                 InitializeExecutionContext(hc);
                 hc.SecretMasker.AddValue(value: "mask_this", origin: "Test");
@@ -226,9 +228,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
             }
         }
 
-        private TestHostContext CreateTestContext([CallerMemberName] String testName = "")
+        private TestHostContext CreateTestContext([CallerMemberName] String testName = "", bool useNewSecretMasker = true)
         {
-            var hc = new TestHostContext(this, testName);
+            var hc = new TestHostContext(this, testName, useNewSecretMasker);
             _expressionManager = new ExpressionManager();
             _expressionManager.Initialize(hc);
             return hc;

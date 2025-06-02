@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Microsoft.Security.Utilities;
 
-
 namespace Agent.Sdk.SecretMasking;
 
 public sealed class OssSecretMasker : IRawSecretMasker

@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 using System;
-
 using Microsoft.TeamFoundation.DistributedTask.Logging;
 
 namespace Agent.Sdk.SecretMasking
@@ -12,7 +11,17 @@ namespace Agent.Sdk.SecretMasking
     /// </summary>
     public sealed class LegacySecretMasker : IRawSecretMasker
     {
-        private SecretMasker _secretMasker = new();
+        private ISecretMasker _secretMasker;
+
+        public LegacySecretMasker()
+        {
+            _secretMasker = new SecretMasker();
+        }
+
+        private LegacySecretMasker(ISecretMasker secretMasker)
+        {
+            _secretMasker = secretMasker;
+        }
 
         public int MinSecretLength
         {
@@ -37,7 +46,7 @@ namespace Agent.Sdk.SecretMasking
 
         public void Dispose()
         {
-            _secretMasker?.Dispose();
+            (_secretMasker as IDisposable)?.Dispose();
             _secretMasker = null;
         }
 
@@ -49,6 +58,11 @@ namespace Agent.Sdk.SecretMasking
         public void RemoveShortSecretsFromDictionary()
         {
             _secretMasker.RemoveShortSecretsFromDictionary();
+        }
+
+        public LegacySecretMasker Clone()
+        {
+            return new LegacySecretMasker(_secretMasker.Clone());
         }
     }
 }

@@ -186,7 +186,7 @@ namespace Microsoft.VisualStudio.Services.Agent
             {
                 rawSecretMasker = new LegacySecretMasker();
             }
-            ILoggedSecretMasker secretMasker = new LoggedSecretMasker(rawSecretMasker);
+            ILoggedSecretMasker secretMasker = LoggedSecretMasker.Create(rawSecretMasker);
 #pragma warning restore CA2000 // Dispose objects before losing scope.
 
             secretMasker.AddValueEncoder(ValueEncoders.JsonStringEscape, $"HostContext_{WellKnownSecretAliases.JsonStringEscape}");

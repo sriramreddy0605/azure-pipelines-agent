@@ -1,7 +1,9 @@
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 using System;
+using Microsoft.TeamFoundation.DistributedTask.Logging;
 
 namespace Agent.Sdk.SecretMasking
 {
@@ -24,9 +26,18 @@ namespace Agent.Sdk.SecretMasking
             this._trace?.Info(msg);
         }
 
-        public LoggedSecretMasker(IRawSecretMasker secretMasker)
+        private LoggedSecretMasker(IRawSecretMasker secretMasker)
         {
-            this._secretMasker = secretMasker;
+            _secretMasker = secretMasker;
+        }
+
+        public static LoggedSecretMasker Create(IRawSecretMasker secretMasker)
+        {
+            return secretMasker switch
+            {
+                LegacySecretMasker lsm => new LegacyLoggedSecretMasker(lsm),
+                _ => new LoggedSecretMasker(secretMasker),
+            };
         }
 
         public void SetTrace(ITraceWriter trace)
@@ -34,13 +45,8 @@ namespace Agent.Sdk.SecretMasking
             this._trace = trace;
         }
 
-        public void AddValue(string pattern)
-        {
-            this._secretMasker.AddValue(pattern);
-        }
-
         /// <summary>
-        /// Overloading of AddValue method with additional logic for logging origin of provided secret
+        /// AddValue method with additional logic for logging origin of provided secret
         /// </summary>
         /// <param name="value">Secret to be added</param>
         /// <param name="origin">Origin of the secret</param>
@@ -54,18 +60,14 @@ namespace Agent.Sdk.SecretMasking
                 return;
             }
 
-            AddValue(value);
-        }
-        public void AddRegex(string pattern)
-        {
-            this._secretMasker.AddRegex(pattern);
+            _secretMasker.AddValue(value);
         }
 
         /// <summary>
-        /// Overloading of AddRegex method with additional logic for logging origin of provided secret
+        /// AddRegex method with additional logic for logging origin of provided secret
         /// </summary>
-        /// <param name="pattern"></param>
-        /// <param name="origin"></param>
+        /// <param name="pattern">Regex to be added</param>
+        /// <param name="origin">Origin of the regex</param>
         public void AddRegex(string pattern, string origin)
         {
             // WARNING: Do not log the pattern here, it could be very specifc and contain a secret!
@@ -76,7 +78,7 @@ namespace Agent.Sdk.SecretMasking
                 return;
             }
 
-            AddRegex(pattern);
+            _secretMasker.AddRegex(pattern);
         }
 
         // We don't allow to skip secrets longer than 5 characters.
@@ -145,11 +147,38 @@ namespace Agent.Sdk.SecretMasking
         {
             if (disposing)
             {
-                if (_secretMasker is IDisposable disposable)
-                {
-                    disposable.Dispose();
-                }
+                _secretMasker?.Dispose();
                 _secretMasker = null;
+            }
+        }
+
+        // When backed by legacy secret masker, we can still implement Clone and
+        // the server ISecretMasker interface. This is done to minimize churn
+        // when running without the feature flag that enables the new secret
+        // masker.
+        private sealed class LegacyLoggedSecretMasker : LoggedSecretMasker, ISecretMasker
+        {
+            public LegacyLoggedSecretMasker(LegacySecretMasker secretMasker) : base(secretMasker) { }
+
+            void ISecretMasker.AddRegex(string pattern)
+            {
+                _secretMasker.AddRegex(pattern);
+            }
+
+            void ISecretMasker.AddValue(string value)
+            {
+                _secretMasker.AddValue(value);
+            }
+
+            void ISecretMasker.AddValueEncoder(ValueEncoder encoder)
+            {
+                _secretMasker.AddValueEncoder(x => encoder(x));
+            }
+
+            ISecretMasker ISecretMasker.Clone()
+            {
+                var lsm = (LegacySecretMasker)_secretMasker;
+                return new LegacyLoggedSecretMasker(lsm.Clone());
             }
         }
     }
