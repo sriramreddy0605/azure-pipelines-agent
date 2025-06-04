@@ -1,3 +1,14 @@
+## Features
+
+
+## Bugs
+ - Handle TimeoutException During Agent Replacement in agent configuration (#5210)
+ - [Bug] An error occurred trying to start process | Revert changes 10024e8 (#5229)
+ - Revert "Deactivate Base64 Encoded Vso Commands AB#2008236 (#5158)" (#5232)
+
+## Misc
+
+
 
 ## Agent Downloads
 
