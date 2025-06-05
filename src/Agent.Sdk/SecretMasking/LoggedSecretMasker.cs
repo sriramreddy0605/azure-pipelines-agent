@@ -177,6 +177,10 @@ namespace Agent.Sdk.SecretMasking
 
             ISecretMasker ISecretMasker.Clone()
             {
+                // NOTE: It has always been the case that trace does not flow to
+                // clones and this code path exists to preserve legacy behavior
+                // in the absence of a feature flag, so that behavior is
+                // retained here.
                 var lsm = (LegacySecretMasker)_secretMasker;
                 return new LegacyLoggedSecretMasker(lsm.Clone());
             }
