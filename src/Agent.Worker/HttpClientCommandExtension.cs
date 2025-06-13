@@ -36,6 +36,10 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 var content = contentTask.Result;
                 context.Output($"Response Status: {response.StatusCode}");
                 context.Output($"Response Body: {content}");
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception($"Health probe failed with status code: {response.StatusCode}");
+                }
             }
         }
     }
