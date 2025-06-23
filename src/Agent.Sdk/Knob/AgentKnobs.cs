@@ -386,6 +386,13 @@ namespace Agent.Sdk.Knob
             new RuntimeKnobSource("AGENT_FAIL_ON_INCOMPATIBLE_OS"),
             new BuiltInDefaultKnobSource("false"));
 
+        public static readonly Knob OverridePipelineArtifactChunkSize = new Knob(
+            nameof(OverridePipelineArtifactChunkSize),
+            "Overrides the chunk size used in this pipeline for pipeline artifact publish.",
+            new RuntimeKnobSource("OVERRIDE_PIPELINE_ARTIFACT_CHUNKSIZE"),
+            new EnvironmentKnobSource("OVERRIDE_PIPELINE_ARTIFACT_CHUNKSIZE"),
+            new BuiltInDefaultKnobSource(string.Empty));
+
         public static readonly Knob AgentEnablePipelineArtifactLargeChunkSize = new Knob(
             nameof(AgentEnablePipelineArtifactLargeChunkSize),
             "Enables large chunk size for pipeline artifacts.",
@@ -679,6 +686,13 @@ namespace Agent.Sdk.Knob
             nameof(EnableNewMaskerAndRegexes),
             "If true, the agent will use new SecretMasker with additional filters & performance enhancements",
             new EnvironmentKnobSource("AZP_ENABLE_NEW_MASKER_AND_REGEXES"),
+            new BuiltInDefaultKnobSource("false"));
+
+        public static readonly Knob SendSecretMaskerTelemetry = new Knob(
+            nameof(SendSecretMaskerTelemetry),
+            "If true, the agent will send telemetry about secret masking",
+            new RuntimeKnobSource("AZP_SEND_SECRET_MASKER_TELEMETRY"),
+            new EnvironmentKnobSource("AZP_SEND_SECRET_MASKER_TELEMETRY"),
             new BuiltInDefaultKnobSource("false"));
 
         public static readonly Knob AddDockerInitOption = new Knob(
