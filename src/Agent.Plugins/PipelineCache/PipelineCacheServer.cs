@@ -110,6 +110,7 @@ namespace Agent.Plugins.PipelineCache
                     ManifestId = result.ManifestId,
                     ProofNodes = result.ProofNodes.ToArray(),
                     ContentFormat = contentFormat.ToString(),
+                    DomainId = domainId.Serialize(),
                 };
 
                 // delete archive file if it's tar.
