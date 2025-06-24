@@ -617,6 +617,66 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Listener.Configuration
         }
 
         // Init the Agent Config Provider
+        [Fact]
+        [Trait("Level", "L0")]
+        [Trait("Category", "ConfigurationManagement")]
+        public void SetupVstsProxySetting_ShouldApplyEnvironmentVariableProxySettings()
+        {
+            using (TestHostContext tc = CreateTestContext())
+            {
+                // Arrange
+                var configManager = new ConfigurationManager();
+                configManager.Initialize(tc);
+
+                var command = new CommandSettings(tc, new string[0]);
+                
+                // Mock proxy settings from environment variables
+                _vstsAgentWebProxy.Setup(x => x.ProxyAddress).Returns("http://proxy.company.com:8080");
+                _vstsAgentWebProxy.Setup(x => x.ProxyUsername).Returns("proxyuser");
+                _vstsAgentWebProxy.Setup(x => x.ProxyPassword).Returns("proxypass");
+
+                // Act - Use reflection to call the private SetupVstsProxySetting method
+                var setupMethod = typeof(ConfigurationManager).GetMethod("SetupVstsProxySetting", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                bool result = (bool)setupMethod.Invoke(configManager, new object[] { _vstsAgentWebProxy.Object, command });
+
+                // Assert
+                Assert.True(result, "SetupVstsProxySetting should return true when proxy is configured from environment variables");
+                
+                // Verify that SetupProxy was called with the environment variable values
+                _vstsAgentWebProxy.Verify(x => x.SetupProxy("http://proxy.company.com:8080", "proxyuser", "proxypass"), Times.Once);
+            }
+        }
+
+        [Fact]
+        [Trait("Level", "L0")]
+        [Trait("Category", "ConfigurationManagement")]
+        public void SetupVstsProxySetting_ShouldReturnFalseWhenNoProxyConfigured()
+        {
+            using (TestHostContext tc = CreateTestContext())
+            {
+                // Arrange
+                var configManager = new ConfigurationManager();
+                configManager.Initialize(tc);
+
+                var command = new CommandSettings(tc, new string[0]);
+                
+                // Mock no proxy settings
+                _vstsAgentWebProxy.Setup(x => x.ProxyAddress).Returns((string)null);
+
+                // Act - Use reflection to call the private SetupVstsProxySetting method
+                var setupMethod = typeof(ConfigurationManager).GetMethod("SetupVstsProxySetting", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                bool result = (bool)setupMethod.Invoke(configManager, new object[] { _vstsAgentWebProxy.Object, command });
+
+                // Assert
+                Assert.False(result, "SetupVstsProxySetting should return false when no proxy is configured");
+                
+                // Verify that SetupProxy was not called
+                _vstsAgentWebProxy.Verify(x => x.SetupProxy(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            }
+        }
+
         private List<IConfigurationProvider> GetConfigurationProviderList(TestHostContext tc)
         {
             IConfigurationProvider buildReleasesAgentConfigProvider = new BuildReleasesAgentConfigProvider();
