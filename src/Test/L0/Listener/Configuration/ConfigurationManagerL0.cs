@@ -677,6 +677,45 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Listener.Configuration
             }
         }
 
+        [Fact]
+        [Trait("Level", "L0")]
+        [Trait("Category", "ConfigurationManagement")]
+        public void SetupVstsProxySetting_ShouldPreferCommandLineOverEnvironmentVariables()
+        {
+            using (TestHostContext tc = CreateTestContext())
+            {
+                // Arrange
+                var configManager = new ConfigurationManager();
+                configManager.Initialize(tc);
+
+                // Mock command line arguments to include proxy settings
+                var args = new string[] 
+                {
+                    "--proxyurl", "http://cmdline-proxy:8080",
+                    "--proxyusername", "cmduser", 
+                    "--proxypassword", "cmdpass"
+                };
+                var command = new CommandSettings(tc, args);
+                
+                // Mock proxy settings from environment variables (should be ignored)
+                _vstsAgentWebProxy.Setup(x => x.ProxyAddress).Returns("http://env-proxy:8080");
+                _vstsAgentWebProxy.Setup(x => x.ProxyUsername).Returns("envuser");
+                _vstsAgentWebProxy.Setup(x => x.ProxyPassword).Returns("envpass");
+
+                // Act - Use reflection to call the private SetupVstsProxySetting method
+                var setupMethod = typeof(ConfigurationManager).GetMethod("SetupVstsProxySetting", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                bool result = (bool)setupMethod.Invoke(configManager, new object[] { _vstsAgentWebProxy.Object, command });
+
+                // Assert
+                Assert.True(result, "SetupVstsProxySetting should return true when command line proxy is provided");
+                
+                // Verify that SetupProxy was called with command line values, not environment values
+                _vstsAgentWebProxy.Verify(x => x.SetupProxy("http://cmdline-proxy:8080", "cmduser", "cmdpass"), Times.Once);
+                _vstsAgentWebProxy.Verify(x => x.SetupProxy("http://env-proxy:8080", It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            }
+        }
+
         private List<IConfigurationProvider> GetConfigurationProviderList(TestHostContext tc)
         {
             IConfigurationProvider buildReleasesAgentConfigProvider = new BuildReleasesAgentConfigProvider();
