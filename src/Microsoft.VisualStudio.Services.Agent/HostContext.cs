@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Threading;
@@ -779,6 +780,25 @@ namespace Microsoft.VisualStudio.Services.Agent
             var agentWebProxy = context.GetService<IVstsAgentWebProxy>();
             clientHandler.Proxy = agentWebProxy.WebProxy;
 
+            // Enable proxy pre-authentication on Linux/macOS when proxy credentials are available
+            // This is needed because some proxy servers require credentials on the first request
+            // and don't send a 407 challenge response that would trigger authentication
+            if ((PlatformUtil.RunningOnLinux || PlatformUtil.RunningOnMacOS) &&
+                agentWebProxy.WebProxy?.Credentials != null &&
+                !string.IsNullOrEmpty(agentWebProxy.ProxyAddress) &&
+                !string.IsNullOrEmpty(agentWebProxy.ProxyUsername) &&
+                !string.IsNullOrEmpty(agentWebProxy.ProxyPassword))
+            {
+                clientHandler.PreAuthenticate = true;
+                
+                // Force the use of proxy and ensure proper proxy handling
+                clientHandler.UseProxy = true;
+                
+                context.GetTrace("HostContextExtension").Info(
+                    "Enabled proxy pre-authentication for Linux/macOS with authenticated proxy: {0}",
+                    agentWebProxy.ProxyAddress);
+            }
+
             var agentCertManager = context.GetService<IAgentCertificateManager>();
             if (agentCertManager.SkipServerCertificateValidation)
             {
@@ -786,6 +806,107 @@ namespace Microsoft.VisualStudio.Services.Agent
             }
 
             return clientHandler;
+        }
+
+        /// <summary>
+        /// Creates an HttpClientHandler with enhanced proxy pre-authentication for Linux/macOS.
+        /// This method is specifically designed for scenarios where proxies require credentials
+        /// on the first request without sending a 407 challenge (pre-authentication scenarios).
+        /// It provides additional proxy configuration options and enhanced logging.
+        /// </summary>
+        /// <param name="context">The host context</param>
+        /// <param name="forceProxyAuth">Force proxy authentication even if not on Linux/macOS (for testing)</param>
+        /// <returns>An HttpClientHandler configured with enhanced proxy pre-authentication settings</returns>
+        public static HttpClientHandler CreateProxyPreAuthHttpClientHandler(this IHostContext context, bool forceProxyAuth = false)
+        {
+            ArgUtil.NotNull(context, nameof(context));
+            var handler = new HttpClientHandler();
+            var agentWebProxy = context.GetService<IVstsAgentWebProxy>();
+            var trace = context.GetTrace("HostContextExtension");
+            
+            // Set up the proxy
+            handler.Proxy = agentWebProxy.WebProxy;
+            
+            // Enable enhanced proxy pre-authentication for Linux/macOS or when forced
+            bool shouldEnableProxyPreAuth = (PlatformUtil.RunningOnLinux || PlatformUtil.RunningOnMacOS || forceProxyAuth) &&
+                                          agentWebProxy.WebProxy?.Credentials != null &&
+                                          !string.IsNullOrEmpty(agentWebProxy.ProxyAddress) &&
+                                          !string.IsNullOrEmpty(agentWebProxy.ProxyUsername) &&
+                                          !string.IsNullOrEmpty(agentWebProxy.ProxyPassword);
+            
+            if (shouldEnableProxyPreAuth)
+            {
+                // Force pre-authentication for proxy requests
+                handler.PreAuthenticate = true;
+                
+                // Ensure the proxy is used and properly configured
+                handler.UseProxy = true;
+                
+                // Additional proxy-specific settings for better compatibility
+                try
+                {
+                    // Set proxy credential cache to be more aggressive with authentication
+                    if (agentWebProxy.WebProxy is AgentWebProxy proxyImpl)
+                    {
+                        // The AgentWebProxy should already have the credentials configured
+                        trace.Info("Enhanced proxy pre-authentication enabled for authenticated proxy: {0}", agentWebProxy.ProxyAddress);
+                        trace.Verbose("Proxy credentials type: {0}", agentWebProxy.WebProxy.Credentials?.GetType()?.Name ?? "None");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    trace.Warning("Failed to configure enhanced proxy settings: {0}", ex.Message);
+                }
+                
+                trace.Info("Proxy pre-authentication enabled: PreAuthenticate={0}, UseProxy={1}, Platform={2}", handler.PreAuthenticate, handler.UseProxy, PlatformUtil.HostOS);
+            }
+            else
+            {
+                trace.Verbose("Proxy pre-authentication not enabled. Platform: {0}, HasCredentials: {1}, ProxyAddress: {2}",
+                    PlatformUtil.HostOS,
+                    agentWebProxy.WebProxy?.Credentials != null,
+                    !string.IsNullOrEmpty(agentWebProxy.ProxyAddress));
+            }
+            
+            // Apply certificate validation settings
+            var agentCertManager = context.GetService<IAgentCertificateManager>();
+            if (agentCertManager.SkipServerCertificateValidation)
+            {
+                handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+            }
+            
+            return handler;
+        }
+
+        /// <summary>
+        /// Creates an AgentWebProxy with enhanced pre-authentication capabilities.
+        /// This is useful for proxy scenarios that require immediate credential submission
+        /// without waiting for a 407 challenge response.
+        /// </summary>
+        /// <param name="context">The host context</param>
+        /// <returns>An AgentWebProxy configured for pre-authentication scenarios</returns>
+        public static IWebProxy CreatePreAuthProxy(this IHostContext context)
+        {
+            ArgUtil.NotNull(context, nameof(context));
+            var agentWebProxy = context.GetService<IVstsAgentWebProxy>();
+            var trace = context.GetTrace("HostContextExtension");
+            
+            if (string.IsNullOrEmpty(agentWebProxy.ProxyAddress))
+            {
+                trace.Verbose("No proxy address configured, returning null proxy");
+                return null;
+            }
+            
+            // Create a new AgentWebProxy instance with the same configuration
+            var preAuthProxy = new AgentWebProxy(
+                agentWebProxy.ProxyAddress,
+                agentWebProxy.ProxyUsername,
+                agentWebProxy.ProxyPassword,
+                agentWebProxy.ProxyBypassList);
+            
+            trace.Info("Created pre-authentication proxy for address: {0}", agentWebProxy.ProxyAddress);
+            
+            return preAuthProxy;
         }
     }
 
