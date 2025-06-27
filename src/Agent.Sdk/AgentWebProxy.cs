@@ -48,7 +48,46 @@ namespace Agent.Sdk
             }
             else
             {
-                Credentials = new NetworkCredential(proxyUsername, proxyPassword);
+                // Enhanced proxy authentication for Linux/macOS with domain support and aggressive credential caching
+                if ((PlatformUtil.RunningOnLinux || PlatformUtil.RunningOnMacOS) && !string.IsNullOrEmpty(_proxyAddress))
+                {
+                    try
+                    {
+                        var proxyUri = new Uri(_proxyAddress);
+                        var credCache = new CredentialCache();
+                        
+                        // Handle domain-based authentication by checking if username contains domain
+                        var username = proxyUsername;
+                        var domain = string.Empty;
+                        if (username.Contains("\\"))
+                        {
+                            var parts = username.Split('\\');
+                            domain = parts[0];
+                            username = parts[1];
+                        }
+                        
+                        var netCred = new NetworkCredential(username, proxyPassword, domain);
+                        
+                        // Add credentials for multiple authentication schemes that the proxy might use
+                        // This forces .NET to send credentials proactively without waiting for 407 challenge
+                        credCache.Add(proxyUri, "Basic", netCred);
+                        credCache.Add(proxyUri, "Digest", netCred);
+                        credCache.Add(proxyUri, "NTLM", netCred);
+                        credCache.Add(proxyUri, "Negotiate", netCred);
+                        
+                        Credentials = credCache;
+                    }
+                    catch
+                    {
+                        // Fallback to standard NetworkCredential if the aggressive approach fails
+                        Credentials = new NetworkCredential(proxyUsername, proxyPassword);
+                    }
+                }
+                else
+                {
+                    // Standard approach for Windows or when proxy address is not available
+                    Credentials = new NetworkCredential(proxyUsername, proxyPassword);
+                }
             }
 
             if (proxyBypassList != null)

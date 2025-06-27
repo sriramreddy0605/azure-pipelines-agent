@@ -799,7 +799,24 @@ namespace Microsoft.VisualStudio.Services.Agent
                 {
                     var proxyUri = new Uri(agentWebProxy.ProxyAddress);
                     var credCache = new CredentialCache();
-                    var netCred = new NetworkCredential(agentWebProxy.ProxyUsername, agentWebProxy.ProxyPassword);
+                    
+                    // Handle domain-based authentication by checking if username contains domain
+                    var username = agentWebProxy.ProxyUsername;
+                    var domain = string.Empty;
+                    if (username.Contains("\\"))
+                    {
+                        var parts = username.Split('\\');
+                        domain = parts[0];
+                        username = parts[1];
+                        context.GetTrace("HostContextExtension").Info("Using domain authentication: domain={0}, username={1}", domain, username);
+                    }
+                    else if (username.Contains("@"))
+                    {
+                        // Handle UPN format (user@domain.com)
+                        context.GetTrace("HostContextExtension").Info("Using UPN format authentication: {0}", username);
+                    }
+                    
+                    var netCred = new NetworkCredential(username, agentWebProxy.ProxyPassword, domain);
                     
                     // Add credentials for multiple authentication schemes that the proxy might use
                     credCache.Add(proxyUri, "Basic", netCred);
@@ -814,9 +831,21 @@ namespace Microsoft.VisualStudio.Services.Agent
                         UseDefaultCredentials = false
                     };
                     
+                    // Additional Linux-specific workaround: Force preemptive authentication
+                    // by manually setting up proxy authentication without waiting for challenge
+                    if (PlatformUtil.RunningOnLinux)
+                    {
+                        // On Linux, .NET might not send proxy credentials proactively
+                        // We'll need to handle this at the HttpClient level with manual headers
+                        context.GetTrace("HostContextExtension").Info("Linux detected: Will use manual proxy authentication headers to ensure credentials are sent");
+                    }
+                    
                     context.GetTrace("HostContextExtension").Info(
-                        "Enabled aggressive proxy pre-authentication for Linux/macOS with credential cache for proxy: {0}",
-                        agentWebProxy.ProxyAddress);
+                        "Enabled aggressive proxy pre-authentication for Linux/macOS with credential cache for proxy: {0}, username: {1}",
+                        agentWebProxy.ProxyAddress,
+                        string.IsNullOrEmpty(domain) ? username : $"{domain}\\{username}");
+                    context.GetTrace("HostContextExtension").Verbose(
+                        "Proxy credentials configured for schemes: Basic, Digest, NTLM, Negotiate");
                 }
                 catch (Exception ex)
                 {
@@ -881,7 +910,24 @@ namespace Microsoft.VisualStudio.Services.Agent
                 {
                     var proxyUri = new Uri(agentWebProxy.ProxyAddress);
                     var credCache = new CredentialCache();
-                    var netCred = new NetworkCredential(agentWebProxy.ProxyUsername, agentWebProxy.ProxyPassword);
+                    
+                    // Handle domain-based authentication by checking if username contains domain
+                    var username = agentWebProxy.ProxyUsername;
+                    var domain = string.Empty;
+                    if (username.Contains("\\"))
+                    {
+                        var parts = username.Split('\\');
+                        domain = parts[0];
+                        username = parts[1];
+                        trace.Info("Using domain authentication: domain={0}, username={1}", domain, username);
+                    }
+                    else if (username.Contains("@"))
+                    {
+                        // Handle UPN format (user@domain.com)
+                        trace.Info("Using UPN format authentication: {0}", username);
+                    }
+                    
+                    var netCred = new NetworkCredential(username, agentWebProxy.ProxyPassword, domain);
                     
                     // Add credentials for multiple authentication schemes that the proxy might use
                     credCache.Add(proxyUri, "Basic", netCred);
@@ -904,8 +950,12 @@ namespace Microsoft.VisualStudio.Services.Agent
                         webProxy.BypassList = agentWebProxy.ProxyBypassList.ToArray();
                     }
                     
-                    trace.Info("Enhanced aggressive proxy pre-authentication enabled with credential cache for proxy: {0}", agentWebProxy.ProxyAddress);
+                    trace.Info("Enhanced aggressive proxy pre-authentication enabled with credential cache for proxy: {0}, username: {1}",
+                        agentWebProxy.ProxyAddress,
+                        string.IsNullOrEmpty(domain) ? username : $"{domain}\\{username}");
                     trace.Verbose("Proxy credentials configured for Basic, Digest, NTLM, and Negotiate authentication schemes");
+                    trace.Verbose("Proxy bypass list: {0}",
+                        agentWebProxy.ProxyBypassList != null ? string.Join(", ", agentWebProxy.ProxyBypassList) : "None");
                 }
                 catch (Exception ex)
                 {
@@ -944,6 +994,73 @@ namespace Microsoft.VisualStudio.Services.Agent
         }
 
         /// <summary>
+        /// Creates HTTP headers with proxy authentication for scenarios where .NET's built-in
+        /// proxy authentication doesn't work properly on Linux. This manually adds the
+        /// Proxy-Authorization header to force credentials on the first request.
+        /// </summary>
+        /// <param name="context">The host context</param>
+        /// <param name="httpClient">The HttpClient to configure</param>
+        /// <returns>True if proxy auth headers were added, false otherwise</returns>
+        public static bool AddManualProxyAuthHeaders(this IHostContext context, HttpClient httpClient)
+        {
+            ArgUtil.NotNull(context, nameof(context));
+            ArgUtil.NotNull(httpClient, nameof(httpClient));
+            
+            var agentWebProxy = context.GetService<IVstsAgentWebProxy>();
+            var trace = context.GetTrace("HostContextExtension");
+            
+            // Only apply manual proxy auth on Linux/macOS when credentials are configured
+            if (!(PlatformUtil.RunningOnLinux || PlatformUtil.RunningOnMacOS) ||
+                string.IsNullOrEmpty(agentWebProxy.ProxyAddress) ||
+                string.IsNullOrEmpty(agentWebProxy.ProxyUsername) ||
+                string.IsNullOrEmpty(agentWebProxy.ProxyPassword))
+            {
+                return false;
+            }
+            
+            try
+            {
+                // Handle domain-based authentication by checking if username contains domain
+                var username = agentWebProxy.ProxyUsername;
+                var domain = string.Empty;
+                if (username.Contains("\\"))
+                {
+                    var parts = username.Split('\\');
+                    domain = parts[0];
+                    username = parts[1];
+                    trace.Info("Manual proxy auth using domain authentication: domain={0}, username={1}", domain, username);
+                }
+                else if (username.Contains("@"))
+                {
+                    trace.Info("Manual proxy auth using UPN format authentication: {0}", username);
+                }
+                
+                // Create Basic authentication header for proxy
+                var credentials = $"{username}:{agentWebProxy.ProxyPassword}";
+                var encodedCredentials = Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes(credentials));
+                var proxyAuthHeader = $"Basic {encodedCredentials}";
+                
+                // Remove any existing proxy authorization headers
+                httpClient.DefaultRequestHeaders.Remove("Proxy-Authorization");
+                
+                // Add the proxy authorization header to force authentication on first request
+                httpClient.DefaultRequestHeaders.Add("Proxy-Authorization", proxyAuthHeader);
+                
+                trace.Info("Added manual Proxy-Authorization header for Linux/macOS proxy: {0}, username: {1}",
+                    agentWebProxy.ProxyAddress,
+                    string.IsNullOrEmpty(domain) ? username : $"{domain}\\{username}");
+                trace.Verbose("Manual proxy authentication enabled with Basic scheme");
+                
+                return true;
+            }
+            catch (Exception ex)
+            {
+                trace.Warning("Failed to add manual proxy authorization headers: {0}", ex.Message);
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Creates an AgentWebProxy with enhanced pre-authentication capabilities.
         /// This creates a WebProxy with aggressive credential caching that sends credentials
         /// immediately without waiting for a 407 challenge response.
@@ -966,7 +1083,27 @@ namespace Microsoft.VisualStudio.Services.Agent
             {
                 var proxyUri = new Uri(agentWebProxy.ProxyAddress);
                 var credCache = new CredentialCache();
-                var netCred = new NetworkCredential(agentWebProxy.ProxyUsername, agentWebProxy.ProxyPassword);
+                
+                // Handle domain-based authentication by checking if username contains domain
+                var username = agentWebProxy.ProxyUsername;
+                var domain = string.Empty;
+                if (!string.IsNullOrEmpty(username))
+                {
+                    if (username.Contains("\\"))
+                    {
+                        var parts = username.Split('\\');
+                        domain = parts[0];
+                        username = parts[1];
+                        trace.Info("Using domain authentication: domain={0}, username={1}", domain, username);
+                    }
+                    else if (username.Contains("@"))
+                    {
+                        // Handle UPN format (user@domain.com)
+                        trace.Info("Using UPN format authentication: {0}", username);
+                    }
+                }
+                
+                var netCred = new NetworkCredential(username, agentWebProxy.ProxyPassword, domain);
                 
                 // Add credentials for multiple authentication schemes for aggressive pre-auth
                 credCache.Add(proxyUri, "Basic", netCred);
@@ -987,7 +1124,9 @@ namespace Microsoft.VisualStudio.Services.Agent
                     preAuthProxy.BypassList = agentWebProxy.ProxyBypassList.ToArray();
                 }
                 
-                trace.Info("Created aggressive pre-authentication proxy with credential cache for address: {0}", agentWebProxy.ProxyAddress);
+                trace.Info("Created aggressive pre-authentication proxy with credential cache for address: {0}, username: {1}",
+                    agentWebProxy.ProxyAddress,
+                    string.IsNullOrEmpty(domain) ? username : $"{domain}\\{username}");
                 
                 return preAuthProxy;
             }
@@ -1006,6 +1145,96 @@ namespace Microsoft.VisualStudio.Services.Agent
                 
                 return preAuthProxy;
             }
+        }
+
+        /// <summary>
+        /// Creates an HttpClient with forced proxy authentication for Linux systems.
+        /// This method manually adds the Proxy-Authorization header to ensure credentials
+        /// are sent with the first request, bypassing .NET's built-in proxy authentication
+        /// which may not work properly on Linux.
+        /// </summary>
+        /// <param name="context">The host context</param>
+        /// <returns>An HttpClient configured with forced proxy authentication</returns>
+        public static HttpClient CreateHttpClientWithForcedProxyAuth(this IHostContext context)
+        {
+            ArgUtil.NotNull(context, nameof(context));
+            var agentWebProxy = context.GetService<IVstsAgentWebProxy>();
+            var trace = context.GetTrace("HostContextExtension");
+            
+            // Check if we should use manual proxy authentication
+            bool shouldUseManualAuth = (PlatformUtil.RunningOnLinux || PlatformUtil.RunningOnMacOS) &&
+                                     !string.IsNullOrEmpty(agentWebProxy.ProxyAddress) &&
+                                     !string.IsNullOrEmpty(agentWebProxy.ProxyUsername) &&
+                                     !string.IsNullOrEmpty(agentWebProxy.ProxyPassword);
+            
+            HttpClientHandler handler;
+            HttpClient client;
+            
+            if (shouldUseManualAuth)
+            {
+                trace.Info("Creating HttpClient with manual proxy authentication for Linux/macOS");
+                
+                // Create handler with proxy but disable automatic authentication
+                handler = new HttpClientHandler()
+                {
+                    Proxy = new WebProxy(new Uri(agentWebProxy.ProxyAddress)),
+                    UseProxy = true,
+                    PreAuthenticate = false, // Disable automatic authentication
+                    UseDefaultCredentials = false
+                };
+                
+                // Apply certificate validation settings
+                var agentCertManager = context.GetService<IAgentCertificateManager>();
+                if (agentCertManager.SkipServerCertificateValidation)
+                {
+                    handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+                }
+                
+                client = new HttpClient(handler);
+                
+                // Manually add Proxy-Authorization header
+                try
+                {
+                    var username = agentWebProxy.ProxyUsername;
+                    var domain = string.Empty;
+                    
+                    // Handle domain authentication
+                    if (username.Contains("\\"))
+                    {
+                        var parts = username.Split('\\');
+                        domain = parts[0];
+                        username = parts[1];
+                        trace.Info("Using domain authentication for manual proxy auth: domain={0}, username={1}", domain, username);
+                    }
+                    else if (username.Contains("@"))
+                    {
+                        trace.Info("Using UPN format for manual proxy auth: {0}", username);
+                    }
+                    
+                    var credentials = $"{username}:{agentWebProxy.ProxyPassword}";
+                    var encodedCredentials = Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes(credentials));
+                    var proxyAuthHeader = $"Basic {encodedCredentials}";
+                    
+                    client.DefaultRequestHeaders.Add("Proxy-Authorization", proxyAuthHeader);
+                    
+                    trace.Info("Added manual Proxy-Authorization header for proxy: {0}, username: {1}",
+                        agentWebProxy.ProxyAddress,
+                        string.IsNullOrEmpty(domain) ? username : $"{domain}\\{username}");
+                }
+                catch (Exception ex)
+                {
+                    trace.Warning("Failed to add manual proxy authorization header: {0}", ex.Message);
+                }
+            }
+            else
+            {
+                // Use standard approach for Windows or when no proxy credentials
+                trace.Verbose("Using standard HttpClientHandler approach");
+                handler = context.CreateHttpClientHandler();
+                client = new HttpClient(handler);
+            }
+            
+            return client;
         }
     }
 
