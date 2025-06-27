@@ -789,14 +789,48 @@ namespace Microsoft.VisualStudio.Services.Agent
                 !string.IsNullOrEmpty(agentWebProxy.ProxyUsername) &&
                 !string.IsNullOrEmpty(agentWebProxy.ProxyPassword))
             {
+                // Enable pre-authentication AND force aggressive proxy credential handling
                 clientHandler.PreAuthenticate = true;
-                
-                // Force the use of proxy and ensure proper proxy handling
                 clientHandler.UseProxy = true;
                 
-                context.GetTrace("HostContextExtension").Info(
-                    "Enabled proxy pre-authentication for Linux/macOS with authenticated proxy: {0}",
-                    agentWebProxy.ProxyAddress);
+                // Force the proxy to use credentials immediately by setting up a credential cache
+                // that will provide credentials proactively for the proxy address
+                try
+                {
+                    var proxyUri = new Uri(agentWebProxy.ProxyAddress);
+                    var credCache = new CredentialCache();
+                    var netCred = new NetworkCredential(agentWebProxy.ProxyUsername, agentWebProxy.ProxyPassword);
+                    
+                    // Add credentials for multiple authentication schemes that the proxy might use
+                    credCache.Add(proxyUri, "Basic", netCred);
+                    credCache.Add(proxyUri, "Digest", netCred);
+                    credCache.Add(proxyUri, "NTLM", netCred);
+                    credCache.Add(proxyUri, "Negotiate", netCred);
+                    
+                    // Replace the proxy with one that has explicit credential cache
+                    clientHandler.Proxy = new WebProxy(proxyUri)
+                    {
+                        Credentials = credCache,
+                        UseDefaultCredentials = false
+                    };
+                    
+                    context.GetTrace("HostContextExtension").Info(
+                        "Enabled aggressive proxy pre-authentication for Linux/macOS with credential cache for proxy: {0}",
+                        agentWebProxy.ProxyAddress);
+                }
+                catch (Exception ex)
+                {
+                    context.GetTrace("HostContextExtension").Warning(
+                        "Failed to setup aggressive proxy pre-authentication, falling back to standard: {0}", ex.Message);
+                    
+                    // Fallback to the original approach
+                    clientHandler.PreAuthenticate = true;
+                    clientHandler.UseProxy = true;
+                    
+                    context.GetTrace("HostContextExtension").Info(
+                        "Enabled standard proxy pre-authentication for Linux/macOS with authenticated proxy: {0}",
+                        agentWebProxy.ProxyAddress);
+                }
             }
 
             var agentCertManager = context.GetService<IAgentCertificateManager>();
@@ -842,9 +876,44 @@ namespace Microsoft.VisualStudio.Services.Agent
                 // Ensure the proxy is used and properly configured
                 handler.UseProxy = true;
                 
-                // Additional proxy-specific settings for better compatibility
+                // Enhanced proxy-specific settings for aggressive credential handling
                 try
                 {
+                    var proxyUri = new Uri(agentWebProxy.ProxyAddress);
+                    var credCache = new CredentialCache();
+                    var netCred = new NetworkCredential(agentWebProxy.ProxyUsername, agentWebProxy.ProxyPassword);
+                    
+                    // Add credentials for multiple authentication schemes that the proxy might use
+                    credCache.Add(proxyUri, "Basic", netCred);
+                    credCache.Add(proxyUri, "Digest", netCred);
+                    credCache.Add(proxyUri, "NTLM", netCred);
+                    credCache.Add(proxyUri, "Negotiate", netCred);
+                    
+                    // Replace the proxy with one that has explicit credential cache for immediate use
+                    handler.Proxy = new WebProxy(proxyUri)
+                    {
+                        Credentials = credCache,
+                        UseDefaultCredentials = false,
+                        BypassProxyOnLocal = false
+                    };
+                    
+                    // Copy bypass list if it exists
+                    if (agentWebProxy.ProxyBypassList != null && agentWebProxy.ProxyBypassList.Count > 0)
+                    {
+                        var webProxy = (WebProxy)handler.Proxy;
+                        webProxy.BypassList = agentWebProxy.ProxyBypassList.ToArray();
+                    }
+                    
+                    trace.Info("Enhanced aggressive proxy pre-authentication enabled with credential cache for proxy: {0}", agentWebProxy.ProxyAddress);
+                    trace.Verbose("Proxy credentials configured for Basic, Digest, NTLM, and Negotiate authentication schemes");
+                }
+                catch (Exception ex)
+                {
+                    trace.Warning("Failed to configure enhanced aggressive proxy settings, falling back to standard: {0}", ex.Message);
+                    
+                    // Fallback to the original AgentWebProxy
+                    handler.Proxy = agentWebProxy.WebProxy;
+                    
                     // Set proxy credential cache to be more aggressive with authentication
                     if (agentWebProxy.WebProxy is AgentWebProxy proxyImpl)
                     {
@@ -852,10 +921,6 @@ namespace Microsoft.VisualStudio.Services.Agent
                         trace.Info("Enhanced proxy pre-authentication enabled for authenticated proxy: {0}", agentWebProxy.ProxyAddress);
                         trace.Verbose("Proxy credentials type: {0}", agentWebProxy.WebProxy.Credentials?.GetType()?.Name ?? "None");
                     }
-                }
-                catch (Exception ex)
-                {
-                    trace.Warning("Failed to configure enhanced proxy settings: {0}", ex.Message);
                 }
                 
                 trace.Info("Proxy pre-authentication enabled: PreAuthenticate={0}, UseProxy={1}, Platform={2}", handler.PreAuthenticate, handler.UseProxy, PlatformUtil.HostOS);
@@ -880,11 +945,11 @@ namespace Microsoft.VisualStudio.Services.Agent
 
         /// <summary>
         /// Creates an AgentWebProxy with enhanced pre-authentication capabilities.
-        /// This is useful for proxy scenarios that require immediate credential submission
-        /// without waiting for a 407 challenge response.
+        /// This creates a WebProxy with aggressive credential caching that sends credentials
+        /// immediately without waiting for a 407 challenge response.
         /// </summary>
         /// <param name="context">The host context</param>
-        /// <returns>An AgentWebProxy configured for pre-authentication scenarios</returns>
+        /// <returns>A WebProxy configured for aggressive pre-authentication scenarios</returns>
         public static IWebProxy CreatePreAuthProxy(this IHostContext context)
         {
             ArgUtil.NotNull(context, nameof(context));
@@ -897,16 +962,50 @@ namespace Microsoft.VisualStudio.Services.Agent
                 return null;
             }
             
-            // Create a new AgentWebProxy instance with the same configuration
-            var preAuthProxy = new AgentWebProxy(
-                agentWebProxy.ProxyAddress,
-                agentWebProxy.ProxyUsername,
-                agentWebProxy.ProxyPassword,
-                agentWebProxy.ProxyBypassList);
-            
-            trace.Info("Created pre-authentication proxy for address: {0}", agentWebProxy.ProxyAddress);
-            
-            return preAuthProxy;
+            try
+            {
+                var proxyUri = new Uri(agentWebProxy.ProxyAddress);
+                var credCache = new CredentialCache();
+                var netCred = new NetworkCredential(agentWebProxy.ProxyUsername, agentWebProxy.ProxyPassword);
+                
+                // Add credentials for multiple authentication schemes for aggressive pre-auth
+                credCache.Add(proxyUri, "Basic", netCred);
+                credCache.Add(proxyUri, "Digest", netCred);
+                credCache.Add(proxyUri, "NTLM", netCred);
+                credCache.Add(proxyUri, "Negotiate", netCred);
+                
+                var preAuthProxy = new WebProxy(proxyUri)
+                {
+                    Credentials = credCache,
+                    UseDefaultCredentials = false,
+                    BypassProxyOnLocal = false
+                };
+                
+                // Copy bypass list if it exists
+                if (agentWebProxy.ProxyBypassList != null && agentWebProxy.ProxyBypassList.Count > 0)
+                {
+                    preAuthProxy.BypassList = agentWebProxy.ProxyBypassList.ToArray();
+                }
+                
+                trace.Info("Created aggressive pre-authentication proxy with credential cache for address: {0}", agentWebProxy.ProxyAddress);
+                
+                return preAuthProxy;
+            }
+            catch (Exception ex)
+            {
+                trace.Warning("Failed to create aggressive pre-auth proxy, falling back to standard: {0}", ex.Message);
+                
+                // Fallback to creating a standard AgentWebProxy instance
+                var preAuthProxy = new AgentWebProxy(
+                    agentWebProxy.ProxyAddress,
+                    agentWebProxy.ProxyUsername,
+                    agentWebProxy.ProxyPassword,
+                    agentWebProxy.ProxyBypassList);
+                
+                trace.Info("Created standard pre-authentication proxy for address: {0}", agentWebProxy.ProxyAddress);
+                
+                return preAuthProxy;
+            }
         }
     }
 
