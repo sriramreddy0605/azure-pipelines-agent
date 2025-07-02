@@ -775,8 +775,26 @@ namespace Microsoft.VisualStudio.Services.Agent
         public static HttpClientHandler CreateHttpClientHandler(this IHostContext context)
         {
             ArgUtil.NotNull(context, nameof(context));
-            HttpClientHandler clientHandler = new HttpClientHandler();
+            
             var agentWebProxy = context.GetService<IVstsAgentWebProxy>();
+            
+            // Create custom handler that adds Proxy-Authorization header when needed
+            HttpClientHandler clientHandler;
+            if (!string.IsNullOrEmpty(agentWebProxy.ProxyUsername) && !string.IsNullOrEmpty(agentWebProxy.ProxyPassword))
+            {
+                string proxyAuthHeader = $"{agentWebProxy.ProxyUsername}:{agentWebProxy.ProxyPassword}";
+                string base64ProxyAuth = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(proxyAuthHeader));
+                
+                // Add the base64 encoded proxy auth to secret masker
+                context.SecretMasker.AddValue(base64ProxyAuth, WellKnownSecretAliases.ProxyPassword);
+                
+                clientHandler = new ProxyPreAuthHandler($"Basic {base64ProxyAuth}");
+            }
+            else
+            {
+                clientHandler = new HttpClientHandler();
+            }
+            
             clientHandler.Proxy = agentWebProxy.WebProxy;
 
             var agentCertManager = context.GetService<IAgentCertificateManager>();
@@ -786,6 +804,26 @@ namespace Microsoft.VisualStudio.Services.Agent
             }
 
             return clientHandler;
+        }
+    }
+
+    // Custom HttpClientHandler that adds Proxy-Authorization header for pre-auth scenarios
+    internal class ProxyPreAuthHandler : HttpClientHandler
+    {
+        private readonly string _proxyAuthHeader;
+
+        public ProxyPreAuthHandler(string proxyAuthHeader)
+        {
+            _proxyAuthHeader = proxyAuthHeader;
+        }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            if (!string.IsNullOrEmpty(_proxyAuthHeader))
+            {
+                request.Headers.Add("Proxy-Authorization", _proxyAuthHeader);
+            }
+            return await base.SendAsync(request, cancellationToken);
         }
     }
 
