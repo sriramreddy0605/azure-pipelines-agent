@@ -93,6 +93,25 @@ namespace Agent.Sdk
             return string.IsNullOrEmpty(_proxyAddress) || uri.IsLoopback || IsMatchInBypassList(uri);
         }
 
+        /// <summary>
+        /// Generates a Proxy-Authorization header value for pre-authentication scenarios.
+        /// Returns null if no credentials are configured.
+        /// </summary>
+        /// <returns>The Proxy-Authorization header value (e.g., "Basic base64encodedcredentials") or null</returns>
+        public string GenerateProxyAuthorizationHeader()
+        {
+            if (Credentials != null && Credentials != CredentialCache.DefaultNetworkCredentials)
+            {
+                if (Credentials is NetworkCredential networkCred)
+                {
+                    string credentialString = $"{networkCred.UserName}:{networkCred.Password}";
+                    string base64Credentials = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(credentialString));
+                    return $"Basic {base64Credentials}";
+                }
+            }
+            return null;
+        }
+
         private bool IsMatchInBypassList(Uri input)
         {
             string matchUriString = input.IsDefaultPort ?

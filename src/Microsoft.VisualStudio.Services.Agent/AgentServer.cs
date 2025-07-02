@@ -4,12 +4,14 @@
 using Microsoft.TeamFoundation.DistributedTask.WebApi;
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Services.Agent.Util;
 using Microsoft.VisualStudio.Services.WebApi;
 using Microsoft.VisualStudio.Services.Common;
+using Agent.Sdk;
 using Agent.Sdk.Util;
 
 namespace Microsoft.VisualStudio.Services.Agent
@@ -208,9 +210,26 @@ namespace Microsoft.VisualStudio.Services.Agent
             int attemptCount = 5;
             var agentCertManager = HostContext.GetService<IAgentCertificateManager>();
 
+            // Get proxy settings to check if we need to add Proxy-Authorization header
+            var agentWebProxy = HostContext.GetService<IVstsAgentWebProxy>();
+            IEnumerable<DelegatingHandler> handlers = null;
+            
+            // Create proxy pre-auth handler if proxy credentials are configured
+            if (agentWebProxy?.WebProxy is AgentWebProxy proxy)
+            {
+                string proxyAuthHeader = proxy.GenerateProxyAuthorizationHeader();
+                if (!string.IsNullOrEmpty(proxyAuthHeader))
+                {
+                    Trace.Info("Adding Proxy-Authorization header for pre-authentication");
+                    // Mask the header value in logs
+                    HostContext.SecretMasker.AddValue(proxyAuthHeader, WellKnownSecretAliases.ProxyPassword);
+                    handlers = new[] { new ProxyAuthorizationHandler(proxyAuthHeader) };
+                }
+            }
+
             while (attemptCount-- > 0)
             {
-                var connection = VssUtil.CreateConnection(serverUrl, credentials, timeout: timeout, trace: Trace, skipServerCertificateValidation: agentCertManager.SkipServerCertificateValidation);
+                var connection = VssUtil.CreateConnection(serverUrl, credentials, timeout: timeout, trace: Trace, skipServerCertificateValidation: agentCertManager.SkipServerCertificateValidation, additionalDelegatingHandler: handlers);
                 try
                 {
                     await connection.ConnectAsync();
@@ -359,6 +378,28 @@ namespace Microsoft.VisualStudio.Services.Agent
         {
             CheckConnection(AgentConnectionType.Generic);
             return _genericTaskAgentClient.UpdateAgentUpdateStateAsync(agentPoolId, agentId, currentState);
+        }
+    }
+
+    /// <summary>
+    /// DelegatingHandler that adds Proxy-Authorization header for proxy pre-authentication
+    /// </summary>
+    internal class ProxyAuthorizationHandler : DelegatingHandler
+    {
+        private readonly string _proxyAuthHeader;
+
+        public ProxyAuthorizationHandler(string proxyAuthHeader)
+        {
+            _proxyAuthHeader = proxyAuthHeader;
+        }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            if (!string.IsNullOrEmpty(_proxyAuthHeader))
+            {
+                request.Headers.Add("Proxy-Authorization", _proxyAuthHeader);
+            }
+            return await base.SendAsync(request, cancellationToken);
         }
     }
 }
