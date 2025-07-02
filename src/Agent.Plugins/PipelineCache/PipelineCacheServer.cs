@@ -216,12 +216,12 @@ namespace Agent.Plugins.PipelineCache
                     IDomainId domainId = WellKnownDomainIds.DefaultDomainId;
                     if (String.IsNullOrEmpty(result.DomainId))
                     {
-                        domainId = DomainIdFactory.Create(result.DomainId);
-                        context.Output($"Retrieving entry from domain: `{domainId.Serialize()}`");
+                        context.Output($"No Domain specified, using default domain: `{domainId.Serialize()}`");
                     }
                     else
                     {
-                        context.Output($"No Domain specified, using default domain: `{domainId.Serialize()}`");
+                        context.Output($"Retrieving entry from domain: `{result.DomainId}`");
+                        domainId = DomainIdFactory.Create(result.DomainId);
                     }
 
                     // now that we know the domainId, we can create the dedup manifest client
