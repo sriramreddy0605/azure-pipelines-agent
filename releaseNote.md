@@ -1,3 +1,17 @@
+## Features
+ - Update Microsoft.Security.Utilities.Core from v1.17.0 to v1.18.0 (#5224)
+ - Updated git version to 2.49.0 (#5238)
+ - Add agent knob to override the chunk size used to publish artifacts (#5249)
+ - Set DownloadPipelineArtifactResourceTypes for v1 (#5209)
+ - Update Node version to 20.19.2 for agent - AB#2291189 (#5256)
+
+## Bugs
+
+
+## Misc
+ - Send secret masking telemetry if opted in to it (#5189)
+ - Update pull_request_template.md with additional checks (#5259)
+
 
 ## Agent Downloads
 
