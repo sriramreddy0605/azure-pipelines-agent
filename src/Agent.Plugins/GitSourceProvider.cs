@@ -833,7 +833,9 @@ namespace Agent.Plugins.Repository
                     executionContext.Debug($"Config proxy server '{agentProxy.ProxyAddress}' for git fetch.");
                     ArgUtil.NotNullOrEmpty(proxyUrlWithCredString, nameof(proxyUrlWithCredString));
                     additionalFetchArgs.Add($"-c http.proxy=\"{proxyUrlWithCredString}\"");
+                    additionalFetchArgs.Add($"-c http.proxyAuthMethod=\"basic\"");
                     additionalLfsFetchArgs.Add($"-c http.proxy=\"{proxyUrlWithCredString}\"");
+                    additionalLfsFetchArgs.Add($"-c http.proxyAuthMethod=\"basic\"");
                 }
 
                 // Prepare ignore ssl cert error config for fetch.
@@ -1069,6 +1071,7 @@ namespace Agent.Plugins.Repository
                         executionContext.Debug($"Config proxy server '{agentProxy.ProxyAddress}' for git submodule update.");
                         ArgUtil.NotNullOrEmpty(proxyUrlWithCredString, nameof(proxyUrlWithCredString));
                         additionalSubmoduleUpdateArgs.Add($"-c http.proxy=\"{proxyUrlWithCredString}\"");
+                        additionalSubmoduleUpdateArgs.Add($"-c http.proxyAuthMethod=\"basic\"");
                     }
 
                     // Prepare ignore ssl cert error config for fetch.
@@ -1167,6 +1170,18 @@ namespace Agent.Plugins.Repository
                         if (exitCode_proxyconfig != 0)
                         {
                             throw new InvalidOperationException($"Git config failed with exit code: {exitCode_proxyconfig}");
+                        }
+
+                        // Force Git to use Basic authentication for proxy to avoid NTLM negotiation failures
+                        // This fixes 407 errors that occur when Git attempts NTLM but fails to fall back to Basic
+                        string proxyAuthMethodKey = "http.proxyAuthMethod";
+                        string proxyAuthMethodValue = "\"basic\"";
+                        configModifications[proxyAuthMethodKey] = proxyAuthMethodValue.Trim('\"');
+
+                        int exitCode_proxyAuthMethod = await gitCommandManager.GitConfig(executionContext, targetPath, proxyAuthMethodKey, proxyAuthMethodValue);
+                        if (exitCode_proxyAuthMethod != 0)
+                        {
+                            executionContext.Warning($"Setting git proxy auth method to basic failed with exit code: {exitCode_proxyAuthMethod}");
                         }
                     }
 
