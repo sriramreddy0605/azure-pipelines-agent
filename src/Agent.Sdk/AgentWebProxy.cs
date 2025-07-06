@@ -48,7 +48,13 @@ namespace Agent.Sdk
             }
             else
             {
-                Credentials = new NetworkCredential(proxyUsername, proxyPassword);
+                // Use CredentialCache to force Basic authentication and avoid NTLM negotiation issues
+                // This fixes the 407 Proxy Authentication Required errors that occur when .NET
+                // attempts NTLM authentication but fails to fall back to Basic authentication properly
+                var credentialCache = new CredentialCache();
+                var proxyUri = new Uri(_proxyAddress);
+                credentialCache.Add(proxyUri, "Basic", new NetworkCredential(proxyUsername, proxyPassword));
+                Credentials = credentialCache;
             }
 
             if (proxyBypassList != null)
