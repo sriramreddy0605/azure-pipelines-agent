@@ -29,7 +29,6 @@ parameters:
   type: string
   default: net8.0
   values:
-  - net6.0
   - net8.0
 - name: derivedFrom
   type: string
