@@ -64,6 +64,11 @@ parameters:
   default: false
   displayName: Disable Teams Notifications
 
+- name: generateGitHubReleaseNotes
+  type: boolean
+  default: true
+  displayName: Generate GitHub Release Notes 
+
 # Skip CG
 variables:
   - name: OneES_JobScannedCount
@@ -308,6 +313,7 @@ extends:
               cd release
               node fillReleaseNotesTemplate.js $(AgentVersion)
             displayName: Fill release notes
+            condition : eq('${{ parameters.generateGitHubReleaseNotes }}', true)
 
           # Create agent release on Github
           - powershell: |
@@ -348,6 +354,7 @@ extends:
               Invoke-RestMethod @assetsParams
             displayName: Create agent release on Github
             name: create_github_release
+            condition: eq('${{ parameters.generateGitHubReleaseNotes }}', true)
 
           # Delete test agent release
           - powershell: |
@@ -366,7 +373,7 @@ extends:
               $releaseDeleted = Invoke-RestMethod @releaseParams
               Write-Host $releaseDeleted.Id
             displayName: Delete test agent release from Github
-            condition: and(succeeded(), eq(variables.IsTestRun, 'True'))
+            condition: and(succeeded(), eq(variables.IsTestRun, 'True'), eq('${{ parameters.generateGitHubReleaseNotes }}', true))
 
       - stage: Cleanup_Release_Branch
         displayName: Cleanup Release Branch
