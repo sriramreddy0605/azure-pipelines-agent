@@ -30,10 +30,14 @@ parameters:
   default: net8.0
   values:
   - net8.0
+  
 - name: derivedFrom
   type: string
   displayName: Derived From Version
   default: 'lastMinorRelease'
+  values:
+  - 'lastMinorRelease'
+  
 - name: skipTests
   type: boolean
   default: false
