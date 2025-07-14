@@ -207,6 +207,7 @@ namespace Microsoft.VisualStudio.Services.Agent
             Trace.Info($"Establish connection with {timeout.TotalSeconds} seconds timeout.");
             int attemptCount = 5;
             var agentCertManager = HostContext.GetService<IAgentCertificateManager>();
+            bool hasTriedProxyFallback = false;
 
             while (attemptCount-- > 0)
             {
@@ -221,12 +222,62 @@ namespace Microsoft.VisualStudio.Services.Agent
                     Trace.Info($"Catch exception during connect. {attemptCount} attempt left.");
                     Trace.Error(ex);
 
+                    // Check if this is a proxy authentication error and we haven't tried the fallback yet
+                    if (!hasTriedProxyFallback && IsProxyAuthenticationError(ex))
+                    {
+                        Trace.Info("❌ NetworkCredential failed, detected proxy authentication error (407).");
+                        Trace.Info("🔄 Falling back to CredentialCache with Basic auth...");
+                        
+                        if (TryEnableProxyBasicAuthFallback())
+                        {
+                            hasTriedProxyFallback = true;
+                            Trace.Info("✅ Enabled Basic authentication fallback for proxy. Retrying connection.");
+                            // Don't delay for the proxy fallback retry, try immediately
+                            continue;
+                        }
+                    }
+
                     await HostContext.Delay(TimeSpan.FromMilliseconds(100), CancellationToken.None);
                 }
             }
 
             // should never reach here.
             throw new InvalidOperationException(nameof(EstablishVssConnection));
+        }
+
+        private bool IsProxyAuthenticationError(Exception ex)
+        {
+            // Check for 407 Proxy Authentication Required error
+            // This can be in various exception types depending on the HTTP stack
+            var message = ex.ToString();
+            return message.Contains("407") ||
+                   message.Contains("Proxy Authentication Required") ||
+                   message.Contains("ProxyAuthenticationRequired");
+        }
+
+        private bool TryEnableProxyBasicAuthFallback()
+        {
+            try
+            {
+                // Access the global proxy instance - same logic as your test app
+                var agentWebProxy = HostContext.GetService<IVstsAgentWebProxy>();
+                if (agentWebProxy?.WebProxy is global::Agent.Sdk.AgentWebProxy proxy)
+                {
+                    Trace.Info("Enabling Basic authentication fallback on AgentWebProxy instance.");
+                    proxy.EnableBasicAuthFallback();
+                    return true;
+                }
+                else
+                {
+                    Trace.Warning($"WebProxy is not an AgentWebProxy instance. Type: {agentWebProxy?.WebProxy?.GetType()?.Name ?? "null"}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.Warning($"Failed to enable proxy Basic authentication fallback: {ex.Message}");
+                Trace.Error(ex);
+            }
+            return false;
         }
 
         private void CheckConnection(AgentConnectionType connectionType)

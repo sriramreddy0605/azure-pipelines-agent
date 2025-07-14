@@ -26,6 +26,8 @@ namespace Agent.Sdk
     {
         private string _proxyAddress;
         private readonly List<Regex> _regExBypassList = new List<Regex>();
+        private string _proxyUsername;
+        private string _proxyPassword;
 
         public ICredentials Credentials { get; set; }
 
@@ -41,6 +43,8 @@ namespace Agent.Sdk
         public void Update(string proxyAddress, string proxyUsername, string proxyPassword, List<string> proxyBypassList)
         {
             _proxyAddress = proxyAddress?.Trim();
+            _proxyUsername = proxyUsername;
+            _proxyPassword = proxyPassword;
 
             if (string.IsNullOrEmpty(proxyUsername) || string.IsNullOrEmpty(proxyPassword))
             {
@@ -48,6 +52,7 @@ namespace Agent.Sdk
             }
             else
             {
+                // Use NetworkCredential first (master approach)
                 Credentials = new NetworkCredential(proxyUsername, proxyPassword);
             }
 
@@ -108,6 +113,22 @@ namespace Agent.Sdk
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Enable Basic authentication fallback when NetworkCredential fails.
+        /// This implements the exact same logic as your working test app.
+        /// </summary>
+        public void EnableBasicAuthFallback()
+        {
+            if (!string.IsNullOrEmpty(_proxyUsername) && !string.IsNullOrEmpty(_proxyPassword))
+            {
+                // THE WORKING APPROACH - CredentialCache with explicit Basic auth
+                var credCache = new CredentialCache();
+                var proxyUri = new Uri(_proxyAddress);
+                credCache.Add(proxyUri, "Basic", new NetworkCredential(_proxyUsername, _proxyPassword));
+                Credentials = credCache;
+            }
         }
     }
 }
