@@ -139,6 +139,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
         public string Agent_ProxyPassword => Get(Constants.Variables.Agent.ProxyPassword);
 
+        public string Agent_ProxyBasicAuth => Get(Constants.Variables.Agent.ProxyBasicAuth);
+
         public int? Build_BuildId => GetInt(BuildWebApi.BuildVariables.BuildId);
 
         public string Build_BuildUri => Get(BuildWebApi.BuildVariables.BuildUri);

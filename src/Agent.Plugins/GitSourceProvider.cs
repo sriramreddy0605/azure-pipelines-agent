@@ -834,6 +834,14 @@ namespace Agent.Plugins.Repository
                     ArgUtil.NotNullOrEmpty(proxyUrlWithCredString, nameof(proxyUrlWithCredString));
                     additionalFetchArgs.Add($"-c http.proxy=\"{proxyUrlWithCredString}\"");
                     additionalLfsFetchArgs.Add($"-c http.proxy=\"{proxyUrlWithCredString}\"");
+                    
+                    // Add proxy authentication method if Basic auth is enabled
+                    if (agentProxy.UseBasicAuth)
+                    {
+                        executionContext.Debug("Config proxy to use Basic authentication for git fetch.");
+                        additionalFetchArgs.Add("-c http.proxyAuthMethod=basic");
+                        additionalLfsFetchArgs.Add("-c http.proxyAuthMethod=basic");
+                    }
                 }
 
                 // Prepare ignore ssl cert error config for fetch.
@@ -1069,6 +1077,13 @@ namespace Agent.Plugins.Repository
                         executionContext.Debug($"Config proxy server '{agentProxy.ProxyAddress}' for git submodule update.");
                         ArgUtil.NotNullOrEmpty(proxyUrlWithCredString, nameof(proxyUrlWithCredString));
                         additionalSubmoduleUpdateArgs.Add($"-c http.proxy=\"{proxyUrlWithCredString}\"");
+                        
+                        // Add proxy authentication method if Basic auth is enabled
+                        if (agentProxy.UseBasicAuth)
+                        {
+                            executionContext.Debug("Config proxy to use Basic authentication for git submodule update.");
+                            additionalSubmoduleUpdateArgs.Add("-c http.proxyAuthMethod=basic");
+                        }
                     }
 
                     // Prepare ignore ssl cert error config for fetch.
@@ -1167,6 +1182,21 @@ namespace Agent.Plugins.Repository
                         if (exitCode_proxyconfig != 0)
                         {
                             throw new InvalidOperationException($"Git config failed with exit code: {exitCode_proxyconfig}");
+                        }
+                        
+                        // Add proxy authentication method if Basic auth is enabled
+                        if (agentProxy.UseBasicAuth)
+                        {
+                            executionContext.Debug("Save proxy authentication method 'basic' to git config.");
+                            string proxyAuthMethodKey = "http.proxyAuthMethod";
+                            string proxyAuthMethodValue = "basic";
+                            configModifications[proxyAuthMethodKey] = proxyAuthMethodValue;
+
+                            int exitCode_proxyauth = await gitCommandManager.GitConfig(executionContext, targetPath, proxyAuthMethodKey, proxyAuthMethodValue);
+                            if (exitCode_proxyauth != 0)
+                            {
+                                throw new InvalidOperationException($"Git config failed with exit code: {exitCode_proxyauth}");
+                            }
                         }
                     }
 

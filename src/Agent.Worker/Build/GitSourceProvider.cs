@@ -724,6 +724,14 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
                     ArgUtil.NotNullOrEmpty(_proxyUrlWithCredString, nameof(_proxyUrlWithCredString));
                     additionalFetchArgs.Add($"-c http.proxy=\"{_proxyUrlWithCredString}\"");
                     additionalLfsFetchArgs.Add($"-c http.proxy=\"{_proxyUrlWithCredString}\"");
+                    
+                    // Add proxy authentication method if Basic auth is enabled
+                    if (StringUtil.ConvertToBoolean(executionContext.Variables.Agent_ProxyBasicAuth))
+                    {
+                        executionContext.Debug("Config proxy to use Basic authentication for git fetch.");
+                        additionalFetchArgs.Add("-c http.proxyAuthMethod=basic");
+                        additionalLfsFetchArgs.Add("-c http.proxyAuthMethod=basic");
+                    }
                 }
 
                 // Prepare ignore ssl cert error config for fetch.
@@ -898,6 +906,13 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
                         executionContext.Debug($"Config proxy server '{executionContext.Variables.Agent_ProxyUrl}' for git submodule update.");
                         ArgUtil.NotNullOrEmpty(_proxyUrlWithCredString, nameof(_proxyUrlWithCredString));
                         additionalSubmoduleUpdateArgs.Add($"-c http.proxy=\"{_proxyUrlWithCredString}\"");
+                        
+                        // Add proxy authentication method if Basic auth is enabled
+                        if (StringUtil.ConvertToBoolean(executionContext.Variables.Agent_ProxyBasicAuth))
+                        {
+                            executionContext.Debug("Config proxy to use Basic authentication for git submodule update.");
+                            additionalSubmoduleUpdateArgs.Add("-c http.proxyAuthMethod=basic");
+                        }
                     }
 
                     // Prepare ignore ssl cert error config for fetch.
@@ -989,6 +1004,21 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
                         if (exitCode_proxyconfig != 0)
                         {
                             throw new InvalidOperationException($"Git config failed with exit code: {exitCode_proxyconfig}");
+                        }
+                        
+                        // Add proxy authentication method if Basic auth is enabled
+                        if (StringUtil.ConvertToBoolean(executionContext.Variables.Agent_ProxyBasicAuth))
+                        {
+                            executionContext.Debug("Save proxy authentication method 'basic' to git config.");
+                            string proxyAuthMethodKey = "http.proxyAuthMethod";
+                            string proxyAuthMethodValue = "basic";
+                            _configModifications[proxyAuthMethodKey] = proxyAuthMethodValue;
+
+                            int exitCode_proxyauth = await _gitCommandManager.GitConfig(executionContext, targetPath, proxyAuthMethodKey, proxyAuthMethodValue);
+                            if (exitCode_proxyauth != 0)
+                            {
+                                throw new InvalidOperationException($"Git config failed with exit code: {exitCode_proxyauth}");
+                            }
                         }
                     }
 

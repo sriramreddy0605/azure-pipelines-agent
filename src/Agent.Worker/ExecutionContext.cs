@@ -651,6 +651,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 {
                     Variables.Set(Constants.Variables.Agent.ProxyBypassList, JsonUtility.ToString(agentWebProxy.ProxyBypassList));
                 }
+
+                // Set ProxyBasicAuth flag
+                Variables.Set(Constants.Variables.Agent.ProxyBasicAuth, agentWebProxy.ProxyBasicAuth.ToString());
             }
 
             // Certificate variables

@@ -20,6 +20,7 @@ namespace Microsoft.VisualStudio.Services.Agent
         string ProxyAddress { get; }
         string ProxyUsername { get; }
         string ProxyPassword { get; }
+        bool ProxyBasicAuth { get; }
         List<string> ProxyBypassList { get; }
         IWebProxy WebProxy { get; }
         void SetupProxy(string proxyAddress, string proxyUsername, string proxyPassword);

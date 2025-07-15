@@ -384,6 +384,7 @@ namespace Microsoft.VisualStudio.Services.Agent
                 public static readonly string ProxyUsername = "agent.proxyusername";
                 public static readonly string ProxyPassword = "agent.proxypassword";
                 public static readonly string ProxyBypassList = "agent.proxybypasslist";
+                public static readonly string ProxyBasicAuth = "agent.proxybasicauth";
                 public static readonly string RetainDefaultEncoding = "agent.retainDefaultEncoding";
                 public static readonly string ReadOnlyVariables = "agent.readOnlyVariables";
                 public static readonly string RootDirectory = "agent.RootDirectory";
