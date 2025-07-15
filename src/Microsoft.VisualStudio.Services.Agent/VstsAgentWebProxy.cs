@@ -23,6 +23,7 @@ namespace Microsoft.VisualStudio.Services.Agent
         List<string> ProxyBypassList { get; }
         IWebProxy WebProxy { get; }
         void SetupProxy(string proxyAddress, string proxyUsername, string proxyPassword);
+        void SetupProxy(string proxyAddress, string proxyUsername, string proxyPassword, bool useBasicAuth);
         void SaveProxySetting();
         void LoadProxyBypassList();
         void DeleteProxySetting();
@@ -36,6 +37,7 @@ namespace Microsoft.VisualStudio.Services.Agent
         public string ProxyAddress { get; private set; }
         public string ProxyUsername { get; private set; }
         public string ProxyPassword { get; private set; }
+        public bool ProxyBasicAuth { get; private set; }
         public List<string> ProxyBypassList => _bypassList;
         public IWebProxy WebProxy => _agentWebProxy;
 
@@ -48,11 +50,18 @@ namespace Microsoft.VisualStudio.Services.Agent
         // This should only be called from config
         public void SetupProxy(string proxyAddress, string proxyUsername, string proxyPassword)
         {
+            SetupProxy(proxyAddress, proxyUsername, proxyPassword, false);
+        }
+
+        // This should only be called from config
+        public void SetupProxy(string proxyAddress, string proxyUsername, string proxyPassword, bool useBasicAuth)
+        {
             ArgUtil.NotNullOrEmpty(proxyAddress, nameof(proxyAddress));
             Trace.Info($"Update proxy setting from '{ProxyAddress ?? string.Empty}' to'{proxyAddress}'");
             ProxyAddress = proxyAddress;
             ProxyUsername = proxyUsername;
             ProxyPassword = proxyPassword;
+            ProxyBasicAuth = useBasicAuth;
 
             if (string.IsNullOrEmpty(ProxyUsername) || string.IsNullOrEmpty(ProxyPassword))
             {
@@ -63,10 +72,15 @@ namespace Microsoft.VisualStudio.Services.Agent
                 Trace.Info($"Config authentication proxy as: {ProxyUsername}.");
             }
 
+            if (useBasicAuth)
+            {
+                Trace.Info("Config proxy to use Basic authentication.");
+            }
+
             // Ensure proxy bypass list is loaded during the agent config
             LoadProxyBypassList();
 
-            _agentWebProxy.Update(ProxyAddress, ProxyUsername, ProxyPassword, ProxyBypassList);
+            _agentWebProxy.Update(ProxyAddress, ProxyUsername, ProxyPassword, ProxyBypassList, useBasicAuth);
         }
 
         // This should only be called from config
@@ -79,6 +93,16 @@ namespace Microsoft.VisualStudio.Services.Agent
                 Trace.Info($"Store proxy configuration to '{proxyConfigFile}' for proxy '{ProxyAddress}'");
                 File.WriteAllText(proxyConfigFile, ProxyAddress);
                 File.SetAttributes(proxyConfigFile, File.GetAttributes(proxyConfigFile) | FileAttributes.Hidden);
+
+                // Save proxy options (basic auth flag)
+                string proxyOptionsFile = HostContext.GetConfigFile(WellKnownConfigFile.ProxyOptions);
+                IOUtil.DeleteFile(proxyOptionsFile);
+                if (ProxyBasicAuth)
+                {
+                    Trace.Info($"Store proxy options to '{proxyOptionsFile}' with basic auth enabled");
+                    File.WriteAllText(proxyOptionsFile, "basicauth=true");
+                    File.SetAttributes(proxyOptionsFile, File.GetAttributes(proxyOptionsFile) | FileAttributes.Hidden);
+                }
 
                 string proxyCredFile = HostContext.GetConfigFile(WellKnownConfigFile.ProxyCredentials);
                 IOUtil.DeleteFile(proxyCredFile);
@@ -122,6 +146,13 @@ namespace Microsoft.VisualStudio.Services.Agent
             {
                 Trace.Info($"Delete .proxybypass file: {proxyBypassFile}");
                 IOUtil.DeleteFile(proxyBypassFile);
+            }
+
+            string proxyOptionsFile = HostContext.GetConfigFile(WellKnownConfigFile.ProxyOptions);
+            if (File.Exists(proxyOptionsFile))
+            {
+                Trace.Info($"Delete .proxyoptions file: {proxyOptionsFile}");
+                IOUtil.DeleteFile(proxyOptionsFile);
             }
 
             string proxyConfigFile = HostContext.GetConfigFile(WellKnownConfigFile.Proxy);
@@ -220,7 +251,20 @@ namespace Microsoft.VisualStudio.Services.Agent
 
                 LoadProxyBypassList();
 
-                _agentWebProxy.Update(ProxyAddress, ProxyUsername, ProxyPassword, ProxyBypassList);
+                // Load proxy options (basic auth flag)
+                string proxyOptionsFile = HostContext.GetConfigFile(WellKnownConfigFile.ProxyOptions);
+                if (File.Exists(proxyOptionsFile))
+                {
+                    Trace.Verbose($"Try read proxy options from file: {proxyOptionsFile}.");
+                    string optionsContent = File.ReadAllText(proxyOptionsFile).Trim();
+                    ProxyBasicAuth = optionsContent.Contains("basicauth=true");
+                    if (ProxyBasicAuth)
+                    {
+                        Trace.Info("Config proxy to use Basic authentication.");
+                    }
+                }
+
+                _agentWebProxy.Update(ProxyAddress, ProxyUsername, ProxyPassword, ProxyBypassList, ProxyBasicAuth);
             }
             else
             {

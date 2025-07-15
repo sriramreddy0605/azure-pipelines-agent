@@ -38,6 +38,7 @@ namespace Microsoft.VisualStudio.Services.Agent
         Proxy,
         ProxyCredentials,
         ProxyBypass,
+        ProxyOptions,
         Autologon,
         Options,
         SetupInfo,
@@ -238,6 +239,7 @@ namespace Microsoft.VisualStudio.Services.Agent
                     public const string Unattended = "unattended";
                     public const string Version = "version";
                     public const string EnableServiceSidTypeUnrestricted = "enableservicesidtypeunrestricted";
+                    public const string ProxyBasicAuth = "proxybasicauth";
                 }
             }
 

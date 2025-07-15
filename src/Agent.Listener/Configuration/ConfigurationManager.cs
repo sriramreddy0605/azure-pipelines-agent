@@ -1029,7 +1029,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
                 Trace.Info("Reset proxy base on commandline args.");
                 string proxyUserName = command.GetProxyUserName();
                 string proxyPassword = command.GetProxyPassword();
-                vstsProxy.SetupProxy(proxyUrl, proxyUserName, proxyPassword);
+                bool proxyBasicAuth = command.GetProxyBasicAuth();
+                vstsProxy.SetupProxy(proxyUrl, proxyUserName, proxyPassword, proxyBasicAuth);
                 saveProxySetting = true;
             }
 
