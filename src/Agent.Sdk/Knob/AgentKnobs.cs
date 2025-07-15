@@ -785,7 +785,7 @@ namespace Agent.Sdk.Knob
             new RuntimeKnobSource("ADD_FORCE_CREDENTIALS_TO_GIT_CHECKOUT"),
             new PipelineFeatureSource(nameof(AddForceCredentialsToGitCheckout)),
             new BuiltInDefaultKnobSource("false"));
-      
+
         public static readonly Knob InstallLegacyTfExe = new Knob(
             nameof(InstallLegacyTfExe),
             "If true, the agent will install the legacy versions of TF, vstsom and vstshost",
@@ -828,5 +828,12 @@ namespace Agent.Sdk.Knob
             new RuntimeKnobSource("START_CONTAINER_RETRYHELPER_SLEEP_MS"),
             new EnvironmentKnobSource("START_CONTAINER_RETRYHELPER_SLEEP_MS"),
             new BuiltInDefaultKnobSource("5000"));
+
+        public static readonly Knob DockerContainerPersistentFailures = new Knob(
+            nameof(DockerContainerPersistentFailures),
+            "When enabled, the agent shows a warning if a task fails inside a Docker container with exit code other than 0. This is useful for debugging persistent failures in containerized tasks.",
+            new RuntimeKnobSource("AZP_DOCKER_CONTAINER_PERSISTENT_FAILURES"),
+            new EnvironmentKnobSource("AZP_DOCKER_CONTAINER_PERSISTENT_FAILURES"),
+            new BuiltInDefaultKnobSource("false"));
     }
 }

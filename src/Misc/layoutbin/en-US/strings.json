@@ -277,6 +277,13 @@
   "DirExpireLimit": "Directory expiration limit: {0} days.",
   "DiscoverBuildDir": "Discover stale build directories that haven't been used for more than {0} days.",
   "DiscoverReleaseDir": "Discover stale release directories that haven't been used for more than {0} days.",
+  "DockerContainerPersistentFailures": [
+    "❌ The current step has failed inside the Docker container with exit code {0}.",
+    "If this issue persists, consider the following troubleshooting steps:",
+    "\t- 🛜 Check the container and host network configurations;",
+    "\t- ⚒️ Rebuild the Docker image if feasible.",
+    "For more details review logs to diagnose pipelines issues: https://learn.microsoft.com/en-us/azure/devops/pipelines/troubleshooting/review-logs?view=azure-devops&tabs=windows-agent"
+  ],
   "DownloadAgent": "Downloading {0} agent",
   "DownloadArtifactFinished": "Downloading artifact finished.",
   "DownloadArtifacts": "Download Artifacts",

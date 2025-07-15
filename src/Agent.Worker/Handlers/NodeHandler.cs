@@ -234,7 +234,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Handlers
                     }
                 }
             }
-            
 
             try
             {
@@ -272,6 +271,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Handlers
                 if (enableResourceUtilizationWarnings && ex.ExitCode == 137)
                 {
                     ExecutionContext.Error(StringUtil.Loc("AgentOutOfMemoryFailure"));
+                }
+
+                if (ex.ExitCode != 0 && ExecutionContext.StepTarget() is ContainerInfo && AgentKnobs.DockerContainerPersistentFailures.GetValue(ExecutionContext).AsBoolean())
+                {
+                    ExecutionContext.Warning(StringUtil.Loc("DockerContainerPersistentFailures", ex.ExitCode));
                 }
 
                 throw;
