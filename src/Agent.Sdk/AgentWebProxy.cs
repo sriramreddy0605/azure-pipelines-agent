@@ -38,13 +38,12 @@ namespace Agent.Sdk
 
         public AgentWebProxy(string proxyAddress, string proxyUsername, string proxyPassword, List<string> proxyBypassList)
         {
-            Update(proxyAddress, proxyUsername, proxyPassword, proxyBypassList);
+            Update(proxyAddress, proxyUsername, proxyPassword, proxyBypassList, false);
         }
 
         public AgentWebProxy(string proxyAddress, string proxyUsername, string proxyPassword, List<string> proxyBypassList, bool useBasicAuth = false)
         {
-            _useBasicAuth = useBasicAuth;
-            Update(proxyAddress, proxyUsername, proxyPassword, proxyBypassList);
+            Update(proxyAddress, proxyUsername, proxyPassword, proxyBypassList, useBasicAuth);
         }
 
         public void Update(string proxyAddress, string proxyUsername, string proxyPassword, List<string> proxyBypassList, bool useBasicAuth = false)
