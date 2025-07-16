@@ -360,12 +360,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests
                         ".proxybypass");
                     break;
 
-                case WellKnownConfigFile.ProxyOptions:
-                    path = Path.Combine(
-                        GetDirectory(WellKnownDirectory.Root),
-                        ".proxyoptions");
-                    break;
-
                 case WellKnownConfigFile.Autologon:
                     path = Path.Combine(
                         GetDirectory(WellKnownDirectory.Root),

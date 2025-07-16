@@ -47,12 +47,7 @@ namespace Agent.Sdk
             Update(proxyAddress, proxyUsername, proxyPassword, proxyBypassList);
         }
 
-        public void Update(string proxyAddress, string proxyUsername, string proxyPassword, List<string> proxyBypassList)
-        {
-            Update(proxyAddress, proxyUsername, proxyPassword, proxyBypassList, _useBasicAuth);
-        }
-
-        public void Update(string proxyAddress, string proxyUsername, string proxyPassword, List<string> proxyBypassList, bool useBasicAuth)
+        public void Update(string proxyAddress, string proxyUsername, string proxyPassword, List<string> proxyBypassList, bool useBasicAuth = false)
         {
             _useBasicAuth = useBasicAuth;
             _proxyAddress = proxyAddress?.Trim();

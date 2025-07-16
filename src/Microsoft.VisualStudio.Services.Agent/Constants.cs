@@ -38,7 +38,6 @@ namespace Microsoft.VisualStudio.Services.Agent
         Proxy,
         ProxyCredentials,
         ProxyBypass,
-        ProxyOptions,
         Autologon,
         Options,
         SetupInfo,

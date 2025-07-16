@@ -92,18 +92,15 @@ namespace Microsoft.VisualStudio.Services.Agent
                 string proxyConfigFile = HostContext.GetConfigFile(WellKnownConfigFile.Proxy);
                 IOUtil.DeleteFile(proxyConfigFile);
                 Trace.Info($"Store proxy configuration to '{proxyConfigFile}' for proxy '{ProxyAddress}'");
-                File.WriteAllText(proxyConfigFile, ProxyAddress);
-                File.SetAttributes(proxyConfigFile, File.GetAttributes(proxyConfigFile) | FileAttributes.Hidden);
-
-                // Save proxy options (basic auth flag)
-                string proxyOptionsFile = HostContext.GetConfigFile(WellKnownConfigFile.ProxyOptions);
-                IOUtil.DeleteFile(proxyOptionsFile);
+                
+                // Store proxy address and basic auth flag in the same file
+                var proxyContent = ProxyAddress;
                 if (ProxyBasicAuth)
                 {
-                    Trace.Info($"Store proxy options to '{proxyOptionsFile}' with basic auth enabled");
-                    File.WriteAllText(proxyOptionsFile, "basicauth=true");
-                    File.SetAttributes(proxyOptionsFile, File.GetAttributes(proxyOptionsFile) | FileAttributes.Hidden);
+                    proxyContent += Environment.NewLine + "basicauth=true";
                 }
+                File.WriteAllText(proxyConfigFile, proxyContent);
+                File.SetAttributes(proxyConfigFile, File.GetAttributes(proxyConfigFile) | FileAttributes.Hidden);
 
                 string proxyCredFile = HostContext.GetConfigFile(WellKnownConfigFile.ProxyCredentials);
                 IOUtil.DeleteFile(proxyCredFile);
@@ -149,13 +146,6 @@ namespace Microsoft.VisualStudio.Services.Agent
                 IOUtil.DeleteFile(proxyBypassFile);
             }
 
-            string proxyOptionsFile = HostContext.GetConfigFile(WellKnownConfigFile.ProxyOptions);
-            if (File.Exists(proxyOptionsFile))
-            {
-                Trace.Info($"Delete .proxyoptions file: {proxyOptionsFile}");
-                IOUtil.DeleteFile(proxyOptionsFile);
-            }
-
             string proxyConfigFile = HostContext.GetConfigFile(WellKnownConfigFile.Proxy);
             Trace.Info($"Delete .proxy file: {proxyConfigFile}");
             IOUtil.DeleteFile(proxyConfigFile);
@@ -190,11 +180,21 @@ namespace Microsoft.VisualStudio.Services.Agent
             string proxyConfigFile = HostContext.GetConfigFile(WellKnownConfigFile.Proxy);
             if (File.Exists(proxyConfigFile))
             {
-                // we expect the first line of the file is the proxy url
+                // Read all lines from the proxy config file
                 Trace.Verbose($"Try read proxy setting from file: {proxyConfigFile}.");
-                ProxyAddress = File.ReadLines(proxyConfigFile).FirstOrDefault() ?? string.Empty;
+                var lines = File.ReadAllLines(proxyConfigFile);
+                
+                // First line is the proxy URL
+                ProxyAddress = lines.FirstOrDefault() ?? string.Empty;
                 ProxyAddress = ProxyAddress.Trim();
                 Trace.Verbose($"{ProxyAddress}");
+                
+                // Check for basic auth flag in subsequent lines
+                ProxyBasicAuth = lines.Any(line => line.Trim().Equals("basicauth=true", StringComparison.OrdinalIgnoreCase));
+                if (ProxyBasicAuth)
+                {
+                    Trace.Info("Config proxy to use Basic authentication.");
+                }
             }
 
             if (string.IsNullOrEmpty(ProxyAddress))
@@ -251,19 +251,6 @@ namespace Microsoft.VisualStudio.Services.Agent
                 }
 
                 LoadProxyBypassList();
-
-                // Load proxy options (basic auth flag)
-                string proxyOptionsFile = HostContext.GetConfigFile(WellKnownConfigFile.ProxyOptions);
-                if (File.Exists(proxyOptionsFile))
-                {
-                    Trace.Verbose($"Try read proxy options from file: {proxyOptionsFile}.");
-                    string optionsContent = File.ReadAllText(proxyOptionsFile).Trim();
-                    ProxyBasicAuth = optionsContent.Contains("basicauth=true");
-                    if (ProxyBasicAuth)
-                    {
-                        Trace.Info("Config proxy to use Basic authentication.");
-                    }
-                }
 
                 _agentWebProxy.Update(ProxyAddress, ProxyUsername, ProxyPassword, ProxyBypassList, ProxyBasicAuth);
             }
