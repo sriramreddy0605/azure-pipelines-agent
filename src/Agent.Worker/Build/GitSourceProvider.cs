@@ -218,6 +218,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
         private const string _remoteRefsPrefix = "refs/remotes/origin/";
         private const string _pullRefsPrefix = "refs/pull/";
         private const string _remotePullRefsPrefix = "refs/remotes/pull/";
+        private const string _gitProxyBasicAuthConfig = "-c http.proxyAuthMethod=basic";
         private readonly Dictionary<string, string> _configModifications = new Dictionary<string, string>();
         private bool _selfManageGitCreds = false;
         private Uri _repositoryUrlWithCred = null;
@@ -729,8 +730,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
                     if (StringUtil.ConvertToBoolean(executionContext.Variables.Agent_ProxyBasicAuth))
                     {
                         executionContext.Debug("Config proxy to use Basic authentication for git fetch.");
-                        additionalFetchArgs.Add("-c http.proxyAuthMethod=basic");
-                        additionalLfsFetchArgs.Add("-c http.proxyAuthMethod=basic");
+                        additionalFetchArgs.Add(_gitProxyBasicAuthConfig);
+                        additionalLfsFetchArgs.Add(_gitProxyBasicAuthConfig);
                     }
                 }
 
@@ -911,7 +912,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
                         if (StringUtil.ConvertToBoolean(executionContext.Variables.Agent_ProxyBasicAuth))
                         {
                             executionContext.Debug("Config proxy to use Basic authentication for git submodule update.");
-                            additionalSubmoduleUpdateArgs.Add("-c http.proxyAuthMethod=basic");
+                            additionalSubmoduleUpdateArgs.Add(_gitProxyBasicAuthConfig);
                         }
                     }
 

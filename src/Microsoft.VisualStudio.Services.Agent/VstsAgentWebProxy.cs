@@ -24,7 +24,7 @@ namespace Microsoft.VisualStudio.Services.Agent
         List<string> ProxyBypassList { get; }
         IWebProxy WebProxy { get; }
         void SetupProxy(string proxyAddress, string proxyUsername, string proxyPassword);
-        void SetupProxy(string proxyAddress, string proxyUsername, string proxyPassword, bool useBasicAuth);
+        void SetupProxy(string proxyAddress, string proxyUsername, string proxyPassword, bool proxyBasicAuth);
         void SaveProxySetting();
         void LoadProxyBypassList();
         void DeleteProxySetting();
@@ -55,14 +55,14 @@ namespace Microsoft.VisualStudio.Services.Agent
         }
 
         // This should only be called from config
-        public void SetupProxy(string proxyAddress, string proxyUsername, string proxyPassword, bool useBasicAuth)
+        public void SetupProxy(string proxyAddress, string proxyUsername, string proxyPassword, bool proxyBasicAuth)
         {
             ArgUtil.NotNullOrEmpty(proxyAddress, nameof(proxyAddress));
             Trace.Info($"Update proxy setting from '{ProxyAddress ?? string.Empty}' to'{proxyAddress}'");
             ProxyAddress = proxyAddress;
             ProxyUsername = proxyUsername;
             ProxyPassword = proxyPassword;
-            ProxyBasicAuth = useBasicAuth;
+            ProxyBasicAuth = proxyBasicAuth;
 
             if (string.IsNullOrEmpty(ProxyUsername) || string.IsNullOrEmpty(ProxyPassword))
             {
@@ -73,7 +73,7 @@ namespace Microsoft.VisualStudio.Services.Agent
                 Trace.Info($"Config authentication proxy as: {ProxyUsername}.");
             }
 
-            if (useBasicAuth)
+            if (proxyBasicAuth)
             {
                 Trace.Info("Config proxy to use Basic authentication.");
             }
@@ -81,7 +81,7 @@ namespace Microsoft.VisualStudio.Services.Agent
             // Ensure proxy bypass list is loaded during the agent config
             LoadProxyBypassList();
 
-            _agentWebProxy.Update(ProxyAddress, ProxyUsername, ProxyPassword, ProxyBypassList, useBasicAuth);
+            _agentWebProxy.Update(ProxyAddress, ProxyUsername, ProxyPassword, ProxyBypassList, proxyBasicAuth);
         }
 
         // This should only be called from config

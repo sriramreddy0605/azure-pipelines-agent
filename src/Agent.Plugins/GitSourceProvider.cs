@@ -191,6 +191,7 @@ namespace Agent.Plugins.Repository
         private const string _remoteRefsPrefix = "refs/remotes/origin/";
         private const string _pullRefsPrefix = "refs/pull/";
         private const string _remotePullRefsPrefix = "refs/remotes/pull/";
+        private const string _gitProxyBasicAuthConfig = "-c http.proxyAuthMethod=basic";
 
         private const string _tenantId = "tenantid";
         private const string _clientId = "servicePrincipalId";
@@ -836,11 +837,11 @@ namespace Agent.Plugins.Repository
                     additionalLfsFetchArgs.Add($"-c http.proxy=\"{proxyUrlWithCredString}\"");
                     
                     // Add proxy authentication method if Basic auth is enabled
-                    if (agentProxy.UseBasicAuth)
+                    if (agentProxy.ProxyBasicAuth)
                     {
                         executionContext.Debug("Config proxy to use Basic authentication for git fetch.");
-                        additionalFetchArgs.Add("-c http.proxyAuthMethod=basic");
-                        additionalLfsFetchArgs.Add("-c http.proxyAuthMethod=basic");
+                        additionalFetchArgs.Add(_gitProxyBasicAuthConfig);
+                        additionalLfsFetchArgs.Add(_gitProxyBasicAuthConfig);
                     }
                 }
 
@@ -1079,10 +1080,10 @@ namespace Agent.Plugins.Repository
                         additionalSubmoduleUpdateArgs.Add($"-c http.proxy=\"{proxyUrlWithCredString}\"");
                         
                         // Add proxy authentication method if Basic auth is enabled
-                        if (agentProxy.UseBasicAuth)
+                        if (agentProxy.ProxyBasicAuth)
                         {
                             executionContext.Debug("Config proxy to use Basic authentication for git submodule update.");
-                            additionalSubmoduleUpdateArgs.Add("-c http.proxyAuthMethod=basic");
+                            additionalSubmoduleUpdateArgs.Add(_gitProxyBasicAuthConfig);
                         }
                     }
 
@@ -1185,7 +1186,7 @@ namespace Agent.Plugins.Repository
                         }
                         
                         // Add proxy authentication method if Basic auth is enabled
-                        if (agentProxy.UseBasicAuth)
+                        if (agentProxy.ProxyBasicAuth)
                         {
                             executionContext.Debug("Save proxy authentication method 'basic' to git config.");
                             string proxyAuthMethodKey = "http.proxyAuthMethod";

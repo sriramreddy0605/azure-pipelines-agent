@@ -330,15 +330,15 @@ namespace Agent.Sdk
                 string proxyUsername = this.Variables.GetValueOrDefault(AgentWebProxySettings.AgentProxyUsernameKey)?.Value;
                 string proxyPassword = this.Variables.GetValueOrDefault(AgentWebProxySettings.AgentProxyPasswordKey)?.Value;
                 List<string> proxyBypassHosts = StringUtil.ConvertFromJson<List<string>>(this.Variables.GetValueOrDefault(AgentWebProxySettings.AgentProxyBypassListKey)?.Value ?? "[]");
-                bool useBasicAuth = StringUtil.ConvertToBoolean(this.Variables.GetValueOrDefault(AgentWebProxySettings.AgentProxyBasicAuthKey)?.Value);
+                bool proxyBasicAuth = StringUtil.GetProxyBasicAuthSetting(this.Variables);
                 return new AgentWebProxySettings()
                 {
                     ProxyAddress = proxyUrl,
                     ProxyUsername = proxyUsername,
                     ProxyPassword = proxyPassword,
                     ProxyBypassList = proxyBypassHosts,
-                    UseBasicAuth = useBasicAuth,
-                    WebProxy = new AgentWebProxy(proxyUrl, proxyUsername, proxyPassword, proxyBypassHosts, useBasicAuth)
+                    ProxyBasicAuth = proxyBasicAuth,
+                    WebProxy = new AgentWebProxy(proxyUrl, proxyUsername, proxyPassword, proxyBypassHosts, proxyBasicAuth)
                 };
             }
             // back-compat of proxy configuration via environment variables
