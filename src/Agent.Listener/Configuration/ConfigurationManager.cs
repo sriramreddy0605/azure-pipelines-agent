@@ -1019,6 +1019,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
 
             bool saveProxySetting = false;
             string proxyUrl = command.GetProxyUrl();
+            bool proxyBasicAuth = command.GetProxyBasicAuth();
+            
             if (!string.IsNullOrEmpty(proxyUrl))
             {
                 if (!Uri.IsWellFormedUriString(proxyUrl, UriKind.Absolute))
@@ -1029,9 +1031,21 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
                 Trace.Info("Reset proxy base on commandline args.");
                 string proxyUserName = command.GetProxyUserName();
                 string proxyPassword = command.GetProxyPassword();
-                bool proxyBasicAuth = command.GetProxyBasicAuth();
                 vstsProxy.SetupProxy(proxyUrl, proxyUserName, proxyPassword, proxyBasicAuth);
                 saveProxySetting = true;
+            }
+            else
+            {
+                // Check if proxy details are set via environment variables and handle --proxybasicauth flag
+                string envProxyUrl = Environment.GetEnvironmentVariable("VSTS_HTTP_PROXY") ?? Environment.GetEnvironmentVariable("http_proxy");
+                if (!string.IsNullOrEmpty(envProxyUrl) && proxyBasicAuth)
+                {
+                    Trace.Info("Proxy URL from environment variable with basic auth flag from command line.");
+                    string envProxyUserName = Environment.GetEnvironmentVariable("VSTS_HTTP_PROXY_USERNAME");
+                    string envProxyPassword = Environment.GetEnvironmentVariable("VSTS_HTTP_PROXY_PASSWORD");
+                    vstsProxy.SetupProxy(envProxyUrl, envProxyUserName, envProxyPassword, proxyBasicAuth);
+                    saveProxySetting = true;
+                }
             }
 
             return saveProxySetting;
