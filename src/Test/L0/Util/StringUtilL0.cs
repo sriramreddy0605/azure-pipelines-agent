@@ -2,9 +2,6 @@
 // Licensed under the MIT License.
 
 using Microsoft.VisualStudio.Services.Agent.Util;
-using Microsoft.TeamFoundation.DistributedTask.WebApi;
-using Agent.Sdk;
-using System.Collections.Generic;
 using System.Globalization;
 using Xunit;
 
@@ -211,34 +208,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Util
                 Assert.False(result8, $"'{undefineString2}' should convert to false.");
                 Assert.False(result9, $"'{undefineString3}' should convert to false.");
             }
-        }
-
-        [Theory]
-        [Trait("Level", "L0")]
-        [Trait("Category", "Common")]
-        [InlineData("true", true)]
-        [InlineData("false", false)]
-        [InlineData("True", true)]
-        [InlineData("False", false)]
-        [InlineData("1", true)]
-        [InlineData("0", false)]
-        [InlineData("invalid", false)]
-        [InlineData("", false)]
-        [InlineData(null, false)]
-        public void GetProxyBasicAuthSettingReturnsCorrectValue(string value, bool expected)
-        {
-            // Arrange
-            var variables = new Dictionary<string, VariableValue>();
-            if (value != null)
-            {
-                variables[AgentWebProxySettings.AgentProxyBasicAuthKey] = new VariableValue(value);
-            }
-
-            // Act
-            bool result = StringUtil.GetProxyBasicAuthSetting(variables);
-
-            // Assert
-            Assert.Equal(expected, result);
         }
     }
 }

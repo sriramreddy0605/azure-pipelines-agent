@@ -1034,11 +1034,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
                 vstsProxy.SetupProxy(proxyUrl, proxyUserName, proxyPassword, proxyBasicAuth);
                 saveProxySetting = true;
             }
-            else
-            {
-                // Environment variables are handled by the knob system in VstsAgentWebProxy
-                Trace.Info("No command-line proxy arguments provided. Proxy will be loaded from environment variables via knob system if available.");
-            }
 
             return saveProxySetting;
         }

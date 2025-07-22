@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 using Agent.Sdk;
-using Microsoft.TeamFoundation.DistributedTask.Pipelines;
-using Microsoft.TeamFoundation.DistributedTask.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -294,16 +292,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
             }
 
             return Regex.Replace(input, "##vso", "**vso", RegexOptions.IgnoreCase);
-        }
-
-        /// <summary>
-        /// Gets the proxy basic auth setting from variables dictionary
-        /// </summary>
-        /// <param name="variables">Dictionary of variables</param>
-        /// <returns>True if proxy basic auth is enabled, false otherwise</returns>
-        public static bool GetProxyBasicAuthSetting(Dictionary<string, VariableValue> variables)
-        {
-            return ConvertToBoolean(variables?.GetValueOrDefault(AgentWebProxySettings.AgentProxyBasicAuthKey)?.Value);
         }
     }
 }

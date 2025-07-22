@@ -75,7 +75,7 @@ namespace Microsoft.VisualStudio.Services.Agent
 
             if (proxyBasicAuth)
             {
-                Trace.Info("Config proxy to use Basic authentication.");
+                Trace.Info("Config proxy to use Basic authentication from command line.");
             }
 
             // Ensure proxy bypass list is loaded during the agent config
@@ -191,10 +191,6 @@ namespace Microsoft.VisualStudio.Services.Agent
                 
                 // Check for basic auth flag in subsequent lines
                 ProxyBasicAuth = lines.Any(line => line.Trim().Equals("basicauth=true", StringComparison.OrdinalIgnoreCase));
-                if (ProxyBasicAuth)
-                {
-                    Trace.Info("Config proxy to use Basic authentication.");
-                }
             }
 
             if (string.IsNullOrEmpty(ProxyAddress))
@@ -239,12 +235,7 @@ namespace Microsoft.VisualStudio.Services.Agent
                 // If basic auth not explicitly set from config file, check environment
                 if (!ProxyBasicAuth)
                 {
-                    bool envBasicAuth = AgentKnobs.ProxyBasicAuth.GetValue(HostContext).AsBoolean();
-                    if (envBasicAuth)
-                    {
-                        ProxyBasicAuth = true;
-                        Trace.Info("Config proxy to use Basic authentication from environment variable.");
-                    }
+                    ProxyBasicAuth = AgentKnobs.ProxyBasicAuth.GetValue(HostContext).AsBoolean();
                 }
 
                 if (!string.IsNullOrEmpty(ProxyPassword))
