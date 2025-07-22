@@ -810,7 +810,30 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
 
                 var result = actualEvents.Where(w => w[0].Properties.ContainsKey("ProxyAddress-${http_proxy}"));
 
-                Assert.True(result?.Count() == 1);
+                // Debug output to understand what events are being published
+                Console.WriteLine($"Debug: http_proxy env var = '{Environment.GetEnvironmentVariable("http_proxy")}'");
+                Console.WriteLine($"Debug: Total telemetry events published: {actualEvents.Count}");
+                for (int i = 0; i < actualEvents.Count; i++)
+                {
+                    var eventProps = actualEvents[i][0].Properties;
+                    Console.WriteLine($"Debug: Event {i} - Keys: {string.Join(", ", eventProps.Keys)}");
+                    foreach (var kvp in eventProps)
+                    {
+                        Console.WriteLine($"  '{kvp.Key}' = '{kvp.Value}'");
+                    }
+                }
+                Console.WriteLine($"Debug: Events with expected key: {result?.Count()}");
+
+                // Build debug info for assertion message
+                string debugInfo = $"http_proxy='{Environment.GetEnvironmentVariable("http_proxy")}', Events:{actualEvents.Count}";
+                for (int i = 0; i < actualEvents.Count && i < 3; i++)
+                {
+                    var eventProps = actualEvents[i][0].Properties;
+                    debugInfo += $" | Event{i}[{string.Join(",", eventProps.Keys)}]";
+                }
+
+                Assert.True(result?.Count() == 1, 
+                    $"Expected 1 telemetry event with 'ProxyAddress-${{http_proxy}}' key, but found {result?.Count()}. {debugInfo}");
 
                 Assert.True(
                     !expectedEvent.Except(result.First()[0].Properties).Any(),

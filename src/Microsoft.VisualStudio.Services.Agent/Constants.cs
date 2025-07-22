@@ -581,6 +581,7 @@ namespace Microsoft.VisualStudio.Services.Agent
                 Agent.OS,
                 Agent.OSArchitecture,
                 Agent.OSVersion,
+                Agent.ProxyBasicAuth,
                 Agent.ProxyBypassList,
                 Agent.ProxyPassword,
                 Agent.ProxyUrl,
