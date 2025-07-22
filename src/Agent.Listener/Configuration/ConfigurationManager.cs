@@ -1036,16 +1036,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
             }
             else
             {
-                // Check if proxy details are set via environment variables and handle --proxybasicauth flag
-                string envProxyUrl = Environment.GetEnvironmentVariable("VSTS_HTTP_PROXY") ?? Environment.GetEnvironmentVariable("http_proxy");
-                if (!string.IsNullOrEmpty(envProxyUrl) && proxyBasicAuth)
-                {
-                    Trace.Info("Proxy URL from environment variable with basic auth flag from command line.");
-                    string envProxyUserName = Environment.GetEnvironmentVariable("VSTS_HTTP_PROXY_USERNAME");
-                    string envProxyPassword = Environment.GetEnvironmentVariable("VSTS_HTTP_PROXY_PASSWORD");
-                    vstsProxy.SetupProxy(envProxyUrl, envProxyUserName, envProxyPassword, proxyBasicAuth);
-                    saveProxySetting = true;
-                }
+                // Environment variables are handled by the knob system in VstsAgentWebProxy
+                Trace.Info("No command-line proxy arguments provided. Proxy will be loaded from environment variables via knob system if available.");
             }
 
             return saveProxySetting;

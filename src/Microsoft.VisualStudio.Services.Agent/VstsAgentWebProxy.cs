@@ -236,6 +236,17 @@ namespace Microsoft.VisualStudio.Services.Agent
                     ProxyPassword = AgentKnobs.ProxyPassword.GetValue(HostContext).AsString();
                 }
 
+                // If basic auth not explicitly set from config file, check environment
+                if (!ProxyBasicAuth)
+                {
+                    bool envBasicAuth = AgentKnobs.ProxyBasicAuth.GetValue(HostContext).AsBoolean();
+                    if (envBasicAuth)
+                    {
+                        ProxyBasicAuth = true;
+                        Trace.Info("Config proxy to use Basic authentication from environment variable.");
+                    }
+                }
+
                 if (!string.IsNullOrEmpty(ProxyPassword))
                 {
                     HostContext.SecretMasker.AddValue(ProxyPassword, WellKnownSecretAliases.ProxyPassword);
