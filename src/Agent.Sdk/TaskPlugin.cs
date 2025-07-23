@@ -121,7 +121,7 @@ namespace Agent.Sdk
             {
                 if (!string.IsNullOrEmpty(WebProxySettings.ProxyAddress))
                 {
-                    VssHttpMessageHandler.DefaultWebProxy = new AgentWebProxy(WebProxySettings.ProxyAddress, WebProxySettings.ProxyUsername, WebProxySettings.ProxyPassword, WebProxySettings.ProxyBypassList);
+                    VssHttpMessageHandler.DefaultWebProxy = new AgentWebProxy(WebProxySettings.ProxyAddress, WebProxySettings.ProxyUsername, WebProxySettings.ProxyPassword, WebProxySettings.ProxyBypassList, WebProxySettings.ProxyBasicAuth);
                 }
             }
 
@@ -348,12 +348,14 @@ namespace Agent.Sdk
                 ProxyUrl = ProxyUrl.Trim();
                 var ProxyUsername = Environment.GetEnvironmentVariable("VSTS_HTTP_PROXY_USERNAME");
                 var ProxyPassword = Environment.GetEnvironmentVariable("VSTS_HTTP_PROXY_PASSWORD");
+                var ProxyBasicAuth = StringUtil.ConvertToBoolean(Environment.GetEnvironmentVariable("VSTS_HTTP_PROXY_BASIC_AUTH"));
                 return new AgentWebProxySettings()
                 {
                     ProxyAddress = ProxyUrl,
                     ProxyUsername = ProxyUsername,
                     ProxyPassword = ProxyPassword,
-                    WebProxy = new AgentWebProxy(proxyUrl, ProxyUsername, ProxyPassword, null)
+                    ProxyBasicAuth = ProxyBasicAuth,
+                    WebProxy = new AgentWebProxy(ProxyUrl, ProxyUsername, ProxyPassword, null, ProxyBasicAuth)
                 };
             }
             else

@@ -193,7 +193,7 @@ namespace Agent.Sdk
             {
                 if (!string.IsNullOrEmpty(WebProxySettings.ProxyAddress))
                 {
-                    VssHttpMessageHandler.DefaultWebProxy = new AgentWebProxy(WebProxySettings.ProxyAddress, WebProxySettings.ProxyUsername, WebProxySettings.ProxyPassword, WebProxySettings.ProxyBypassList);
+                    VssHttpMessageHandler.DefaultWebProxy = new AgentWebProxy(WebProxySettings.ProxyAddress, WebProxySettings.ProxyUsername, WebProxySettings.ProxyPassword, WebProxySettings.ProxyBypassList, WebProxySettings.ProxyBasicAuth);
                 }
             }
 

@@ -202,7 +202,8 @@ namespace Agent.Sdk
                     ProxyUsername = proxyUsername,
                     ProxyPassword = proxyPassword,
                     ProxyBypassList = proxyBypassHosts,
-                    ProxyBasicAuth = proxyBasicAuth
+                    ProxyBasicAuth = proxyBasicAuth,
+                    WebProxy = new AgentWebProxy(proxyUrl, proxyUsername, proxyPassword, proxyBypassHosts, proxyBasicAuth)
                 };
             }
             else
