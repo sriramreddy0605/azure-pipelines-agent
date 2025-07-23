@@ -142,7 +142,7 @@ namespace Agent.Sdk
             {
                 if (!string.IsNullOrEmpty(proxySetting.ProxyAddress))
                 {
-                    VssHttpMessageHandler.DefaultWebProxy = new AgentWebProxy(proxySetting.ProxyAddress, proxySetting.ProxyUsername, proxySetting.ProxyPassword, proxySetting.ProxyBypassList);
+                    VssHttpMessageHandler.DefaultWebProxy = new AgentWebProxy(proxySetting.ProxyAddress, proxySetting.ProxyUsername, proxySetting.ProxyPassword, proxySetting.ProxyBypassList, proxySetting.ProxyBasicAuth);
                 }
             }
 
@@ -202,8 +202,7 @@ namespace Agent.Sdk
                     ProxyUsername = proxyUsername,
                     ProxyPassword = proxyPassword,
                     ProxyBypassList = proxyBypassHosts,
-                    ProxyBasicAuth = proxyBasicAuth,
-                    WebProxy = new AgentWebProxy(proxyUrl, proxyUsername, proxyPassword, proxyBypassHosts, proxyBasicAuth)
+                    ProxyBasicAuth = proxyBasicAuth
                 };
             }
             else

@@ -69,7 +69,7 @@ namespace Agent.Sdk
                 }
                 else
                 {
-                    // Default behavior: Use NetworkCredential (master logic)
+                    // Default behavior: Use NetworkCredential (default logic for .NET)
                     Credentials = new NetworkCredential(proxyUsername, proxyPassword);
                 }
             }

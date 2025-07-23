@@ -58,7 +58,7 @@ namespace Microsoft.VisualStudio.Services.Agent
         public void SetupProxy(string proxyAddress, string proxyUsername, string proxyPassword, bool proxyBasicAuth)
         {
             ArgUtil.NotNullOrEmpty(proxyAddress, nameof(proxyAddress));
-            Trace.Info($"Update proxy setting from '{ProxyAddress ?? string.Empty}' to'{proxyAddress}'");
+            Trace.Info($"Update proxy setting from '{ProxyAddress ?? string.Empty}' to '{proxyAddress}'");
             ProxyAddress = proxyAddress;
             ProxyUsername = proxyUsername;
             ProxyPassword = proxyPassword;
