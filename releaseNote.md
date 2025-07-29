@@ -1,3 +1,15 @@
+## Features
+ - Add domain support to pipeline caching (#5260)
+ - Removing .net6 option and input box for Derived from version (#5267)
+ - Add FetchByCommitForFullClone knob to enable fetch by commit for full clones (#5276)
+ - Updating node version to v20.19.4 (#5278)
+
+## Bugs
+
+
+## Misc
+ - Moved vso-task-lib download to runtime (#5277)
+
 
 ## Agent Downloads
 
