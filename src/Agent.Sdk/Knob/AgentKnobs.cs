@@ -200,6 +200,13 @@ namespace Agent.Sdk.Knob
             new EnvironmentKnobSource("AGENT_USE_NODE20_IN_UNSUPPORTED_SYSTEM"),
             new BuiltInDefaultKnobSource("false"));
 
+        public static readonly Knob FetchByCommitForFullClone = new Knob(
+            nameof(FetchByCommitForFullClone),
+            "If true, allow fetch by commit when doing a full clone (depth=0).",
+            new RuntimeKnobSource("VSTS.FetchByCommitForFullClone"),
+            new EnvironmentKnobSource("VSTS_FETCHBYCOMMITFORFULLCLONE"),
+            new BuiltInDefaultKnobSource("false"));
+
         // Agent logging
         public static readonly Knob AgentPerflog = new Knob(
             nameof(AgentPerflog),
@@ -467,6 +474,12 @@ namespace Agent.Sdk.Knob
             "When set, defines the domain to use to send Pipeline artifacts to.",
             new RuntimeKnobSource("SEND_PIPELINE_ARTIFACTS_TO_BLOBSTORE_DOMAIN"),
             new EnvironmentKnobSource("SEND_PIPELINE_ARTIFACT_ARTIFACTS_TO_BLOBSTORE_DOMAIN"),
+            new BuiltInDefaultKnobSource(string.Empty));
+        public static readonly Knob SendPipelineCacheToBlobstoreDomain = new Knob(
+            nameof(SendPipelineArtifactsToBlobstoreDomain),
+            "When set, defines the domain to store Pipeline caches.",
+            new RuntimeKnobSource("SEND_PIPELINE_CACHE_TO_BLOBSTORE_DOMAIN"),
+            new EnvironmentKnobSource("SEND_PIPELINE_CACHE_TO_BLOBSTORE_DOMAIN"),
             new BuiltInDefaultKnobSource(string.Empty));
 
         public static readonly Knob EnableIncompatibleBuildArtifactsPathResolution = new Knob(
