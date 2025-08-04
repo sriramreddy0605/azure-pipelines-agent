@@ -238,7 +238,7 @@ namespace Microsoft.VisualStudio.Services.Agent
                     public const string Unattended = "unattended";
                     public const string Version = "version";
                     public const string EnableServiceSidTypeUnrestricted = "enableservicesidtypeunrestricted";
-                    public const string ProxyBasicAuth = "proxybasicauth";
+                    public const string UseBasicAuthForProxy = "usebasicauthforproxy";
                 }
             }
 
@@ -383,7 +383,7 @@ namespace Microsoft.VisualStudio.Services.Agent
                 public static readonly string ProxyUsername = "agent.proxyusername";
                 public static readonly string ProxyPassword = "agent.proxypassword";
                 public static readonly string ProxyBypassList = "agent.proxybypasslist";
-                public static readonly string ProxyBasicAuth = "agent.proxybasicauth";
+                public static readonly string UseBasicAuthForProxy = "agent.usebasicauthforproxy";
                 public static readonly string RetainDefaultEncoding = "agent.retainDefaultEncoding";
                 public static readonly string ReadOnlyVariables = "agent.readOnlyVariables";
                 public static readonly string RootDirectory = "agent.RootDirectory";
@@ -581,7 +581,7 @@ namespace Microsoft.VisualStudio.Services.Agent
                 Agent.OS,
                 Agent.OSArchitecture,
                 Agent.OSVersion,
-                Agent.ProxyBasicAuth,
+                Agent.UseBasicAuthForProxy,
                 Agent.ProxyBypassList,
                 Agent.ProxyPassword,
                 Agent.ProxyUrl,

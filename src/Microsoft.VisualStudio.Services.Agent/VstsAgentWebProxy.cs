@@ -20,11 +20,11 @@ namespace Microsoft.VisualStudio.Services.Agent
         string ProxyAddress { get; }
         string ProxyUsername { get; }
         string ProxyPassword { get; }
-        bool ProxyBasicAuth { get; }
+        bool UseBasicAuthForProxy { get; }
         List<string> ProxyBypassList { get; }
         IWebProxy WebProxy { get; }
         void SetupProxy(string proxyAddress, string proxyUsername, string proxyPassword);
-        void SetupProxy(string proxyAddress, string proxyUsername, string proxyPassword, bool proxyBasicAuth);
+        void SetupProxy(string proxyAddress, string proxyUsername, string proxyPassword, bool useBasicAuthForProxy);
         void SaveProxySetting();
         void LoadProxyBypassList();
         void DeleteProxySetting();
@@ -38,7 +38,7 @@ namespace Microsoft.VisualStudio.Services.Agent
         public string ProxyAddress { get; private set; }
         public string ProxyUsername { get; private set; }
         public string ProxyPassword { get; private set; }
-        public bool ProxyBasicAuth { get; private set; }
+        public bool UseBasicAuthForProxy { get; private set; }
         public List<string> ProxyBypassList => _bypassList;
         public IWebProxy WebProxy => _agentWebProxy;
 
@@ -55,14 +55,14 @@ namespace Microsoft.VisualStudio.Services.Agent
         }
 
         // This should only be called from config
-        public void SetupProxy(string proxyAddress, string proxyUsername, string proxyPassword, bool proxyBasicAuth)
+        public void SetupProxy(string proxyAddress, string proxyUsername, string proxyPassword, bool useBasicAuthForProxy)
         {
             ArgUtil.NotNullOrEmpty(proxyAddress, nameof(proxyAddress));
             Trace.Info($"Update proxy setting from '{ProxyAddress ?? string.Empty}' to '{proxyAddress}'");
             ProxyAddress = proxyAddress;
             ProxyUsername = proxyUsername;
             ProxyPassword = proxyPassword;
-            ProxyBasicAuth = proxyBasicAuth;
+            UseBasicAuthForProxy = useBasicAuthForProxy;
 
             if (string.IsNullOrEmpty(ProxyUsername) || string.IsNullOrEmpty(ProxyPassword))
             {
@@ -73,7 +73,7 @@ namespace Microsoft.VisualStudio.Services.Agent
                 Trace.Info($"Config authentication proxy as: {ProxyUsername}.");
             }
 
-            if (proxyBasicAuth)
+            if (useBasicAuthForProxy)
             {
                 Trace.Info("Config proxy to use Basic authentication from command line.");
             }
@@ -81,7 +81,7 @@ namespace Microsoft.VisualStudio.Services.Agent
             // Ensure proxy bypass list is loaded during the agent config
             LoadProxyBypassList();
 
-            _agentWebProxy.Update(ProxyAddress, ProxyUsername, ProxyPassword, ProxyBypassList, proxyBasicAuth);
+            _agentWebProxy.Update(ProxyAddress, ProxyUsername, ProxyPassword, ProxyBypassList, useBasicAuthForProxy);
         }
 
         // This should only be called from config
@@ -95,7 +95,7 @@ namespace Microsoft.VisualStudio.Services.Agent
                 
                 // Store proxy address and basic auth flag in the same file
                 var proxyContent = ProxyAddress;
-                if (ProxyBasicAuth)
+                if (UseBasicAuthForProxy)
                 {
                     proxyContent += Environment.NewLine + "basicauth=true";
                 }
@@ -190,7 +190,7 @@ namespace Microsoft.VisualStudio.Services.Agent
                 Trace.Verbose($"{ProxyAddress}");
                 
                 // Check for basic auth flag in subsequent lines
-                ProxyBasicAuth = lines.Any(line => line.Trim().Equals("basicauth=true", StringComparison.OrdinalIgnoreCase));
+                UseBasicAuthForProxy = lines.Any(line => line.Trim().Equals("basicauth=true", StringComparison.OrdinalIgnoreCase));
             }
 
             if (string.IsNullOrEmpty(ProxyAddress))
@@ -233,9 +233,9 @@ namespace Microsoft.VisualStudio.Services.Agent
                 }
 
                 // If basic auth not explicitly set from config file, check environment
-                if (!ProxyBasicAuth)
+                if (!UseBasicAuthForProxy)
                 {
-                    ProxyBasicAuth = AgentKnobs.ProxyBasicAuth.GetValue(HostContext).AsBoolean();
+                    UseBasicAuthForProxy = AgentKnobs.UseBasicAuthForProxy.GetValue(HostContext).AsBoolean();
                 }
 
                 if (!string.IsNullOrEmpty(ProxyPassword))
@@ -254,7 +254,7 @@ namespace Microsoft.VisualStudio.Services.Agent
 
                 LoadProxyBypassList();
 
-                _agentWebProxy.Update(ProxyAddress, ProxyUsername, ProxyPassword, ProxyBypassList, ProxyBasicAuth);
+                _agentWebProxy.Update(ProxyAddress, ProxyUsername, ProxyPassword, ProxyBypassList, UseBasicAuthForProxy);
             }
             else
             {

@@ -142,7 +142,7 @@ namespace Agent.Sdk
             {
                 if (!string.IsNullOrEmpty(proxySetting.ProxyAddress))
                 {
-                    VssHttpMessageHandler.DefaultWebProxy = new AgentWebProxy(proxySetting.ProxyAddress, proxySetting.ProxyUsername, proxySetting.ProxyPassword, proxySetting.ProxyBypassList, proxySetting.ProxyBasicAuth);
+                    VssHttpMessageHandler.DefaultWebProxy = new AgentWebProxy(proxySetting.ProxyAddress, proxySetting.ProxyUsername, proxySetting.ProxyPassword, proxySetting.ProxyBypassList, proxySetting.UseBasicAuthForProxy);
                 }
             }
 
@@ -195,15 +195,15 @@ namespace Agent.Sdk
                 string proxyUsername = this.Variables.GetValueOrDefault(AgentWebProxySettings.AgentProxyUsernameKey)?.Value;
                 string proxyPassword = this.Variables.GetValueOrDefault(AgentWebProxySettings.AgentProxyPasswordKey)?.Value;
                 List<string> proxyBypassHosts = StringUtil.ConvertFromJson<List<string>>(this.Variables.GetValueOrDefault(AgentWebProxySettings.AgentProxyBypassListKey)?.Value ?? "[]");
-                bool proxyBasicAuth = StringUtil.ConvertToBoolean(this.Variables.GetValueOrDefault(AgentWebProxySettings.AgentProxyBasicAuthKey)?.Value);
+                bool useBasicAuthForProxy = StringUtil.ConvertToBoolean(this.Variables.GetValueOrDefault(AgentWebProxySettings.AgentUseBasicAuthForProxyKey)?.Value);
                 return new AgentWebProxySettings()
                 {
                     ProxyAddress = proxyUrl,
                     ProxyUsername = proxyUsername,
                     ProxyPassword = proxyPassword,
                     ProxyBypassList = proxyBypassHosts,
-                    ProxyBasicAuth = proxyBasicAuth,
-                    WebProxy = new AgentWebProxy(proxyUrl, proxyUsername, proxyPassword, proxyBypassHosts, proxyBasicAuth)
+                    UseBasicAuthForProxy = useBasicAuthForProxy,
+                    WebProxy = new AgentWebProxy(proxyUrl, proxyUsername, proxyPassword, proxyBypassHosts, useBasicAuthForProxy)
                 };
             }
             else

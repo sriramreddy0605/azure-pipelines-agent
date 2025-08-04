@@ -218,7 +218,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
         private const string _remoteRefsPrefix = "refs/remotes/origin/";
         private const string _pullRefsPrefix = "refs/pull/";
         private const string _remotePullRefsPrefix = "refs/remotes/pull/";
-        private const string _gitProxyBasicAuthConfig = "-c http.proxyAuthMethod=basic";
+        private const string _gitUseBasicAuthForProxyConfig = "-c http.proxyAuthMethod=basic";
         private readonly Dictionary<string, string> _configModifications = new Dictionary<string, string>();
         private bool _selfManageGitCreds = false;
         private Uri _repositoryUrlWithCred = null;
@@ -727,11 +727,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
                     additionalLfsFetchArgs.Add($"-c http.proxy=\"{_proxyUrlWithCredString}\"");
                     
                     // Add proxy authentication method if Basic auth is enabled
-                    if (executionContext.Variables.Agent_ProxyBasicAuth == true)
+                    if (executionContext.Variables.Agent_UseBasicAuthForProxy == true)
                     {
                         executionContext.Debug("Config proxy to use Basic authentication for git fetch.");
-                        additionalFetchArgs.Add(_gitProxyBasicAuthConfig);
-                        additionalLfsFetchArgs.Add(_gitProxyBasicAuthConfig);
+                        additionalFetchArgs.Add(_gitUseBasicAuthForProxyConfig);
+                        additionalLfsFetchArgs.Add(_gitUseBasicAuthForProxyConfig);
                     }
                 }
 
@@ -909,10 +909,10 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
                         additionalSubmoduleUpdateArgs.Add($"-c http.proxy=\"{_proxyUrlWithCredString}\"");
                         
                         // Add proxy authentication method if Basic auth is enabled
-                        if (executionContext.Variables.Agent_ProxyBasicAuth == true)
+                        if (executionContext.Variables.Agent_UseBasicAuthForProxy == true)
                         {
                             executionContext.Debug("Config proxy to use Basic authentication for git submodule update.");
-                            additionalSubmoduleUpdateArgs.Add(_gitProxyBasicAuthConfig);
+                            additionalSubmoduleUpdateArgs.Add(_gitUseBasicAuthForProxyConfig);
                         }
                     }
 
@@ -1008,7 +1008,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
                         }
                         
                         // Add proxy authentication method if Basic auth is enabled
-                        if (executionContext.Variables.Agent_ProxyBasicAuth == true)
+                        if (executionContext.Variables.Agent_UseBasicAuthForProxy == true)
                         {
                             executionContext.Debug("Save proxy authentication method 'basic' to git config.");
                             string proxyAuthMethodKey = "http.proxyAuthMethod";

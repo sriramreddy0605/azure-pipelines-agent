@@ -49,7 +49,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests
         [Fact]
         [Trait("Level", "L0")]
         [Trait("Category", "Common")]
-        public void ProxyBasicAuthSetupAndPersistence()
+        public void UseBasicAuthForProxySetupAndPersistence()
         {
             using (var _hc = Setup(false))
             {
@@ -63,21 +63,21 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests
                 Assert.Equal("http://proxy.example.com:8080", vstsAgentWebProxy.ProxyAddress);
                 Assert.Equal("testuser", vstsAgentWebProxy.ProxyUsername);
                 Assert.Equal("testpass", vstsAgentWebProxy.ProxyPassword);
-                Assert.True(vstsAgentWebProxy.ProxyBasicAuth);
+                Assert.True(vstsAgentWebProxy.UseBasicAuthForProxy);
 
                 // Test SetupProxy with basic auth disabled (default behavior)
                 vstsAgentWebProxy.SetupProxy("http://proxy2.example.com:8080", "testuser2", "testpass2", false);
                 Assert.Equal("http://proxy2.example.com:8080", vstsAgentWebProxy.ProxyAddress);
                 Assert.Equal("testuser2", vstsAgentWebProxy.ProxyUsername);
                 Assert.Equal("testpass2", vstsAgentWebProxy.ProxyPassword);
-                Assert.False(vstsAgentWebProxy.ProxyBasicAuth);
+                Assert.False(vstsAgentWebProxy.UseBasicAuthForProxy);
 
                 // Test legacy SetupProxy method (should default to false)
                 vstsAgentWebProxy.SetupProxy("http://proxy3.example.com:8080", "testuser3", "testpass3");
                 Assert.Equal("http://proxy3.example.com:8080", vstsAgentWebProxy.ProxyAddress);
                 Assert.Equal("testuser3", vstsAgentWebProxy.ProxyUsername);
                 Assert.Equal("testpass3", vstsAgentWebProxy.ProxyPassword);
-                Assert.False(vstsAgentWebProxy.ProxyBasicAuth); // Should default to false
+                Assert.False(vstsAgentWebProxy.UseBasicAuthForProxy); // Should default to false
             }
         }
 
@@ -100,7 +100,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests
                 vstsAgentWebProxy.SetupProxy(proxyAddress, proxyUsername, proxyPassword, true);
                 
                 // Assert basic auth flag is set
-                Assert.True(vstsAgentWebProxy.ProxyBasicAuth);
+                Assert.True(vstsAgentWebProxy.UseBasicAuthForProxy);
                 Assert.Equal(proxyAddress, vstsAgentWebProxy.ProxyAddress);
                 Assert.Equal(proxyUsername, vstsAgentWebProxy.ProxyUsername);
                 Assert.Equal(proxyPassword, vstsAgentWebProxy.ProxyPassword);
@@ -109,13 +109,13 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests
                 vstsAgentWebProxy.SetupProxy(proxyAddress, proxyUsername, proxyPassword, false);
                 
                 // Assert basic auth flag is false
-                Assert.False(vstsAgentWebProxy.ProxyBasicAuth);
+                Assert.False(vstsAgentWebProxy.UseBasicAuthForProxy);
                 
                 // Test legacy method (should default to false)
                 vstsAgentWebProxy.SetupProxy(proxyAddress, proxyUsername, proxyPassword);
                 
                 // Assert basic auth defaults to false
-                Assert.False(vstsAgentWebProxy.ProxyBasicAuth);
+                Assert.False(vstsAgentWebProxy.UseBasicAuthForProxy);
             }
         }
 

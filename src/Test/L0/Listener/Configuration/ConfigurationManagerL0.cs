@@ -662,7 +662,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Listener.Configuration
                        "--proxyurl", "http://proxy.example.com:8080",
                        "--proxyusername", "testuser",
                        "--proxypassword", "testpass",
-                       "--proxybasicauth"
+                       "--usebasicauthforproxy"
                     });
 
                 // Use reflection to call private SetupVstsProxySetting method

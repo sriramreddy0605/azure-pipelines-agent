@@ -15,12 +15,12 @@ namespace Agent.Sdk
         public static string AgentProxyUsernameKey = "Agent.ProxyUsername".ToLower();
         public static string AgentProxyPasswordKey = "Agent.ProxyPassword".ToLower();
         public static string AgentProxyBypassListKey = "Agent.ProxyBypassList".ToLower();
-        public static string AgentProxyBasicAuthKey = "Agent.ProxyBasicAuth".ToLower();
+        public static string AgentUseBasicAuthForProxyKey = "Agent.UseBasicAuthForProxy".ToLower();
         public string ProxyAddress { get; set; }
         public string ProxyUsername { get; set; }
         public string ProxyPassword { get; set; }
         public List<string> ProxyBypassList { get; set; }
-        public bool ProxyBasicAuth { get; set; }
+        public bool UseBasicAuthForProxy { get; set; }
         public IWebProxy WebProxy { get; set; }
     }
 
@@ -28,7 +28,7 @@ namespace Agent.Sdk
     {
         private string _proxyAddress;
         private readonly List<Regex> _regExBypassList = new List<Regex>();
-        private bool _proxyBasicAuth = false; // Flag to control Basic auth usage
+        private bool _useBasicAuthForProxy = false; // Flag to control Basic auth usage
 
         public ICredentials Credentials { get; set; }
 
@@ -41,14 +41,14 @@ namespace Agent.Sdk
             Update(proxyAddress, proxyUsername, proxyPassword, proxyBypassList, false);
         }
 
-        public AgentWebProxy(string proxyAddress, string proxyUsername, string proxyPassword, List<string> proxyBypassList, bool proxyBasicAuth = false)
+        public AgentWebProxy(string proxyAddress, string proxyUsername, string proxyPassword, List<string> proxyBypassList, bool useBasicAuthForProxy = false)
         {
-            Update(proxyAddress, proxyUsername, proxyPassword, proxyBypassList, proxyBasicAuth);
+            Update(proxyAddress, proxyUsername, proxyPassword, proxyBypassList, useBasicAuthForProxy);
         }
 
-        public void Update(string proxyAddress, string proxyUsername, string proxyPassword, List<string> proxyBypassList, bool proxyBasicAuth = false)
+        public void Update(string proxyAddress, string proxyUsername, string proxyPassword, List<string> proxyBypassList, bool useBasicAuthForProxy = false)
         {
-            _proxyBasicAuth = proxyBasicAuth;
+            _useBasicAuthForProxy = useBasicAuthForProxy;
             _proxyAddress = proxyAddress?.Trim();
 
             if (string.IsNullOrEmpty(proxyUsername) || string.IsNullOrEmpty(proxyPassword))
@@ -57,7 +57,7 @@ namespace Agent.Sdk
             }
             else
             {
-                if (_proxyBasicAuth)
+                if (_useBasicAuthForProxy)
                 {
                     // Use CredentialCache to force Basic authentication and avoid NTLM negotiation issues
                     // This fixes the 407 Proxy Authentication Required errors that occur when .NET

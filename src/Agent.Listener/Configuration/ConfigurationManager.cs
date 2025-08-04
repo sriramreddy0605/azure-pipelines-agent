@@ -1019,7 +1019,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
 
             bool saveProxySetting = false;
             string proxyUrl = command.GetProxyUrl();
-            bool proxyBasicAuth = command.GetProxyBasicAuth();
+            bool useBasicAuthForProxy = command.GetUseBasicAuthForProxy();
             
             if (!string.IsNullOrEmpty(proxyUrl))
             {
@@ -1031,7 +1031,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
                 Trace.Info("Reset proxy base on commandline args.");
                 string proxyUserName = command.GetProxyUserName();
                 string proxyPassword = command.GetProxyPassword();
-                vstsProxy.SetupProxy(proxyUrl, proxyUserName, proxyPassword, proxyBasicAuth);
+                vstsProxy.SetupProxy(proxyUrl, proxyUserName, proxyPassword, useBasicAuthForProxy);
                 saveProxySetting = true;
             }
 
