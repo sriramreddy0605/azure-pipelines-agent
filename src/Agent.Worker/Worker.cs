@@ -25,7 +25,18 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         private readonly TimeSpan _workerStartTimeout = TimeSpan.FromSeconds(30);
         private static readonly char[] _quoteLikeChars = new char[] { '\'', '"' };
 
-
+        // STEP-4.2
+        // #### 4.2 Job Message Reception
+        // ```
+        // Worker.cs::RunAsync()
+        // ├── ProcessChannel.StartClient()
+        // ├── Channel.ReceiveAsync() - Wait for job message
+        // ├── Job message deserialization
+        // ├── VsoCommand deactivation (security)
+        // ├── Secret masker initialization
+        // ├── Culture/locale setup
+        // └── JobRunner.RunAsync() initiation
+        // ```
         public async Task<int> RunAsync(string pipeIn, string pipeOut)
         {
             // Validate args.
@@ -41,13 +52,15 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             using (var jobRequestCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(HostContext.AgentShutdownToken))
             using (var channelTokenSource = new CancellationTokenSource())
             {
-                // Start the channel.
+                // Start the channel. 
                 channel.StartClient(pipeIn, pipeOut);
 
                 // Wait for up to 30 seconds for a message from the channel.
                 HostContext.WritePerfCounter("WorkerWaitingForJobMessage");
                 Trace.Info("Waiting to receive the job message from the channel.");
                 WorkerMessage channelMessage;
+                // Wait for job message
+                // WAITING FOR WORKER PROCESS TO RECEIVE JOB MESSAGE
                 using (var csChannelMessage = new CancellationTokenSource(_workerStartTimeout))
                 {
                     channelMessage = await channel.ReceiveAsync(csChannelMessage.Token);
@@ -57,10 +70,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 Trace.Info("Message received.");
                 ArgUtil.Equal(MessageType.NewJobRequest, channelMessage.MessageType, nameof(channelMessage.MessageType));
                 ArgUtil.NotNullOrEmpty(channelMessage.Body, nameof(channelMessage.Body));
+                // Job message deserialization
                 var jobMessage = JsonUtility.FromString<Pipelines.AgentJobRequestMessage>(channelMessage.Body);
                 ArgUtil.NotNull(jobMessage, nameof(jobMessage));
                 HostContext.WritePerfCounter($"WorkerJobMessageReceived_{jobMessage.RequestId.ToString()}");
-
+                // VsoCommand deactivation (security)
                 Trace.Info("Deactivating vso commands in job message variables.");
                 jobMessage = WorkerUtilities.DeactivateVsoCommandsFromJobMessageVariables(jobMessage);
 
@@ -70,6 +84,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
                 // Start the job.
                 Trace.Info($"Job message:{Environment.NewLine} {StringUtil.ConvertToJson(WorkerUtilities.ScrubPiiData(jobMessage))}");
+                // JobRunner.RunAsync() initiation
                 Task<TaskResult> jobRunnerTask = jobRunner.RunAsync(jobMessage, jobRequestCancellationToken.Token);
 
                 bool cancel = false;

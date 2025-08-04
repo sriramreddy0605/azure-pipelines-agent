@@ -24,7 +24,17 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 return MainAsync(context, args).GetAwaiter().GetResult();
             }
         }
-
+        // STEP-4
+        // ### Phase 4: Worker Process Execution
+        // #### 4.1 Worker Initialization
+        // ```
+        // Agent.Worker/Program.cs::Main()
+        // ├── MainAsync()
+        // │   ├── HostContext creation (Worker type)
+        // │   ├── Command validation ("spawnclient")
+        // │   ├── Pipe handle extraction
+        // │   └── Worker.RunAsync(pipeIn, pipeOut)
+        // ```
         private static async Task<int> MainAsync(IHostContext context, string[] args)
         {
             //ITerminal registers a CTRL-C handler, which keeps the Agent.Worker process running

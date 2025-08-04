@@ -42,7 +42,22 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         {
             set => _jobServerQueue = value;
         }
-
+        // STEP-5
+        // ### Phase 5: Job Execution Context Setup
+        // #### 5.1 Job Context Initialization
+        // ```
+        // JobRunner.cs::RunAsync()
+        // ├── Job validation and parameter setup
+        // ├── Server connection establishment:
+        // │   ├── JobServer connection
+        // │   ├── TaskServer connection (task definitions)
+        // │   └── Certificate validation handling
+        // ├── ExecutionContext creation and initialization
+        // ├── Variable expansion and environment setup
+        // ├── Work directory creation and validation
+        // ├── Agent metadata population
+        // └── Resource monitoring initialization
+        // ```
         public async Task<TaskResult> RunAsync(Pipelines.AgentJobRequestMessage message, CancellationToken jobRequestCancellationToken)
         {
             // Validate parameters.

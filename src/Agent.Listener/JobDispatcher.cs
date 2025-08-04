@@ -75,6 +75,17 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
 
         public TaskCompletionSource<bool> RunOnceJobCompleted => _runOnceJobCompleted;
 
+        // STEP-2.3
+        // #### 2.3 Job Dispatcher Initialization
+        // ```
+        // JobDispatcher.cs::Run()
+        // ├── Previous job cleanup check
+        // ├── WorkerDispatcher creation
+        // ├── Job dispatch mode selection:
+        // │   ├── RunAsync() - Normal mode
+        // │   └── RunOnceAsync() - Single-use agent mode
+        // └── Job queue management
+        // ```
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA2000:Dispose objects before losing scope", MessageId = "WorkerDispatcher")]
         public void Run(Pipelines.AgentJobRequestMessage jobRequestMessage, bool runOnce = false)
         {
@@ -324,12 +335,26 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                 _runOnceJobCompleted.TrySetResult(true);
             }
         }
-
+        // STEP-3
+        // ### Phase 3: Worker Process Creation and Communication
+        // #### 3.1 Worker Process Setup
+        // ```
+        // JobDispatcher.cs::RunAsync()
+        // ├── Previous job completion wait
+        // ├── Job lock renewal initiation
+        // ├── Process channel establishment
+        // ├── Worker process creation:
+        // │   ├── Worker binary: "Agent.Worker.exe"
+        // │   ├── Arguments: "spawnclient {pipeOut} {pipeIn}"
+        // │   ├── Environment variables setup
+        // │   └── IPC pipe configuration
+        // ```
         private async Task RunAsync(Pipelines.AgentJobRequestMessage message, WorkerDispatcher previousJobDispatch, WorkerDispatcher newJobDispatch)
         {
-            
+
             if (previousJobDispatch != null)
             {
+                // Previous job completion wait
                 Trace.Verbose($"Make sure the previous job request {previousJobDispatch.JobId} has successfully finished on worker.");
                 await EnsureDispatchFinished(previousJobDispatch);
             }
@@ -409,7 +434,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                     // The worker will shutdown after 30 seconds if it hasn't received the job message.
                     processChannel.StartServer(
                         // Delegate to start the child process.
-                        startProcess:  (string pipeHandleOut, string pipeHandleIn) =>
+                        startProcess: (string pipeHandleOut, string pipeHandleIn) =>
                         {
                             // Validate args.
                             ArgUtil.NotNullOrEmpty(pipeHandleOut, nameof(pipeHandleOut));
@@ -438,8 +463,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                                     }
                                 }
                             };
-                            
 
+                            // Worker process creation
                             // Start the child process.
                             HostContext.WritePerfCounter("StartingWorkerProcess");
                             var assemblyDirectory = HostContext.GetDirectory(WellKnownDirectory.Bin);
@@ -466,6 +491,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                     // process may have successfully received the job message.
                     try
                     {
+                        // Send job request message to worker
                         var body = JsonUtility.ToString(message);
                         var numBytes = System.Text.ASCIIEncoding.Unicode.GetByteCount(body) / 1024;
                         string numBytesString = numBytes > 0 ? $"{numBytes} KB" : " < 1 KB";
@@ -539,6 +565,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                         {
                             var metadataUpdateTask = newJobDispatch.MetadataSource.Task;
                             var completedTask = await Task.WhenAny(renewJobRequest, workerProcessTask, Task.Delay(-1, jobRequestCancellationToken), metadataUpdateTask);
+                            // renewJobRequest completed means we run out of retry for the job request renew.
+                            // workerProcessTask completed means worker process has finished.
+                            // metadataUpdateTask completed means we received a metadata update from worker.
+                            // jobRequestCancellationToken completed means job request has been canceled.
+                            // WAITING FOR WORKER PROCESS TO FINISH OR JOB REQUEST CANCELLATION
                             if (completedTask == workerProcessTask)
                             {
                                 keepListening = false;

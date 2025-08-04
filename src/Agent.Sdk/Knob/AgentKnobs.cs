@@ -207,51 +207,92 @@ namespace Agent.Sdk.Knob
             new EnvironmentKnobSource("VSTS_FETCHBYCOMMITFORFULLCLONE"),
             new BuiltInDefaultKnobSource("false"));
 
-        // Agent logging
-        public static readonly Knob AgentPerflog = new Knob(
-            nameof(AgentPerflog),
-            "If set, writes a perf counter trace for the agent. Writes to the location set in this variable.",
-            new EnvironmentKnobSource("VSTS_AGENT_PERFLOG"),
-            new BuiltInDefaultKnobSource(string.Empty));
+        // =============================================================================
+        // LOGGING & DIAGNOSTICS
+        // =============================================================================
+        // This section contains all logging-related flags organized by purpose.
+        // 
+        // 🔍 QUICK REFERENCE BY FLAG:
+        //   Agent Diagnostics: VSTS_AGENT_TRACE, ADO_AGENT_DEBUG
+        //   Pipeline Debug: System.Debug (pipeline variable)
+        //   HTTP Debugging: VSTS_AGENT_HTTPTRACE (see HttpTrace in HTTP section)
+        //   Performance: VSTS_AGENT_PERFLOG
+        //   Event Logs: VSTSAGENT_DUMP_JOB_EVENT_LOGS
+        //   Task Debug: VSTSAGENT_DEBUG_TASK
+        //
+        // 🎯 QUICK REFERENCE BY USE CASE:
+        //   Agent won't start: VSTS_AGENT_TRACE=true or ADO_AGENT_DEBUG=true
+        //   Pipeline failing: System.Debug=true (pipeline variable)
+        //   HTTP/network issues: VSTS_AGENT_HTTPTRACE=true
+        //   Task debugging: VSTSAGENT_DEBUG_TASK=<task_name>
+        //   Performance issues: VSTS_AGENT_PERFLOG=<path>
+        //   Windows events: VSTSAGENT_DUMP_JOB_EVENT_LOGS=true
+        // =============================================================================
 
+        // Core Agent Diagnostic Logging (Tracing.cs - goes to _diag folder)
         public static readonly Knob TraceVerbose = new Knob(
             nameof(TraceVerbose),
-            "If set to anything, trace level will be verbose",
+            "🔥 HIGH VERBOSITY: MAIN AGENT TRACING - If set to anything, enables verbose agent diagnostic tracing to _diag folder. Use VSTS_AGENT_TRACE=true for same effect.",
             new EnvironmentKnobSource("VSTSAGENT_TRACE"),
             new BuiltInDefaultKnobSource(string.Empty));
 
-        public static readonly Knob DebugTask = new Knob(
-            nameof(DebugTask),
-            "If the agent executes a task which ID or name matches the value provided, it will run the task so that it will wait for debugger to attach",
-            new EnvironmentKnobSource("VSTSAGENT_DEBUG_TASK"),
-            new BuiltInDefaultKnobSource(string.Empty));
-
-        public static readonly Knob DumpJobEventLogs = new Knob(
-            nameof(DumpJobEventLogs),
-            "If true, dump event viewer logs",
-            new RuntimeKnobSource("VSTSAGENT_DUMP_JOB_EVENT_LOGS"),
-            new EnvironmentKnobSource("VSTSAGENT_DUMP_JOB_EVENT_LOGS"),
+        public static readonly Knob AgentDebugTrace = new Knob(
+            nameof(AgentDebugTrace),
+            "🔥 HIGH VERBOSITY: AZURE DEVOPS AGENT DEBUG - If true, enables verbose agent diagnostic tracing. Alternative to VSTS_AGENT_TRACE.",
+            new EnvironmentKnobSource("ADO_AGENT_DEBUG"),
             new BuiltInDefaultKnobSource("false"));
 
-        public static readonly Knob DisableTestsMetadata = new Knob(
-            nameof(DisableTestsMetadata),
-            "If true, publishing tests metadata to evidence store will be disabled.",
-            new RuntimeKnobSource("AZP_AGENT_DISABLE_TESTS_METADATA"),
-            new EnvironmentKnobSource("AZP_AGENT_DISABLE_TESTS_METADATA"),
-            new BuiltInDefaultKnobSource("false"));
-
-        // Diag logging
+        // Diagnostic Log Paths (Custom locations for agent logs)
         public static readonly Knob AgentDiagLogPath = new Knob(
             nameof(AgentDiagLogPath),
-            "If set to anything, the folder containing the agent diag log will be created here.",
+            "CUSTOM AGENT LOG PATH: Override default _diag folder location for agent listener logs (Agent_*.log files).",
             new EnvironmentKnobSource("AGENT_DIAGLOGPATH"),
             new BuiltInDefaultKnobSource(string.Empty));
 
         public static readonly Knob WorkerDiagLogPath = new Knob(
             nameof(WorkerDiagLogPath),
-            "If set to anything, the folder containing the agent worker diag log will be created here.",
+            "CUSTOM WORKER LOG PATH: Override default _diag folder location for worker logs (Worker_*.log files).",
             new EnvironmentKnobSource("WORKER_DIAGLOGPATH"),
             new BuiltInDefaultKnobSource(string.Empty));
+
+        // Performance and Specialized Diagnostics
+        public static readonly Knob AgentPerflog = new Knob(
+            nameof(AgentPerflog),
+            "⚠️ PERFORMANCE IMPACT: PERFORMANCE LOGGING - If set to a path, writes performance counter traces to that location. May slow down agent.",
+            new EnvironmentKnobSource("VSTS_AGENT_PERFLOG"),
+            new BuiltInDefaultKnobSource(string.Empty));
+
+        public static readonly Knob DumpJobEventLogs = new Knob(
+            nameof(DumpJobEventLogs),
+            "🪟 WINDOWS ONLY: WINDOWS EVENT LOGS - If true, dumps Windows Event Viewer logs during job execution (Windows only).",
+            new RuntimeKnobSource("VSTSAGENT_DUMP_JOB_EVENT_LOGS"),
+            new EnvironmentKnobSource("VSTSAGENT_DUMP_JOB_EVENT_LOGS"),
+            new BuiltInDefaultKnobSource("false"));
+
+        public static readonly Knob DumpPackagesVerificationResult = new Knob(
+            nameof(DumpPackagesVerificationResult),
+            "🐧 LINUX ONLY: PACKAGE VERIFICATION - If true, dumps info about invalid MD5 sums of installed packages (Linux only).",
+            new RuntimeKnobSource("VSTSAGENT_DUMP_PACKAGES_VERIFICATION_RESULTS"),
+            new EnvironmentKnobSource("VSTSAGENT_DUMP_PACKAGES_VERIFICATION_RESULTS"),
+            new BuiltInDefaultKnobSource("false"));
+
+        // Task-Level Debugging
+        public static readonly Knob DebugTask = new Knob(
+            nameof(DebugTask),
+            "TASK DEBUGGING: If set to task ID or name, that task will wait for debugger attachment.",
+            new EnvironmentKnobSource("VSTSAGENT_DEBUG_TASK"),
+            new BuiltInDefaultKnobSource(string.Empty));
+
+        // HTTP Debugging (located in HTTP section but documented here for reference)
+        // See HttpTrace knob in HTTP section: VSTS_AGENT_HTTPTRACE=true
+
+        // Test and Metadata Logging
+        public static readonly Knob DisableTestsMetadata = new Knob(
+            nameof(DisableTestsMetadata),
+            "TEST METADATA: If true, disables publishing test metadata to evidence store.",
+            new RuntimeKnobSource("AZP_AGENT_DISABLE_TESTS_METADATA"),
+            new EnvironmentKnobSource("AZP_AGENT_DISABLE_TESTS_METADATA"),
+            new BuiltInDefaultKnobSource("false"));
 
         // Timeouts
         public static readonly Knob AgentChannelTimeout = new Knob(

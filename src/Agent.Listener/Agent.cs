@@ -42,6 +42,16 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
             _term = HostContext.GetService<ITerminal>();
         }
 
+        // STEP-1.2
+        //  #### 1.2 Agent Service Initialization
+        // ```
+        // Agent.cs::ExecuteCommand()
+        // ├── Configuration loading
+        // ├── Banner printing
+        // ├── Debug mode handling
+        // ├── Telemetry initialization
+        // └── RunAsync() - Main listening loop
+
         public async Task<int> ExecuteCommand(CommandSettings command)
         {
             ArgUtil.NotNull(command, nameof(command));
@@ -350,6 +360,16 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
             }
         }
 
+        // STEP-1.3
+        // #### 1.3 Message Listener Setup
+        // Agent.cs::RunAsync()
+        // ├── MessageListener.CreateSessionAsync()
+        // │   ├── Server connection establishment
+        // │   ├── Authentication with OAuth/PAT
+        // │   └── Session creation with Azure DevOps
+        // ├── JobDispatcher initialization
+        // ├── JobNotification service start
+
         //create worker manager, create message listener and start listening to the queue
         private async Task<int> RunAsync(AgentSettings settings, bool runOnce = false)
         {
@@ -367,7 +387,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                         _term.WriteLine(StringUtil.Loc("PSModulePathLocations"));
                     }
                 }
-
+                // MessageListener.CreateSessionAsync()
                 _listener = HostContext.GetService<IMessageListener>();
                 if (!await _listener.CreateSessionAsync(HostContext.AgentShutdownToken))
                 {
@@ -398,17 +418,33 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                     bool autoUpdateInProgress = false;
                     Task<bool> selfUpdateTask = null;
                     bool runOnceJobReceived = false;
+                    // JobDispatcher initialization
                     jobDispatcher = HostContext.CreateService<IJobDispatcher>();
-                    TaskAgentMessage previuosMessage = null;
+                    TaskAgentMessage previousMessage = null;
 
                     _ = _listener.KeepAlive(keepAliveToken.Token);
+                    // Start the job dispatcher
 
+                    // step 2.1
+                    // ### Phase 2: Job Request Reception and Processing
+                    // #### 2.1 Message Reception
+                    // Agent.cs::RunAsync() - Message Loop
+                    // ├── MessageListener.GetNextMessageAsync()
+                    // │   ├── Long polling to Azure DevOps
+                    // │   ├── Message type detection:
+                    // │   │   ├── AgentJobRequest
+                    // │   │   ├── PipelineAgentJobRequest
+                    // │   │   ├── JobCancelMessage
+                    // │   │   ├── JobMetadataMessage
+                    // │   │   └── AgentRefreshMessage
+                    // │   └── Message deserialization
                     while (!HostContext.AgentShutdownToken.IsCancellationRequested)
                     {
                         TaskAgentMessage message = null;
                         bool skipMessageDeletion = false;
                         try
                         {
+                            // MessageListener.GetNextMessageAsync()
                             Task<TaskAgentMessage> getNextMessage = _listener.GetNextMessageAsync(messageQueueLoopTokenSource.Token);
                             if (autoUpdateInProgress)
                             {
@@ -460,7 +496,15 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                                     previuosMessage = null;
                                 }
                             }
-
+                            // STEP-2.2
+                            // #### 2.2 Job Dispatch Decision
+                            // ```
+                            // Agent.cs::RunAsync() - Job Message Processing
+                            // ├── Message type validation
+                            // ├── Auto-update conflict checking
+                            // ├── Pipeline job message conversion
+                            // └── JobDispatcher.Run(pipelineJobMessage, runOnce)
+                            // ```
                             if (runOnceJobReceived)
                             {
                                 Trace.Verbose("One time used agent has start running its job, waiting for getNextMessage or the job to finish.");
@@ -485,8 +529,10 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
 
                             message ??= await getNextMessage; //get next message
                             HostContext.WritePerfCounter($"MessageReceived_{message.MessageType}");
+                            // Message type validation
                             if (string.Equals(message.MessageType, AgentRefreshMessage.MessageType, StringComparison.OrdinalIgnoreCase))
                             {
+                                // Auto-update conflict checking
                                 if (disableAutoUpdate)
                                 {
                                     Trace.Info("Refresh message received, skip autoupdate since environment variable agent.disableupdate is set.");
@@ -522,6 +568,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                                 }
                                 else
                                 {
+                                    // Pipeline job message conversion
                                     Pipelines.AgentJobRequestMessage pipelineJobMessage = null;
                                     switch (message.MessageType)
                                     {

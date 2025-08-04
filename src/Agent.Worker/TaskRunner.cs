@@ -89,6 +89,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             var taskManager = HostContext.GetService<ITaskManager>();
             var handlerFactory = HostContext.GetService<IHandlerFactory>();
 
+            // Start with a clear task execution header
+            LogTaskExecutionStart();
+
             Trace.Info($"Allow publishing telemetry for {Task.Reference.Name}@{Task.Reference.Version} task: {IsTelemetryPublishRequired()}");
 
             // Enable skip for string translator in case of checkout task.
@@ -105,16 +108,19 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 scope.Set(WellKnownDistributedTaskVariables.TaskInstanceName, Task.Name);
 
                 // Load the task definition and choose the handler.
+                LogTaskPhase("Loading Task Definition");
                 // TODO: Add a try catch here to give a better error message.
                 Definition definition = taskManager.Load(Task);
                 ArgUtil.NotNull(definition, nameof(definition));
 
                 // Verify Signatures and Re-Extract Tasks if neccessary
+                LogTaskPhase("Verifying Task Signature");
                 await VerifyTask(taskManager, definition);
 
                 // Print out task metadata
                 PrintTaskMetaData(definition);
 
+                LogTaskPhase("Selecting Task Handler");
                 ExecutionData currentExecution = null;
                 switch (Stage)
                 {
