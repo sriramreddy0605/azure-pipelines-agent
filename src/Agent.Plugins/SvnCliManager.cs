@@ -218,17 +218,12 @@ namespace Agent.Plugins.Repository
         public async Task<long> GetLatestRevisionAsync(string serverPath, string sourceRevision)
         {
             _context.Debug($@"Get latest revision of: '{_repository.Url.AbsoluteUri}' at or before: '{sourceRevision}'.");
-            string rawXml = await RunPorcelainCommandAsync(
+            string xml = await RunPorcelainCommandAsync(
                 "info",
                 BuildSvnUri(serverPath),
                 "--depth", "empty",
                 "--revision", sourceRevision,
                 "--xml");
-
-            // Filter out SVN warning messages before XML parsing
-            var lines = rawXml.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
-            var filteredLines = lines.Where(line => !line.StartsWith("svn: warning:", StringComparison.OrdinalIgnoreCase)).ToArray();
-            string xml = string.Join(Environment.NewLine, filteredLines);
 
             // Deserialize the XML.
             // The command returns a non-zero exit code if the source revision is not found.
@@ -531,21 +526,21 @@ namespace Agent.Plugins.Repository
                 _context.Debug($"Add proxy setting parameters to '{_svn}' for proxy server '{agentProxy.ProxyAddress}'.");
 
                 formattedArgs.Add("--config-option");
-                formattedArgs.Add(QuotedArgument($"servers:default:http-proxy-host={new Uri(agentProxy.ProxyAddress).Host}"));
+                formattedArgs.Add(QuotedArgument($"servers:global:http-proxy-host={new Uri(agentProxy.ProxyAddress).Host}"));
 
                 formattedArgs.Add("--config-option");
-                formattedArgs.Add(QuotedArgument($"servers:default:http-proxy-port={new Uri(agentProxy.ProxyAddress).Port}"));
+                formattedArgs.Add(QuotedArgument($"servers:global:http-proxy-port={new Uri(agentProxy.ProxyAddress).Port}"));
 
                 if (!string.IsNullOrEmpty(agentProxy.ProxyUsername))
                 {
                     formattedArgs.Add("--config-option");
-                    formattedArgs.Add(QuotedArgument($"servers:default:http-proxy-username={agentProxy.ProxyUsername}"));
+                    formattedArgs.Add(QuotedArgument($"servers:global:http-proxy-username={agentProxy.ProxyUsername}"));
                 }
 
                 if (!string.IsNullOrEmpty(agentProxy.ProxyPassword))
                 {
                     formattedArgs.Add("--config-option");
-                    formattedArgs.Add(QuotedArgument($"servers:default:http-proxy-password={agentProxy.ProxyPassword}"));
+                    formattedArgs.Add(QuotedArgument($"servers:global:http-proxy-password={agentProxy.ProxyPassword}"));
                 }
             }
 
