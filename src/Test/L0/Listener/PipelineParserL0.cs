@@ -599,6 +599,43 @@ steps:
         [Fact]
         [Trait("Level", "L0")]
         [Trait("Category", "Agent")]
+        public void PipelineResources_FlatStructure_ThrowsError()
+        {
+            using (CreateTestContext())
+            {
+                // Arrange.
+                String content = @"
+resources:
+- pipeline: my
+  source: MyFolder\My Pipeline
+steps:
+- script: echo hello
+";
+                m_fileProvider.FileContent[Path.Combine(c_defaultRoot, "pipelineResources_flatError.yml")] = content;
+
+                try
+                {
+                    // Act.
+                    m_pipelineParser.DeserializeAndSerialize(
+                        c_defaultRoot,
+                        "pipelineResources_flatError.yml",
+                        mustacheContext: null,
+                        cancellationToken: CancellationToken.None);
+
+                    // Assert.
+                    Assert.True(false, "Should have thrown syntax error exception");
+                }
+                catch (SyntaxErrorException ex)
+                {
+                    // Assert.
+                    Assert.Contains("Pipeline resources must be defined under 'pipelines:' section", ex.Message);
+                }
+            }
+        }
+
+        [Fact]
+        [Trait("Level", "L0")]
+        [Trait("Category", "Agent")]
         public void MaxObjectDepth_Mapping()
         {
             using (CreateTestContext())

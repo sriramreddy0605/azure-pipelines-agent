@@ -33,8 +33,10 @@ namespace Microsoft.TeamFoundation.DistributedTask.Orchestration.Server.Pipeline
                     {
                         case YamlConstants.Endpoint:
                         case YamlConstants.Repo:
-                        case YamlConstants.Pipeline:
                             break;
+                        case YamlConstants.Pipeline:
+                            throw new SyntaxErrorException(scalar.Start, scalar.End, 
+                                $"Pipeline resources must be defined under 'pipelines:' section, not as flat resources");
                         default:
                             throw new SyntaxErrorException(scalar.Start, scalar.End, $"Unexpected resource type: '{scalar.Value}'");
                     }
@@ -153,7 +155,7 @@ namespace Microsoft.TeamFoundation.DistributedTask.Orchestration.Server.Pipeline
                 }
                 emitter.Emit(new SequenceEnd());
             }
-            // If we have pipeline resources, use nested structure
+            // If we only have pipeline resources, use nested structure
             else if (otherResources.Count == 0)
             {
                 emitter.Emit(new MappingStart());
@@ -166,23 +168,11 @@ namespace Microsoft.TeamFoundation.DistributedTask.Orchestration.Server.Pipeline
                 emitter.Emit(new SequenceEnd());
                 emitter.Emit(new MappingEnd());
             }
-            // If we have both, use nested structure with both sections
+            // If we have both, pipeline resources should not exist in flat structure, this is an error
             else
             {
-                emitter.Emit(new MappingStart());
-                
-                // Write pipelines section
-                emitter.Emit(new Scalar(YamlConstants.Pipelines));
-                emitter.Emit(new SequenceStart(null, null, true, SequenceStyle.Block));
-                foreach (ProcessResource resource in pipelineResources)
-                {
-                    WriteProcessResource(emitter, resource);
-                }
-                emitter.Emit(new SequenceEnd());
-                
-                // TODO: Add other resource sections as needed (repositories, etc.)
-                
-                emitter.Emit(new MappingEnd());
+                throw new InvalidOperationException("Pipeline resources cannot be mixed with other resource types. " +
+                    "Pipeline resources must be defined under 'pipelines:' section.");
             }
         }
 
