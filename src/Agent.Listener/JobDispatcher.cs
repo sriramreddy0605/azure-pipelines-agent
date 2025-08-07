@@ -377,9 +377,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
             var jobRequestCancellationToken = newJobDispatch.WorkerCancellationTokenSource.Token;
             var workerCancelTimeoutKillToken = newJobDispatch.WorkerCancelTimeoutKillTokenSource.Token;
             var term = HostContext.GetService<ITerminal>();
-            Trace.Info("Displaying job start notification to user [JobName:{0}, StartTime:{1}, PlanType:{2}]", 
-                message.JobDisplayName, DateTime.UtcNow.ToString("HH:mm:ss"), message.Plan.PlanType);
-
+            term.WriteLine(StringUtil.Loc("RunningJob", DateTime.UtcNow, message.JobDisplayName));
+            
             // first job request renew succeed.
             TaskCompletionSource<int> firstJobRequestRenewed = new TaskCompletionSource<int>();
             var notification = HostContext.GetService<IJobNotification>();
