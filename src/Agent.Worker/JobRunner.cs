@@ -51,7 +51,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             ArgUtil.NotNull(message.Resources, nameof(message.Resources));
             ArgUtil.NotNull(message.Variables, nameof(message.Variables));
             ArgUtil.NotNull(message.Steps, nameof(message.Steps));
-            Trace.Info("Job ID {0}", message.JobId);
 
             Trace.Info("Job validation complete [JobId:{0}, RequestId:{1}, Steps:{2}, Endpoints:{3}, Variables:{4}, PlanType:{5}]", 
                 message.JobId, message.RequestId, message.Steps?.Count ?? 0, message.Resources?.Endpoints?.Count ?? 0, 
