@@ -200,6 +200,13 @@ namespace Agent.Sdk.Knob
             new EnvironmentKnobSource("AGENT_USE_NODE20_IN_UNSUPPORTED_SYSTEM"),
             new BuiltInDefaultKnobSource("false"));
 
+        public static readonly Knob FetchByCommitForFullClone = new Knob(
+            nameof(FetchByCommitForFullClone),
+            "If true, allow fetch by commit when doing a full clone (depth=0).",
+            new RuntimeKnobSource("VSTS.FetchByCommitForFullClone"),
+            new EnvironmentKnobSource("VSTS_FETCHBYCOMMITFORFULLCLONE"),
+            new BuiltInDefaultKnobSource("false"));
+
         // Agent logging
         public static readonly Knob AgentPerflog = new Knob(
             nameof(AgentPerflog),
@@ -344,6 +351,12 @@ namespace Agent.Sdk.Knob
             new EnvironmentKnobSource("VSTS_HTTP_PROXY_USERNAME"),
             new BuiltInDefaultKnobSource(string.Empty));
 
+        public static readonly Knob UseBasicAuthForProxy = new Knob(
+            nameof(UseBasicAuthForProxy),
+            "Enable proxy basic authentication to avoid NTLM negotiation issues",
+            new EnvironmentKnobSource("VSTS_HTTP_PROXY_BASICAUTH"),
+            new BuiltInDefaultKnobSource("false"));
+
         // Secrets masking
         public static readonly Knob AllowUnsafeMultilineSecret = new Knob(
             nameof(AllowUnsafeMultilineSecret),
@@ -385,6 +398,13 @@ namespace Agent.Sdk.Knob
             new EnvironmentKnobSource("AGENT_FAIL_ON_INCOMPATIBLE_OS"),
             new RuntimeKnobSource("AGENT_FAIL_ON_INCOMPATIBLE_OS"),
             new BuiltInDefaultKnobSource("false"));
+
+        public static readonly Knob OverridePipelineArtifactChunkSize = new Knob(
+            nameof(OverridePipelineArtifactChunkSize),
+            "Overrides the chunk size used in this pipeline for pipeline artifact publish.",
+            new RuntimeKnobSource("OVERRIDE_PIPELINE_ARTIFACT_CHUNKSIZE"),
+            new EnvironmentKnobSource("OVERRIDE_PIPELINE_ARTIFACT_CHUNKSIZE"),
+            new BuiltInDefaultKnobSource(string.Empty));
 
         public static readonly Knob AgentEnablePipelineArtifactLargeChunkSize = new Knob(
             nameof(AgentEnablePipelineArtifactLargeChunkSize),
@@ -460,6 +480,12 @@ namespace Agent.Sdk.Knob
             "When set, defines the domain to use to send Pipeline artifacts to.",
             new RuntimeKnobSource("SEND_PIPELINE_ARTIFACTS_TO_BLOBSTORE_DOMAIN"),
             new EnvironmentKnobSource("SEND_PIPELINE_ARTIFACT_ARTIFACTS_TO_BLOBSTORE_DOMAIN"),
+            new BuiltInDefaultKnobSource(string.Empty));
+        public static readonly Knob SendPipelineCacheToBlobstoreDomain = new Knob(
+            nameof(SendPipelineArtifactsToBlobstoreDomain),
+            "When set, defines the domain to store Pipeline caches.",
+            new RuntimeKnobSource("SEND_PIPELINE_CACHE_TO_BLOBSTORE_DOMAIN"),
+            new EnvironmentKnobSource("SEND_PIPELINE_CACHE_TO_BLOBSTORE_DOMAIN"),
             new BuiltInDefaultKnobSource(string.Empty));
 
         public static readonly Knob EnableIncompatibleBuildArtifactsPathResolution = new Knob(
@@ -679,6 +705,13 @@ namespace Agent.Sdk.Knob
             nameof(EnableNewMaskerAndRegexes),
             "If true, the agent will use new SecretMasker with additional filters & performance enhancements",
             new EnvironmentKnobSource("AZP_ENABLE_NEW_MASKER_AND_REGEXES"),
+            new BuiltInDefaultKnobSource("false"));
+
+        public static readonly Knob SendSecretMaskerTelemetry = new Knob(
+            nameof(SendSecretMaskerTelemetry),
+            "If true, the agent will send telemetry about secret masking",
+            new RuntimeKnobSource("AZP_SEND_SECRET_MASKER_TELEMETRY"),
+            new EnvironmentKnobSource("AZP_SEND_SECRET_MASKER_TELEMETRY"),
             new BuiltInDefaultKnobSource("false"));
 
         public static readonly Knob AddDockerInitOption = new Knob(
