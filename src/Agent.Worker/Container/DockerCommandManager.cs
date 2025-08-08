@@ -209,6 +209,12 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Container
             ArgUtil.NotNull(context, nameof(context));
             ArgUtil.NotNull(containerId, nameof(containerId));
 
+            if (!AgentKnobs.CheckBeforeRetryDockerStart.GetValue(context).AsBoolean())
+            {
+                var action = new Func<Task<int>>(async () => await ExecuteDockerCommandAsync(context, "start", containerId, context.CancellationToken));
+                const string command = "Docker start";
+                return await ExecuteDockerCommandAsyncWithRetries(context, action, command);
+            }
             // Use the new helper for start with retries and running-state checks
             return await ExecuteDockerStartWithRetriesAndCheck(context, containerId);
         }
