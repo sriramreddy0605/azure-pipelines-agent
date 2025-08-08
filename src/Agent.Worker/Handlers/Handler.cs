@@ -306,7 +306,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Handlers
             bool checkLocationsKnob = AgentKnobs.CheckPsModulesLocations.GetValue(ExecutionContext).AsBoolean();
 
             bool isPwshCore = Inputs.TryGetValue("pwsh", out string pwsh) && StringUtil.ConvertToBoolean(pwsh);
-            Trace.Info($"PsModulePathContainsPowershellCoreLocations- Windows: {PlatformUtil.RunningOnWindows}, knob: {checkLocationsKnob}, pwshCore: {isPwshCore}");
 
             if (!PlatformUtil.RunningOnWindows || !checkLocationsKnob || isPwshCore)
             {

@@ -359,14 +359,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
 
                 var featureFlagProvider = HostContext.GetService<IFeatureFlagProvider>();
                 var checkPsModulesFeatureFlag = await featureFlagProvider.GetFeatureFlagAsync(HostContext, "DistributedTask.Agent.CheckPsModulesLocations", Trace);
-                if (checkPsModulesFeatureFlag?.EffectiveState == "On")
-                {
-                    Trace.Info("checkPsModulesFeatureFlag is enabled");
-                }
-                else
-                {
-                    Trace.Info("checkPsModulesFeatureFlag is disabled");
-                }
+
                 if (PlatformUtil.RunningOnWindows && checkPsModulesFeatureFlag?.EffectiveState == "On")
                 {
                     string psModulePath = Environment.GetEnvironmentVariable("PSModulePath");
