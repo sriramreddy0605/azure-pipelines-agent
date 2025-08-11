@@ -88,6 +88,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Listener
                 hc.SetSingleton<IAgentCertificateManager>(_cert.Object);
                 hc.SetSingleton<IConfigurationStore>(_configStore.Object);
                 hc.SetSingleton<IAgenetListenerTelemetryPublisher>(_listenerTelemetryPublisher.Object);
+                hc.SetSingleton<IFeatureFlagProvider>(_featureFlagProvider.Object);
 
                 agent.Initialize(hc);
                 var settings = new AgentSettings
@@ -237,6 +238,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Listener
                 hc.SetSingleton<IAgentCertificateManager>(_cert.Object);
                 hc.SetSingleton<IConfigurationStore>(_configStore.Object);
                 hc.SetSingleton<IAgenetListenerTelemetryPublisher>(_listenerTelemetryPublisher.Object);
+                hc.SetSingleton<IFeatureFlagProvider>(_featureFlagProvider.Object);
 
                 var command = new CommandSettings(hc, new[] { "run" });
 
@@ -314,6 +316,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Listener
                 hc.SetSingleton<IAgentCertificateManager>(_cert.Object);
                 hc.SetSingleton<IConfigurationStore>(_configStore.Object);
                 hc.SetSingleton<IAgenetListenerTelemetryPublisher>(_listenerTelemetryPublisher.Object);
+                hc.SetSingleton<IFeatureFlagProvider>(_featureFlagProvider.Object);
 
                 agent.Initialize(hc);
                 var settings = new AgentSettings
@@ -412,6 +415,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Listener
                 hc.SetSingleton<IAgentCertificateManager>(_cert.Object);
                 hc.SetSingleton<IConfigurationStore>(_configStore.Object);
                 hc.SetSingleton<IAgenetListenerTelemetryPublisher>(_listenerTelemetryPublisher.Object);
+                hc.SetSingleton<IFeatureFlagProvider>(_featureFlagProvider.Object);
 
                 agent.Initialize(hc);
                 var settings = new AgentSettings
@@ -518,6 +522,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Listener
                 hc.SetSingleton<IConfigurationStore>(_configStore.Object);
                 hc.SetSingleton<ISelfUpdater>(_updater.Object);
                 hc.SetSingleton<IAgenetListenerTelemetryPublisher>(_listenerTelemetryPublisher.Object);
+                hc.SetSingleton<IFeatureFlagProvider>(_featureFlagProvider.Object);
 
                 agent.Initialize(hc);
                 var settings = new AgentSettings
@@ -738,6 +743,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Listener
                 hc.SetSingleton<IAgentCertificateManager>(_cert.Object);
                 hc.SetSingleton<IConfigurationStore>(_configStore.Object);
                 hc.SetSingleton<IAgenetListenerTelemetryPublisher>(_listenerTelemetryPublisher.Object);
+                hc.SetSingleton<IFeatureFlagProvider>(_featureFlagProvider.Object);
 
                 agent.Initialize(hc);
                 var settings = new AgentSettings
