@@ -503,11 +503,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                             {
                                 if (disableAutoUpdate)
                                 {
-                                    // FINAL - REMOVE THESE 2 NEW ADDED - DUPLICATE
                                     Trace.Info("Auto-update handling - Refresh message received but skipping autoupdate since agent.disableupdate is set");
-                                    // updated code log - Add metadata about disabled updates: "Auto-update handling - Refresh message received but skipping autoupdate since agent.disableupdate is set [UpdatePolicy:Disabled,Reason:EnvVariable,SecurityMode:Manual]"
-                                    Trace.Info("Auto-update handling - Refresh message received but skipping autoupdate since agent.disableupdate is set [UpdatePolicy:Disabled,Reason:EnvVariable,SecurityMode:Manual]");
-                                    Trace.Info("Refresh message received, skip autoupdate since environment variable agent.disableupdate is set.");
                                 }
                                 else
                                 {
@@ -614,7 +610,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                             }
                             else
                             {
-                                // FINAL - RECHECK THIS ONCE
                                 Trace.Info("Message deletion skipped - Either skip flag set or no message to delete");
                             }
                         }
@@ -654,7 +649,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
             {
                 ext = "cmd";
             }
-            // check this ------ where does this term.WriteLine writes output on - agent logs/ Pipeline UI logs/ where?
             string commonHelp = StringUtil.Loc("CommandLineHelp_Common");
             string envHelp = StringUtil.Loc("CommandLineHelp_Env");
             if (command.IsConfigureCommand())
