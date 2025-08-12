@@ -91,8 +91,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                 }
             }
 
-            Trace.Info("Creating new worker dispatcher  for job execution [JobId:{0}, RequestId:{1}, TotalDispatchers:{2}]", 
-                jobRequestMessage.JobId, jobRequestMessage.RequestId, _jobInfos.Count + 1);
             WorkerDispatcher newDispatch = new WorkerDispatcher(jobRequestMessage.JobId, jobRequestMessage.RequestId);
             if (runOnce)
             {
