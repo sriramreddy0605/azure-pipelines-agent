@@ -383,9 +383,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                 }
 
                 HostContext.WritePerfCounter("SessionCreated");
-                // FINAL - TERM VS TRACE LOG HERE
                 Trace.Info("Session created successfully - agent is now listening for jobs");
-                // this _term is a wrapper over trace , what why ?
                 _term.WriteLine(StringUtil.Loc("ListenForJobs", DateTime.UtcNow));
 
                 IJobDispatcher jobDispatcher = null;
