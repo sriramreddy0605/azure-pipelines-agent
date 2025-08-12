@@ -104,7 +104,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                         try
                         {
                             p.PriorityClass = ProcessPriorityClass.AboveNormal;
-                            trace.Info("Process priority elevated to AboveNormal to improve responsiveness");
                         }
                         catch (Exception e)
                         {
@@ -118,7 +117,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                 string envFile = Path.Combine(context.GetDirectory(WellKnownDirectory.Root), ".env");
                 if (File.Exists(envFile))
                 {
-                    trace.Info("Loading custom environment variables from .env file");
                     var envContents = File.ReadAllLines(envFile);
                     foreach (var env in envContents)
                     {
