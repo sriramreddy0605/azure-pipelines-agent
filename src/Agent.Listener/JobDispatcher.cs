@@ -142,7 +142,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
             }
             else
             {
-                Trace.Info("Initiating job cancellation for running job: {0}", jobCancelMessage.JobId);
                 if (workerDispatcher.Cancel(jobCancelMessage.Timeout))
                 {
                     Trace.Verbose($"Fired cancellation token for job request {workerDispatcher.JobId}.");
@@ -233,7 +232,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
         
         private async Task EnsureDispatchFinished(WorkerDispatcher jobDispatch, bool cancelRunningJob = false)
         {
-            // updated code log - Add metadata about dispatch finish operation initiation
             Trace.Info("EnsureDispatchFinished initiated [JobId:{0}, RequestId:{1}, CancelRunningJob:{2}, IsCompleted:{3}]", 
                 jobDispatch.JobId, jobDispatch.RequestId, cancelRunningJob, jobDispatch.WorkerDispatch.IsCompleted);
             
@@ -365,7 +363,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
             
             if (previousJobDispatch != null)
             {
-                Trace.Info("Waiting for previous job completion before starting new job [PreviousJobId:{0}, NewJobId:{1}]", previousJobDispatch.JobId, message.JobId);
+                Trace.Verbose("Waiting for previous job completion before starting new job [PreviousJobId:{0}, NewJobId:{1}]", previousJobDispatch.JobId, message.JobId);
                 await EnsureDispatchFinished(previousJobDispatch);
                 Trace.Info("Previous job cleanup completed - ready for new job execution");
             }

@@ -39,11 +39,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
         private static async Task<int> MainAsync(IHostContext context, string[] args)
         {
             Tracing trace = context.GetTrace("AgentProcess");
-            
-            trace.Info("Azure DevOps Agent starting - initializing host context");
-            trace.Info($"Agent package {BuildConstants.AgentPackage.PackageName}.");
-            trace.Info($"Running on {PlatformUtil.HostOS} ({PlatformUtil.HostArchitecture}).");
-            trace.Info($"RuntimeInformation: {RuntimeInformation.OSDescription}.");
+            trace.Info("Azure DevOps Agent starting - initializing host context: Agent package {0}, Running on {1}({2}), RuntimeInformation {3}", 
+                BuildConstants.AgentPackage.PackageName, PlatformUtil.HostOS, PlatformUtil.HostArchitecture, RuntimeInformation.OSDescription);
             context.WritePerfCounter("AgentProcessStarted");
             var terminal = context.GetService<ITerminal>();
 
@@ -52,12 +49,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
 
             try
             {
-                trace.Info("Agent initialization starting - loading version and culture info");
-                trace.Info($"Version: {BuildConstants.AgentPackage.Version}");
-                trace.Info($"Commit: {BuildConstants.Source.CommitHash}");
-                trace.Info($"Culture: {CultureInfo.CurrentCulture.Name}");
-                trace.Info($"UI Culture: {CultureInfo.CurrentUICulture.Name}");
-
+                trace.Info("Agent initialization starting - loading version and culture info. Version: {0}, Commit: {1}, Culture: {2}, UI Culture: {3}", 
+                    BuildConstants.AgentPackage.Version , BuildConstants.Source.CommitHash, CultureInfo.CurrentCulture.Name, CultureInfo.CurrentUICulture.Name);
                 // Validate directory permissions.
                 string agentDirectory = context.GetDirectory(WellKnownDirectory.Root);
                 trace.Info($"Validating directory permissions for: '{agentDirectory}'");
@@ -81,7 +74,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
 
                 if (PlatformUtil.RunningOnWindows)
                 {
-                    trace.Info("Configuring Windows-specific settings and validating prerequisites");
+                    trace.Verbose("Configuring Windows-specific settings and validating prerequisites");
                     
                     // Validate PowerShell 3.0 or higher is installed.
                     var powerShellExeUtil = context.GetService<IPowerShellExeUtil>();
@@ -142,7 +135,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                 // Parse the command line args.
                 var command = new CommandSettings(context, args, new SystemEnvironment());
                 trace.Info("Command line arguments parsed successfully - ready for command execution");
-                trace.Info("Arguments parsed");
 
                 // Print any Parse Errros
                 if (command.ParseErrors?.Any() == true)
@@ -171,13 +163,12 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                 IAgent agent = context.GetService<IAgent>();
                 try
                 {
-                    trace.Info("Delegating command execution to Agent service");
+                    trace.Verbose("Delegating command execution to Agent service");
                     return await agent.ExecuteCommand(command);
                 }
                 catch (OperationCanceledException) when (context.AgentShutdownToken.IsCancellationRequested)
                 {
                     trace.Info("Agent execution cancelled - graceful shutdown requested");
-                    trace.Info("Agent execution been cancelled.");
                     return Constants.Agent.ReturnCode.Success;
                 }
                 catch (NonRetryableException e)
