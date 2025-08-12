@@ -296,7 +296,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
 
 
                 // Run the agent interactively or as service
-                Trace.Info("Starting main agent run loop - entering operational state");
                 return await RunAsync(settings, command.GetRunOnce());
             }
             finally
@@ -408,7 +407,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                     bool autoUpdateInProgress = false;
                     Task<bool> selfUpdateTask = null;
                     bool runOnceJobReceived = false;
-                    Trace.Info("Initializing job dispatcher - preparing for job execution");
                     jobDispatcher = HostContext.CreateService<IJobDispatcher>();
                     TaskAgentMessage previuosMessage = null;
 
