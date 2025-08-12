@@ -245,7 +245,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                 }
                 else if (settings.DebugMode && !debugModeEnabled)
                 {
-                    Trace.Info("Debug mode disabled - returning to normal operation mode");
                     settings.DebugMode = false;
                     store.SaveSettings(settings);
                 }
@@ -507,7 +506,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                                 {
                                     if (autoUpdateInProgress == false)
                                     {
-                                        Trace.Info("Auto-update handling - Initiating agent self-update process");
                                         autoUpdateInProgress = true;
                                         var agentUpdateMessage = JsonUtility.FromString<AgentRefreshMessage>(message.Body);
                                         var selfUpdater = HostContext.GetService<ISelfUpdater>();
@@ -539,12 +537,12 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                                     switch (message.MessageType)
                                     {
                                         case JobRequestMessageTypes.AgentJobRequest:
-                                            Trace.Info("Converting legacy job message format to pipeline format");
+                                            Trace.Verbose("Converting legacy job message format to pipeline format");
                                             var legacyJobMessage = JsonUtility.FromString<AgentJobRequestMessage>(message.Body);
                                             pipelineJobMessage = Pipelines.AgentJobRequestMessageUtil.Convert(legacyJobMessage);
                                             break;
                                         case JobRequestMessageTypes.PipelineAgentJobRequest:
-                                            Trace.Info("Processing pipeline job message for execution");
+                                            Trace.Verbose("Processing pipeline job message for execution");
                                             pipelineJobMessage = JsonUtility.FromString<Pipelines.AgentJobRequestMessage>(message.Body);
                                             break;
                                     }
@@ -560,7 +558,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                             }
                             else if (string.Equals(message.MessageType, JobCancelMessage.MessageType, StringComparison.OrdinalIgnoreCase))
                             {
-                                Trace.Info("Processing job cancellation request from Azure DevOps");
+                                Trace.Verbose("Processing job cancellation request from Azure DevOps");
                                 var cancelJobMessage = JsonUtility.FromString<JobCancelMessage>(message.Body);
                                 bool jobCancelled = jobDispatcher.Cancel(cancelJobMessage);
                                 skipMessageDeletion = (autoUpdateInProgress || runOnceJobReceived) && !jobCancelled;
