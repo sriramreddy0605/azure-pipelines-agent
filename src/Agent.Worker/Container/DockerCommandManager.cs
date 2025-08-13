@@ -391,7 +391,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Container
 
             return isContainerRunning;
         }
-        // making it protected for unit testing
+
         private Task<int> ExecuteDockerCommandAsync(IExecutionContext context, string command, string options, CancellationToken cancellationToken = default(CancellationToken))
         {
             return ExecuteDockerCommandAsync(context, command, options, null, cancellationToken);
