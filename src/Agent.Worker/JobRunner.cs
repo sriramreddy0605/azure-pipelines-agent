@@ -51,23 +51,18 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             ArgUtil.NotNull(message.Resources, nameof(message.Resources));
             ArgUtil.NotNull(message.Variables, nameof(message.Variables));
             ArgUtil.NotNull(message.Steps, nameof(message.Steps));
-
-            Trace.Info("Job validation complete [JobId:{0}, RequestId:{1}, Steps:{2}, Endpoints:{3}, Variables:{4}, PlanType:{5}]", 
-                message.JobId, message.RequestId, message.Steps?.Count ?? 0, message.Resources?.Endpoints?.Count ?? 0, 
-                message.Variables?.Count ?? 0, message.Plan?.PlanType ?? "Unknown");
+            Trace.Entering();
 
             DateTime jobStartTimeUtc = DateTime.UtcNow;
 
             ServiceEndpoint systemConnection = message.Resources.Endpoints.Single(x => string.Equals(x.Name, WellKnownServiceEndpointNames.SystemVssConnection, StringComparison.OrdinalIgnoreCase));
             bool skipServerCertificateValidation = HostContext.GetService<IAgentCertificateManager>().SkipServerCertificateValidation;
-            Trace.Info("System connection configuration loaded [Url:{0}]", systemConnection.Url);
 
             // System.AccessToken
             if (message.Variables.ContainsKey(Constants.Variables.System.EnableAccessToken) &&
                 StringUtil.ConvertToBoolean(message.Variables[Constants.Variables.System.EnableAccessToken].Value))
             {
                 message.Variables[Constants.Variables.System.AccessToken] = new VariableValue(systemConnection.Authorization.Parameters["AccessToken"], false);
-                Trace.Info("System access token enabled and configured for job execution");
             }
 
             // back compat TfsServerUrl
@@ -112,18 +107,16 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             try
             {
                 // Create the job execution context.
-                Trace.Info("ExecutionContext creation initiated - initializing job execution environment");
                 jobContext = HostContext.CreateService<IExecutionContext>();
                 jobContext.InitializeJob(message, jobRequestCancellationToken);
 
                 jobContext.Start();
                 jobContext.Section(StringUtil.Loc("StepStarting", message.JobDisplayName));
-                Trace.Info($"ExecutionContext initialized successfully - JobName: {message.JobDisplayName}. Starting the job execution context.");
+                Trace.Info($"ExecutionContext initialized successfully. [JobName: {message.JobDisplayName}]");
 
                 //Start Resource Diagnostics if enabled in the job message 
                 jobContext.Variables.TryGetValue("system.debug", out var systemDebug);
 
-                Trace.Info("Resource monitoring initialization - setting up diagnostic and performance tracking");
                 resourceDiagnosticManager = HostContext.GetService<IResourceMetricsManager>();
                 resourceDiagnosticManager.SetContext(jobContext);
 
@@ -163,7 +156,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
                 // Validate directory permissions.
                 string workDirectory = HostContext.GetDirectory(WellKnownDirectory.Work);
-                Trace.Info("Work directory validation initiated [Path:{0}]", workDirectory);
+                Trace.Info($"Validating directory permissions for: '{workDirectory}'");
                 try
                 {
                     Directory.CreateDirectory(workDirectory);
@@ -172,13 +165,12 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 }
                 catch (Exception ex)
                 {
-                    Trace.Error($"Work directory validation failed [Path:{workDirectory}, Issue:PermissionDenied]", ex);
+                    Trace.Error(ex);
                     jobContext.Error(ex);
                     return await CompleteJobAsync(jobServer, jobContext, message, TaskResult.Failed);
                 }
 
                 // Set agent variables.
-                Trace.Info("Agent metadata population initiated - setting up agent and system variables");
                 AgentSettings settings = HostContext.GetService<IConfigurationStore>().GetSettings();
                 jobContext.SetVariable(Constants.Variables.Agent.Id, settings.AgentId.ToString(CultureInfo.InvariantCulture));
                 jobContext.SetVariable(Constants.Variables.Agent.HomeDirectory, HostContext.GetDirectory(WellKnownDirectory.Root), isFilePath: true);
@@ -226,7 +218,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 if (AgentKnobs.DisableGitPrompt.GetValue(jobContext).AsBoolean())
                 {
                     jobContext.SetVariable("GIT_TERMINAL_PROMPT", "0");
-                    Trace.Info("Git terminal prompt disabled - GIT_TERMINAL_PROMPT set to 0 for automated operations");
                 }
 
                 // Setup TEMP directories
@@ -242,12 +233,10 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 if (!string.IsNullOrEmpty(jobContext.Variables.System_TaskDefinitionsUri))
                 {
                     taskServerUri = new Uri(jobContext.Variables.System_TaskDefinitionsUri);
-                    Trace.Info($"Using System_TaskDefinitionsUri for TaskServer: {taskServerUri}");
                 }
                 else if (!string.IsNullOrEmpty(jobContext.Variables.System_TFCollectionUrl))
                 {
                     taskServerUri = new Uri(jobContext.Variables.System_TFCollectionUrl);
-                    Trace.Info($"Using System_TFCollectionUrl for TaskServer: {taskServerUri}");
                 }
 
                 var taskServerCredential = VssUtil.GetVssCredential(systemConnection);
@@ -269,19 +258,14 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                         var configStore = HostContext.GetService<IConfigurationStore>();
                         taskServerUri = new Uri(configStore.GetSettings().ServerUrl);
 
-                        Trace.Info($"Legacy TaskServer connection setup - using configuration server URL: {taskServerUri}");
+                        Trace.Info($"Recreate task server with configuration server url: {taskServerUri}");
                         legacyTaskConnection = VssUtil.CreateConnection(taskServerUri, taskServerCredential, trace: Trace, skipServerCertificateValidation);
                         await taskServer.ConnectAsync(legacyTaskConnection);
-                        Trace.Info($"Legacy TaskServer connection established successfully - URI: {taskServerUri}");
-                    }
-                    else
-                    {
-                        Trace.Info("TaskServer endpoint validation successful - using primary connection, no fallback required");
+                        Trace.Info($"Legacy TaskServer connection established successfully - [URI: {taskServerUri}]");
                     }
                 }
 
                 // Expand the endpoint data values.
-                Trace.Info($"Variable expansion initiated - processing {jobContext.Endpoints?.Count ?? 0} endpoints, {jobContext.Repositories?.Count ?? 0} repositories, {jobContext.Containers?.Count ?? 0} containers");
                 foreach (ServiceEndpoint endpoint in jobContext.Endpoints)
                 {
                     jobContext.Variables.ExpandValues(target: endpoint.Data);
@@ -347,7 +331,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     });
 
                     jobContext.AsyncCommands.Add(windowsPreinstalledGitCommand);
-                    Trace.Info("Windows Git telemetry collection task registered for asynchronous execution");
                 }
 
                 // Get the job extension.
@@ -366,8 +349,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 {
                     Trace.Info("Job steps initialization initiated - parsing step definitions and resolving task references");
                     jobSteps = await jobExtension.InitializeJob(jobContext, message);
-                    // Step count, types, and display names help identify pipeline composition and potential step-related problems
-                    Trace.Info($"Job extension initialization completed successfully [StepsParsed:{jobSteps?.Count ?? 0}, StepTypes:{string.Join(",", jobSteps?.Select(s => s.GetType().Name).Distinct() ?? new string[0])}, FirstStepName:{jobSteps?.FirstOrDefault()?.DisplayName ?? "None"}]");
+                    Trace.Info($"Job extension initialization completed successfully");
                 }
                 catch (OperationCanceledException ex) when (jobContext.CancellationToken.IsCancellationRequested)
                 {
@@ -404,12 +386,12 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 }
 
                 // trace out all steps
-                Trace.Info($"Job steps finalization completed - Total job steps: {jobSteps.Count}");
+                Trace.Info($"Total job steps: {jobSteps.Count}.");
                 Trace.Verbose($"Job steps: '{string.Join(", ", jobSteps.Select(x => x.DisplayName))}'");
                 HostContext.WritePerfCounter($"WorkerJobInitialized_{message?.RequestId.ToString()}");
 
                 // Run all job steps
-                Trace.Info("Job execution context setup completed successfully - transitioning to step execution pipeline");
+                Trace.Info("Run all job steps.");
                 var stepsRunner = HostContext.GetService<IStepsRunner>();
                 try
                 {
@@ -474,7 +456,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 legacyTaskConnection?.Dispose();
                 taskConnection?.Dispose();
                 jobConnection?.Dispose();
-                Trace.Info("Connection resources disposed - task connections and job connection cleaned up successfully");
                 await ShutdownQueue(throwOnFailure: false);
                 Trace.Info("Job server queue shutdown completed - all resources cleaned up successfully");
             }
@@ -523,7 +504,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
             try
             {
-                Trace.Info("Job extension finalization initiated - Shutting down job server queue");
                 await ShutdownQueue(throwOnFailure: true);
                 Trace.Info("Job extension finalization completed - Job server queue shutdown successful");
             }
@@ -542,15 +522,13 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 result = TaskResultUtil.MergeTaskResults(result, TaskResult.Failed);
             }
 
-            Trace.Info("Resource disposal initiated - Cleaning up temporary directories");
             // Clean TEMP after finish process jobserverqueue, since there might be a pending fileupload still use the TEMP dir.
             _tempDirectoryManager?.CleanupTempDirectory();
             Trace.Info("Resource disposal completed - Temporary directory cleanup finished");
 
             if (!jobContext.Features.HasFlag(PlanFeatures.JobCompletedPlanEvent))
             {
-                Trace.Info($"Job completion event skipped - Plan version {message.Plan.Version} does not support JobCompletedPlanEvent");
-                Trace.Info($"Job finalization completed - Final result: {result}");
+                Trace.Info($"Job completion event skipped - [Plan version {message.Plan.Version}] does not support JobCompletedPlanEvent. [Final result: {result}]");
                 return result;
             }
 
