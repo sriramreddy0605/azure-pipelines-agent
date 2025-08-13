@@ -37,15 +37,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             Tracing trace = context.GetTrace(nameof(Program));
             try
             {
-                trace.Info("Worker process initialization starting - setting up runtime environment");
-                trace.Info($"Version: {BuildConstants.AgentPackage.Version}");
-                trace.Info($"Commit: {BuildConstants.Source.CommitHash}");
-                trace.Info($"Culture: {CultureInfo.CurrentCulture.Name}");
-                trace.Info($"UI Culture: {CultureInfo.CurrentUICulture.Name}");
+                trace.Info("Worker process initialization starting - setting up runtime environment. Version: {0}, Commit: {1}, Culture: {2}, UI Culture: {3}",
+                    BuildConstants.AgentPackage.Version, BuildConstants.Source.CommitHash, CultureInfo.CurrentCulture.Name, CultureInfo.CurrentUICulture.Name);
                 context.WritePerfCounter("WorkerProcessStarted");
 
                 // Validate args.
-                trace.Info("Validating command line arguments for spawnclient mode");
                 ArgUtil.NotNull(args, nameof(args));
                 ArgUtil.Equal(3, args.Length, nameof(args.Length));
                 ArgUtil.NotNullOrEmpty(args[0], $"{nameof(args)}[0]");
@@ -56,12 +52,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 var worker = context.GetService<IWorker>();
 
                 // Run the worker.
-                trace.Info("Starting worker execution - establishing communication with listener process");
-                var result = await worker.RunAsync(
+                return await worker.RunAsync(
                     pipeIn: args[1],
                     pipeOut: args[2]);
-                trace.Info("Worker execution completed successfully [ExitCode:{0}]", result);
-                return result;
             }
             catch (AggregateException ex)
             {
@@ -79,7 +72,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 {
                     // make sure we don't crash the app on trace error.
                     // since IOException will throw when we run out of disk space.
-                    Console.WriteLine("Failed to log exception to trace: " + e.ToString());
+                    Console.WriteLine(e.ToString());
                 }
             }
             trace.Info("Worker process exiting with error code - job execution failed");
