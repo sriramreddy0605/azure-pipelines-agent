@@ -30,8 +30,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         {
             // Validate args.
             ArgUtil.NotNullOrEmpty(pipeIn, nameof(pipeIn));
-            ArgUtil.NotNullOrEmpty(pipeOut, nameof(pipeOut));       
-            Trace.Info("Worker process lifecycle initiated - initializing VSS client settings [PipeIn:{0}, PipeOut:{1}]", pipeIn, pipeOut);
+            ArgUtil.NotNullOrEmpty(pipeOut, nameof(pipeOut));
+            Trace.Entering();
             var agentWebProxy = HostContext.GetService<IVstsAgentWebProxy>();
             var agentCertManager = HostContext.GetService<IAgentCertificateManager>();
             VssUtil.InitializeVssClientSettings(HostContext.UserAgent, agentWebProxy.WebProxy, agentCertManager.VssClientCertificateManager, agentCertManager.SkipServerCertificateValidation);
@@ -56,7 +56,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 WorkerMessage channelMessage;
                 using (var csChannelMessage = new CancellationTokenSource(_workerStartTimeout))
                 {
-                    Trace.Info("Job message reception initiated [Timeout:{0}s]", _workerStartTimeout.TotalSeconds);
                     channelMessage = await channel.ReceiveAsync(csChannelMessage.Token);
                 }
 
@@ -70,15 +69,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
                 Trace.Info("Job message deserialized successfully [JobId:{0}, PlanId:{1}, RequestId:{2}]",
                     jobMessage.JobId, jobMessage.Plan.PlanId, jobMessage.RequestId);
-                Trace.Info("Deactivating vso commands in job message variables.");
                 jobMessage = WorkerUtilities.DeactivateVsoCommandsFromJobMessageVariables(jobMessage);
-                Trace.Info("VSO command deactivation completed - job message sanitized for execution");
 
                 // Initialize the secret masker and set the thread culture.
-                Trace.Info("Security and localization initialization initiated - configuring secret masking and culture settings");
                 InitializeSecretMasker(jobMessage);
                 SetCulture(jobMessage);
-                Trace.Info("Security masker and culture settings initialized successfully");
 
                 // Start the job.
                 Trace.Info("Job preprocessing complete - starting JobRunner execution with detailed message logging");
@@ -92,7 +87,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 {
                     messageLoopIteration++;
                     // Start listening for a cancel message from the channel.
-                    Trace.Verbose("Starting listener for control messages from listener process [Iteration:{0}]", messageLoopIteration);
+                    Trace.Info("Starting listener for control messages from listener process [Iteration:{0}]", messageLoopIteration);
                     Task<WorkerMessage> channelTask = channel.ReceiveAsync(channelTokenSource.Token);
 
                     // Wait for one of the tasks to complete.
@@ -136,7 +131,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                             Trace.Info("Job metadata update processed successfully");
                             break;
                         default:
-                            Trace.Error("Unknown message type received from listener: {0}", channelMessage.MessageType);
                             throw new ArgumentOutOfRangeException(nameof(channelMessage.MessageType), channelMessage.MessageType, nameof(channelMessage.MessageType));
                     }
                 }
@@ -182,7 +176,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 if (variable.Value.IsSecret && !string.IsNullOrWhiteSpace(variable.Value.Value))
                 {
                     secretCount++;
-                    Trace.Verbose("Adding secret variable to masker: {0}", variable.Key);
                     AddUserSuppliedSecret(variable.Value.Value);
                     // also, we escape some characters for variables when we print them out in debug mode. We need to
                     // add the escaped version of these secrets as well
@@ -241,7 +234,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     if (!string.IsNullOrEmpty(keyValuePair.Value) && MaskingUtil.IsEndpointAuthorizationParametersSecret(keyValuePair.Key))
                     {
                         endpointSecretCount++;
-                        Trace.Verbose("Adding service endpoint authorization parameter to secret masker: {0}", keyValuePair.Key);
                         HostContext.SecretMasker.AddValue(keyValuePair.Value, $"Worker_EndpointAuthorizationParameters_{keyValuePair.Key}");
                     }
                 }
@@ -254,7 +246,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 if (!string.IsNullOrEmpty(file.Ticket))
                 {
                     secureFileCount++;
-                    Trace.Verbose("Adding secure file download ticket to secret masker: {0}", file.Name);
                     HostContext.SecretMasker.AddValue(file.Ticket, WellKnownSecretAliases.SecureFileTicket);
                 }
             }
@@ -273,13 +264,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             if (message.Variables.TryGetValue(Constants.Variables.System.Culture, out culture))
             {
                 // Set the default thread culture.
-                Trace.Info("Setting worker process culture from job variable [Culture:{0}]", culture.Value);
                 HostContext.SetDefaultCulture(culture.Value);
-                Trace.Info("Worker process culture configuration completed successfully");
-            }
-            else
-            {
-                Trace.Info("No culture setting specified in job variables - using system default culture");
             }
         }
     }
