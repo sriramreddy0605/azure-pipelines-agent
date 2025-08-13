@@ -379,7 +379,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Container
         /// <returns
         /// <c>true</c>, if specified container is running, <c>false</c> otherwise. 
         /// </returns>
-        public virtual async Task<bool> IsContainerRunning(IExecutionContext context, string containerId)
+        public async Task<bool> IsContainerRunning(IExecutionContext context, string containerId)
         {
             List<string> filteredItems = await DockerPS(context, $"--filter id={containerId}");
 
@@ -392,7 +392,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Container
             return isContainerRunning;
         }
         // making it protected for unit testing
-        protected virtual Task<int> ExecuteDockerCommandAsync(IExecutionContext context, string command, string options, CancellationToken cancellationToken = default(CancellationToken))
+        private Task<int> ExecuteDockerCommandAsync(IExecutionContext context, string command, string options, CancellationToken cancellationToken = default(CancellationToken))
         {
             return ExecuteDockerCommandAsync(context, command, options, null, cancellationToken);
         }
@@ -543,7 +543,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Container
         /// Executes 'docker start' with retries, checking if the container is already running before each retry.
         /// Returns 0 if the container is running or started successfully, otherwise returns the last exit code.
         /// </summary>
-        protected virtual async Task<int> ExecuteDockerStartWithRetriesAndCheck(IExecutionContext context, string containerId)
+        private async Task<int> ExecuteDockerStartWithRetriesAndCheck(IExecutionContext context, string containerId)
         {
             bool dockerActionRetries = AgentKnobs.DockerActionRetries.GetValue(context).AsBoolean();
             context.Output($"DockerActionRetries variable value: {dockerActionRetries}");
