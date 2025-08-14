@@ -19,7 +19,7 @@ using Microsoft.TeamFoundation.TestClient.PublishTestResults.Telemetry;
 using Microsoft.VisualStudio.Services.Agent.Listener.Telemetry;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using Agent.Sdk.Knob;
+using Agent.Listener.Configuration;
 
 namespace Microsoft.VisualStudio.Services.Agent.Listener
 {
@@ -361,7 +361,10 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
             {
                 Trace.Info($"Entering main agent execution loop");
 
-                if (PlatformUtil.RunningOnWindows && AgentKnobs.CheckPsModulesLocations.GetValue(HostContext).AsBoolean())
+                var featureFlagProvider = HostContext.GetService<IFeatureFlagProvider>();
+                var checkPsModulesFeatureFlag = await featureFlagProvider.GetFeatureFlagAsync(HostContext, "DistributedTask.Agent.CheckPsModulesLocations", Trace);
+
+                if (PlatformUtil.RunningOnWindows && checkPsModulesFeatureFlag?.EffectiveState == "On")
                 {
                     string psModulePath = Environment.GetEnvironmentVariable("PSModulePath");
                     bool containsPwshLocations = PsModulePathUtil.ContainsPowershellCoreLocations(psModulePath);
