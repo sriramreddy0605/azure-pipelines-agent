@@ -94,13 +94,13 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
             WorkerDispatcher newDispatch = new WorkerDispatcher(jobRequestMessage.JobId, jobRequestMessage.RequestId);
             if (runOnce)
             {
-                Trace.Info("Initializing single-use agent mode - job will terminate agent after completion");
+                Trace.Info("Starting dispatcher with runOnce option.(Agent will terminate agent after completion)");
                 jobRequestMessage.Variables[Constants.Variables.Agent.RunMode] = new VariableValue(Constants.Agent.CommandLine.Flags.Once);
                 newDispatch.WorkerDispatch = RunOnceAsync(jobRequestMessage, currentDispatch, newDispatch);
             }
             else
             {
-                Trace.Info("Initializing normal agent mode - agent will continue listening after job completion");
+                Trace.Info("Starting Dispatcher(RunAsync)");
                 newDispatch.WorkerDispatch = RunAsync(jobRequestMessage, currentDispatch, newDispatch);
             }
 

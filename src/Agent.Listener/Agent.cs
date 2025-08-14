@@ -47,7 +47,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
             ArgUtil.NotNull(command, nameof(command));
             try
             {
-                Trace.Info("Starting agent command execution - initializing core services");
+                Trace.Verbose("Initializing core services...");
                 var agentWebProxy = HostContext.GetService<IVstsAgentWebProxy>();
                 var agentCertManager = HostContext.GetService<IAgentCertificateManager>();
                 VssUtil.InitializeVssClientSettings(HostContext.UserAgent, agentWebProxy.WebProxy, agentCertManager.VssClientCertificateManager, agentCertManager.SkipServerCertificateValidation);
@@ -58,7 +58,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
 
                 //register a SIGTERM handler
                 HostContext.Unloading += Agent_Unloading;
-                
+
                 // TODO Unit test to cover this logic
                 var configManager = HostContext.GetService<IConfigurationManager>();
 
@@ -232,7 +232,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                     }
                 }
 
-                Trace.Info($"Set agent startup type - {startType}"); 
+                Trace.Info($"Set agent startup type - {startType}");
                 HostContext.StartupType = startType;
 
                 bool debugModeEnabled = command.GetDebugMode();
@@ -359,7 +359,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
         {
             try
             {
-                Trace.Info($"Entering main agent execution loop");
+                Trace.Info($"Entering main agent execution loop({0})", nameof(RunAsync));
 
                 var featureFlagProvider = HostContext.GetService<IFeatureFlagProvider>();
                 var checkPsModulesFeatureFlag = await featureFlagProvider.GetFeatureFlagAsync(HostContext, "DistributedTask.Agent.CheckPsModulesLocations", Trace);
@@ -584,6 +584,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                         }
                         catch (AggregateException e)
                         {
+                            Trace.Error($"Exception occurred while processing message from queue: {e.Message}");
                             ExceptionsUtil.HandleAggregateException((AggregateException)e, Trace.Error);
                         }
                         finally

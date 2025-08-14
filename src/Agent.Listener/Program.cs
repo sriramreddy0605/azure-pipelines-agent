@@ -18,15 +18,19 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
 {
     public static class Program
     {
+        private static Tracing trace;
+        
         public static int Main(string[] args)
         {
+            trace = context.GetTrace("AgentProcess");
             if (PlatformUtil.UseLegacyHttpHandler)
             {
+                trace.Info("Legacy HTTP handler enabled.");
                 AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", false);
             }
 
             using (HostContext context = new HostContext(HostType.Agent))
-            {
+            {  
                 return MainAsync(context, args).GetAwaiter().GetResult();
             }
         }
@@ -38,9 +42,10 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
         // 3: Exit for self update
         private static async Task<int> MainAsync(IHostContext context, string[] args)
         {
-            Tracing trace = context.GetTrace("AgentProcess");
-            trace.Info("Azure DevOps Agent starting - initializing host context: Agent package {0}, Running on {1}({2}), RuntimeInformation {3}", 
-                BuildConstants.AgentPackage.PackageName, PlatformUtil.HostOS, PlatformUtil.HostArchitecture, RuntimeInformation.OSDescription);
+            trace.Entering();
+            trace.Info($"Agent package {BuildConstants.AgentPackage.PackageName}.");
+            trace.Info($"Running on {PlatformUtil.HostOS} ({PlatformUtil.HostArchitecture}).");
+            trace.Info($"RuntimeInformation: {RuntimeInformation.OSDescription}.");
             context.WritePerfCounter("AgentProcessStarted");
             var terminal = context.GetService<ITerminal>();
 
