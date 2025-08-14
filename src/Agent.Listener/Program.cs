@@ -22,10 +22,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
         
         public static int Main(string[] args)
         {
-            trace = context.GetTrace("AgentProcess");
             if (PlatformUtil.UseLegacyHttpHandler)
             {
-                trace.Info("Legacy HTTP handler enabled.");
                 AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", false);
             }
 
@@ -42,6 +40,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
         // 3: Exit for self update
         private static async Task<int> MainAsync(IHostContext context, string[] args)
         {
+            trace = context.GetTrace("AgentProcess");
             trace.Entering();
             trace.Info($"Agent package {BuildConstants.AgentPackage.PackageName}.");
             trace.Info($"Running on {PlatformUtil.HostOS} ({PlatformUtil.HostArchitecture}).");
@@ -54,8 +53,10 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
 
             try
             {
-                trace.Info("Agent initialization starting - loading version and culture info. Version: {0}, Commit: {1}, Culture: {2}, UI Culture: {3}", 
-                    BuildConstants.AgentPackage.Version , BuildConstants.Source.CommitHash, CultureInfo.CurrentCulture.Name, CultureInfo.CurrentUICulture.Name);
+                trace.Info($"Version: {BuildConstants.AgentPackage.Version}");
+                trace.Info($"Commit: {BuildConstants.Source.CommitHash}");
+                trace.Info($"Culture: {CultureInfo.CurrentCulture.Name}");
+                trace.Info($"UI Culture: {CultureInfo.CurrentUICulture.Name}");
                 // Validate directory permissions.
                 string agentDirectory = context.GetDirectory(WellKnownDirectory.Root);
                 trace.Info($"Validating directory permissions for: '{agentDirectory}'");
@@ -99,7 +100,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                     if (!NetFrameworkUtil.Test(new Version(4, 5), trace))
                     {
                         terminal.WriteError(StringUtil.Loc("MinimumNetFramework"));
-                        trace.Warning(".NET Framework version below recommended minimum - functionality may be limited");
+                        trace.Error(".NET Framework version below recommended minimum - functionality may be limited");
                         // warn only, like configurationmanager.cs does. this enables windows edition with just .netcore to work
                     }
 
