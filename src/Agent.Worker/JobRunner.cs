@@ -242,11 +242,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 var taskServerCredential = VssUtil.GetVssCredential(systemConnection);
                 if (taskServerUri != null)
                 {
-                    Trace.Info($"Creating task server with {taskServerUri}");
+                    Trace.Info("Creating task server [URI:{0}]", taskServerUri);
 
                     taskConnection = VssUtil.CreateConnection(taskServerUri, taskServerCredential, Trace, skipServerCertificateValidation);
                     await taskServer.ConnectAsync(taskConnection);
-                    Trace.Info($"TaskServer connection established successfully - URI: {taskServerUri}");
+                    Trace.Info($"TaskServer connection established successfully [URI: {taskServerUri}]");
                 }
 
                 // for back compat TFS 2015 RTM/QU1, we may need to switch the task server url to agent config url
