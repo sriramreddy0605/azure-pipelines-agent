@@ -357,7 +357,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
 
         private async Task RunAsync(Pipelines.AgentJobRequestMessage message, WorkerDispatcher previousJobDispatch, WorkerDispatcher newJobDispatch)
         {
-            Trace.Info("Starting job execution in normal agent mode [JobId:{0}, PlanType:{1}, DisplayName:{2}]", message.JobId, message.Plan.PlanType, message.JobDisplayName);
+            Trace.Info("Starting job execution [JobId:{0}, PlanId:{1}, DisplayName:{2}]", message.JobId, message.Plan.PlanId, message.JobDisplayName);
             
             if (previousJobDispatch != null)
             {
