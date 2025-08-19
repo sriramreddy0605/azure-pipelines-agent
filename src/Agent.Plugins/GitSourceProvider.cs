@@ -800,14 +800,16 @@ namespace Agent.Plugins.Repository
                     additionalFetchArgs.Add(args);
 
                     // Check if repository is a partial clone
-                    bool hasExplicitFilter = additionalFetchFilterOptions.Any();
-                    bool hasInheritedPartialClone = await IsPartialCloneRepository(executionContext, gitCommandManager, targetPath);
-                    bool isPartialClone = hasExplicitFilter || hasInheritedPartialClone;
+                    bool hasExplicitFetchFilter = additionalFetchFilterOptions.Any();
+                    bool hasInheritedPartialCloneConfig = await IsPartialCloneRepository(executionContext, gitCommandManager, targetPath);
+                    bool isPartialClone = hasExplicitFetchFilter || hasInheritedPartialCloneConfig;
                     bool forceCredentialsEnabled = AgentKnobs.AddForceCredentialsToGitCheckout.GetValue(executionContext).AsBoolean();
+                    
+                    executionContext.Debug($"Partial clone detection - ExplicitFilter: {hasExplicitFetchFilter}, InheritedConfig: {hasInheritedPartialCloneConfig}, IsPartialClone: {isPartialClone}, ForceCredentials: {forceCredentialsEnabled}");
                     
                     if (isPartialClone && forceCredentialsEnabled)
                     {
-                        executionContext.Output("Adding credentials to checkout due to partial clone detection and enabled force credentials knob");
+                        executionContext.Debug("Adding credentials to checkout due to partial clone detection and enabled force credentials knob");
                         additionalCheckoutArgs.Add(args);
                     }
                 }
@@ -1545,13 +1547,28 @@ namespace Agent.Plugins.Repository
                 string gitDir = Path.Combine(targetPath, ".git");
                 if (!Directory.Exists(gitDir))
                 {
+                    executionContext.Debug("Not a Git repository: .git directory does not exist");
                     return false;
                 }
 
-                // Check for promisor remote configuration (indicates partial clone)
+                // Check for promisor remote configuration (primary indicator)
                 if (await gitCommandManager.GitConfigExist(executionContext, targetPath, "remote.origin.promisor"))
                 {
                     executionContext.Debug("Detected partial clone: remote.origin.promisor exists");
+                    return true;
+                }
+
+                // Check for partial clone filter configuration (secondary indicator)
+                if (await gitCommandManager.GitConfigExist(executionContext, targetPath, "remote.origin.partialclonefilter"))
+                {
+                    executionContext.Debug("Detected partial clone: remote.origin.partialclonefilter exists");
+                    return true;
+                }
+
+                // Check for core.repositoryformatversion with extensions.partialclone
+                if (await gitCommandManager.GitConfigExist(executionContext, targetPath, "extensions.partialclone"))
+                {
+                    executionContext.Debug("Detected partial clone: extensions.partialclone exists");
                     return true;
                 }
 
