@@ -294,16 +294,6 @@ namespace Agent.Plugins.Repository
             string sourceBranch = repository.Properties.Get<string>(Pipelines.RepositoryPropertyNames.Ref);
             string sourceVersion = repository.Version;
 
-            // Enhanced targetPath logging for debugging multiple checkout scenarios
-            executionContext.Debug($"Repository checkout initialization:");
-            executionContext.Debug($"  - Repository Name: {repository.Properties.Get<string>(Pipelines.RepositoryPropertyNames.Name)}");
-            executionContext.Debug($"  - Repository Type: {repository.Type}");
-            executionContext.Debug($"  - Repository URL: {repositoryUrl}");
-            executionContext.Debug($"  - Target Path (from properties): {targetPath}");
-            executionContext.Debug($"  - Target Path (absolute): {Path.GetFullPath(targetPath)}");
-            executionContext.Debug($"  - Source Branch: {sourceBranch}");
-            executionContext.Debug($"  - Source Version: {sourceVersion}");
-
             bool clean = StringUtil.ConvertToBoolean(executionContext.GetInput(Pipelines.PipelineConstants.CheckoutTaskInputs.Clean));
 
             // input Submodules can be ['', true, false, recursive]
@@ -809,43 +799,11 @@ namespace Agent.Plugins.Repository
                     string args = ComposeGitArgs(executionContext, gitCommandManager, configKey, username, password, useBearerAuthType);
                     additionalFetchArgs.Add(args);
 
-                    // PARTIAL CLONE AUTHENTICATION HANDLING
-                    // ====================================
-                    // 
-                    // Problem: Partial clones can trigger "promisor remote" fetches during checkout operations.
-                    // These fetches require authentication but traditionally only fetch operations received credentials.
-                    // 
-                    // Logic: Add credentials to checkout when BOTH conditions are met:
-                    // 1. Repository is a partial clone (EXPLICIT OR INHERITED): 
-                    //    - EXPLICIT PARTIAL CLONE: Current checkout specifies fetchFilter (e.g., fetchFilter: blob:none)
-                    //    - INHERITED PARTIAL CLONE: Repository is already in partial clone state from previous operations
-                    // 2. AND the agent knob ADD_FORCE_CREDENTIALS_TO_GIT_CHECKOUT is enabled
-                    //
-                    // When Git encounters missing objects during checkout in a partial clone, it attempts to fetch
-                    // them from the promisor remote. Without credentials, this fails with:
-                    // "fatal: could not read Password for 'https://...': terminal prompts disabled"
-                    // "fatal: could not fetch <commit-hash> from promisor remote"
-                    //
-                    // Detection methods documented in IsPartialCloneRepository():
-                    // - remote.origin.promisor: Indicates origin can provide missing objects
-                    // - remote.origin.partialCloneFilter: Stores the filter spec used for partial clone  
-                    // - .git/objects/info/partial-clone: Git's internal partial clone tracking file
-                    //
-                    
                     // Check if repository is a partial clone
                     bool hasExplicitFilter = additionalFetchFilterOptions.Any();
                     bool hasInheritedPartialClone = await IsPartialCloneRepository(executionContext, gitCommandManager, targetPath);
                     bool isPartialClone = hasExplicitFilter || hasInheritedPartialClone;
                     bool forceCredentialsEnabled = AgentKnobs.AddForceCredentialsToGitCheckout.GetValue(executionContext).AsBoolean();
-                    
-                    executionContext.Debug($"Partial clone detection details:");
-                    executionContext.Debug($"  - targetPath: {targetPath}");
-                    executionContext.Debug($"  - targetPath exists: {Directory.Exists(targetPath)}");
-                    executionContext.Debug($"  - .git directory exists: {Directory.Exists(Path.Combine(targetPath, ".git"))}");
-                    executionContext.Debug($"  - hasExplicitFilter: {hasExplicitFilter}");
-                    executionContext.Debug($"  - hasInheritedPartialClone: {hasInheritedPartialClone}");
-                    executionContext.Debug($"  - isPartialClone (combined): {isPartialClone}");
-                    executionContext.Debug($"  - forceCredentialsEnabled: {forceCredentialsEnabled}");
                     
                     if (isPartialClone && forceCredentialsEnabled)
                     {
@@ -1579,50 +1537,21 @@ namespace Agent.Plugins.Repository
             return filters;
         }
 
-        /// <summary>
-        /// Detects if a Git repository is in a partial clone state by checking for partial clone indicators.
-        /// 
-        /// Partial clones are Git repositories that don't contain all objects locally, instead fetching
-        /// them on-demand from a "promisor remote" when needed. This can happen during checkout operations
-        /// and requires proper authentication.
-        /// 
-        /// Detection methods:
-        /// 1. remote.origin.promisor - Git config indicating origin is a promisor remote
-        /// 2. remote.origin.partialCloneFilter - Git config storing the partial clone filter used
-        /// 3. .git/objects/info/partial-clone - File created by Git to track partial clone state
-        /// </summary>
-        /// <param name="executionContext">The execution context for logging and debugging</param>
-        /// <param name="gitCommandManager">Git command manager for executing Git config commands</param>
-        /// <param name="targetPath">Path to the Git repository to check</param>
-        /// <returns>True if repository is in partial clone state, false otherwise</returns>
         private async Task<bool> IsPartialCloneRepository(AgentTaskPluginExecutionContext executionContext, GitCliManager gitCommandManager, string targetPath)
         {
             try
             {
-                executionContext.Debug($"IsPartialCloneRepository: Checking targetPath: {targetPath}");
-                executionContext.Debug($"IsPartialCloneRepository: targetPath absolute path: {Path.GetFullPath(targetPath)}");
-                
                 // Skip check if .git directory doesn't exist (not a Git repository)
                 string gitDir = Path.Combine(targetPath, ".git");
-                bool gitDirExists = Directory.Exists(gitDir);
-                executionContext.Debug($"IsPartialCloneRepository: .git directory path: {gitDir}");
-                executionContext.Debug($"IsPartialCloneRepository: .git directory exists: {gitDirExists}");
-                
-                if (!gitDirExists)
+                if (!Directory.Exists(gitDir))
                 {
-                    executionContext.Debug("Not a Git repository (no .git directory found)");
                     return false;
                 }
 
-                // Check for promisor remote configuration
-                // When Git creates a partial clone, it marks the remote as a "promisor" remote,
-                // meaning this remote promises to provide any missing objects on demand.
-                // This is the essential indicator for authentication requirements in partial clone scenarios.
-                // Git config: remote.origin.promisor = true
-                // Documentation: https://git-scm.com/docs/partial-clone
+                // Check for promisor remote configuration (indicates partial clone)
                 if (await gitCommandManager.GitConfigExist(executionContext, targetPath, "remote.origin.promisor"))
                 {
-                    executionContext.Debug("Detected partial clone: remote.origin.promisor exists - Origin remote is configured as a promisor remote that can provide missing objects on demand");
+                    executionContext.Debug("Detected partial clone: remote.origin.promisor exists");
                     return true;
                 }
 
@@ -1630,10 +1559,7 @@ namespace Agent.Plugins.Repository
             }
             catch (Exception ex)
             {
-                // If we can't determine the state, default to false and log the issue
-                // This ensures we don't break builds due to detection failures, but we might miss
-                // some partial clone scenarios. The fallback is to rely on explicit fetchFilter
-                // detection or the force credentials knob.
+                // Default to false on detection failure to avoid breaking builds
                 executionContext.Debug($"Failed to detect partial clone state: {ex.Message}");
                 return false;
             }
