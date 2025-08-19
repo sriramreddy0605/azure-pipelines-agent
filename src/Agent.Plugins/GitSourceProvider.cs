@@ -1564,14 +1564,6 @@ namespace Agent.Plugins.Repository
                     executionContext.Debug("Detected partial clone: remote.origin.partialclonefilter exists");
                     return true;
                 }
-
-                // Check for core.repositoryformatversion with extensions.partialclone
-                if (await gitCommandManager.GitConfigExist(executionContext, targetPath, "extensions.partialclone"))
-                {
-                    executionContext.Debug("Detected partial clone: extensions.partialclone exists");
-                    return true;
-                }
-
                 return false;
             }
             catch (Exception ex)
