@@ -52,6 +52,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             ArgUtil.NotNull(message.Variables, nameof(message.Variables));
             ArgUtil.NotNull(message.Steps, nameof(message.Steps));
             Trace.Entering();
+            Trace.Info($"Job ID {message.JobId}");
 
             DateTime jobStartTimeUtc = DateTime.UtcNow;
 
