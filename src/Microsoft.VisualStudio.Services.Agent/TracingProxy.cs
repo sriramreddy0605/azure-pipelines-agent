@@ -176,26 +176,26 @@ namespace Microsoft.VisualStudio.Services.Agent
             inner.Verbose(item, operation);
         }
 
-        public override void Entering([CallerMemberName] string name = "", [CallerMemberName] string operation = "")
+        public override void Entering([CallerMemberName] string name = "")
         {
             var inner = _inner;
             if (inner is null)
             {
-                base.Entering(name, operation);
+                base.Entering(name);
                 return;
             }
-            inner.Entering(name, operation);
+            inner.Entering(name);
         }
 
-        public override void Leaving([CallerMemberName] string name = "", [CallerMemberName] string operation = "")
+        public override void Leaving([CallerMemberName] string name = "")
         {
             var inner = _inner;
             if (inner is null)
             {
-                base.Leaving(name, operation);
+                base.Leaving(name);
                 return;
             }
-            inner.Leaving(name, operation);
+            inner.Leaving(name);
         }
 
         protected override void Dispose(bool disposing)

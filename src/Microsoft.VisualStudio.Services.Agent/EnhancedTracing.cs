@@ -77,14 +77,14 @@ namespace Microsoft.VisualStudio.Services.Agent
             LogWithOperation(TraceEventType.Verbose, item?.ToString() ?? "null", operation);
         }
 
-        public override void Entering([CallerMemberName] string name = "", [CallerMemberName] string operation = "")
+        public override void Entering([CallerMemberName] string name = "")
         {
-            LogWithOperation(TraceEventType.Verbose, $"Entering {name}", operation);
+            LogWithOperation(TraceEventType.Verbose, $"Entering {name}", name);
         }
 
-        public override void Leaving([CallerMemberName] string name = "", [CallerMemberName] string operation = "")
+        public override void Leaving([CallerMemberName] string name = "")
         {
-            LogWithOperation(TraceEventType.Verbose, $"Leaving {name}", operation);
+            LogWithOperation(TraceEventType.Verbose, $"Leaving {name}", name);
         }
 
         private void LogWithOperation(TraceEventType eventType, string message, string operation)
