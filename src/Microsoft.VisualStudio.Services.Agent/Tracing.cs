@@ -130,7 +130,6 @@ namespace Microsoft.VisualStudio.Services.Agent
                 // the shared HostTraceListener used across the entire process.
                 // Closing the shared listener from one Tracing instance would stop all logging.
                 _traceSource.Flush();
-                // Intentionally NOT calling _traceSource.Close();
             }
         }
     }
