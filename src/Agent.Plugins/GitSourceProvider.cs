@@ -799,17 +799,40 @@ namespace Agent.Plugins.Repository
                     string args = ComposeGitArgs(executionContext, gitCommandManager, configKey, username, password, useBearerAuthType);
                     additionalFetchArgs.Add(args);
 
-                    // Check if repository is a partial clone
+                    // Partial Clone Credential Handling:
+                    // Two feature flags control when credentials are added to git checkout for partial clones:
+                    // 1. AddForceCredentialsToGitCheckout (legacy): Only checks explicit fetch filters
+                    // 2. AddForceCredentialsToGitCheckoutEnhanced (new): Checks both explicit filters AND inherited partial clone config
+                    // The enhanced flag takes precedence when both are enabled.
                     bool hasExplicitFetchFilter = additionalFetchFilterOptions.Any();
-                    bool hasInheritedPartialCloneConfig = await IsPartialCloneRepository(executionContext, gitCommandManager, targetPath);
-                    bool isPartialClone = hasExplicitFetchFilter || hasInheritedPartialCloneConfig;
-                    bool forceCredentialsEnabled = AgentKnobs.AddForceCredentialsToGitCheckout.GetValue(executionContext).AsBoolean();
-                    
-                    executionContext.Debug($"Partial clone detection - ExplicitFilter: {hasExplicitFetchFilter}, InheritedConfig: {hasInheritedPartialCloneConfig}, IsPartialClone: {isPartialClone}, ForceCredentials: {forceCredentialsEnabled}");
-                    
-                    if (isPartialClone && forceCredentialsEnabled)
+                    bool forceCredentialsLegacyEnabled = AgentKnobs.AddForceCredentialsToGitCheckout.GetValue(executionContext).AsBoolean();
+                    bool forceCredentialsEnhancedEnabled = AgentKnobs.AddForceCredentialsToGitCheckoutEnhanced.GetValue(executionContext).AsBoolean();
+
+                    bool shouldAddCredentials = false;
+ 
+                    // Enhanced behavior takes precedence - checks both explicit filters and promisor remote configuration
+                    if (forceCredentialsEnhancedEnabled)
                     {
-                        executionContext.Debug("Adding credentials to checkout due to partial clone detection and enabled force credentials knob");
+                        // Enhanced detection: check for inherited partial clone configuration via git config
+                        bool hasInheritedPartialCloneConfig = await IsPartialCloneRepository(executionContext, gitCommandManager, targetPath);
+                        executionContext.Debug($"Enhanced partial clone detection - ExplicitFilter: {hasExplicitFetchFilter}, InheritedConfig: {hasInheritedPartialCloneConfig}, ForceCredentialsEnhanced: {forceCredentialsEnhancedEnabled}");
+                        if (hasExplicitFetchFilter || hasInheritedPartialCloneConfig)
+                        {
+                            executionContext.Debug("Adding credentials to checkout due to enhanced partial clone detection");
+                            shouldAddCredentials = true;
+                        }
+                    }
+                    else if (forceCredentialsLegacyEnabled && hasExplicitFetchFilter)
+                    {
+                        // Legacy behavior: only check explicit fetch filter, used when enhanced flag is disabled
+                        executionContext.Debug($"Legacy partial clone detection - ExplicitFilter: {hasExplicitFetchFilter}, ForceCredentials: {forceCredentialsLegacyEnabled}");
+                        executionContext.Debug("Adding credentials to checkout due to explicit fetch filter and legacy force credentials knob");
+                        shouldAddCredentials = true;
+                    }
+
+                    // Apply credentials to checkout if either feature flag condition was satisfied
+                    if (shouldAddCredentials)
+                    {
                         additionalCheckoutArgs.Add(args);
                     }
                 }
