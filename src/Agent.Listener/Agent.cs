@@ -20,6 +20,7 @@ using Microsoft.VisualStudio.Services.Agent.Listener.Telemetry;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Agent.Sdk.Knob;
+using Microsoft.VisualStudio.Services.Agent.AOP;
 
 namespace Microsoft.VisualStudio.Services.Agent.Listener
 {
@@ -398,7 +399,13 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                     bool autoUpdateInProgress = false;
                     Task<bool> selfUpdateTask = null;
                     bool runOnceJobReceived = false;
-                    jobDispatcher = HostContext.CreateService<IJobDispatcher>();
+                    
+                    // Initialize AOP system for method entry/exit logging
+                    AOPProxyFactory.Initialize(Trace);
+                    var baseJobDispatcher = HostContext.CreateService<IJobDispatcher>();
+                    jobDispatcher = AOPProxyFactory.CreateProxy<IJobDispatcher>(baseJobDispatcher, Trace);
+                    Trace.Info("AOP-enabled JobDispatcher created with method entry/exit logging.");
+                    
                     TaskAgentMessage previuosMessage = null;
 
                     _ = _listener.KeepAlive(keepAliveToken.Token);

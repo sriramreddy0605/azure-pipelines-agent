@@ -20,6 +20,7 @@ using Microsoft.VisualStudio.Services.Common;
 using System.Diagnostics;
 using Newtonsoft.Json;
 using Microsoft.VisualStudio.Services.Agent.Listener.Telemetry;
+using Microsoft.VisualStudio.Services.Agent.AOP;
 
 
 namespace Microsoft.VisualStudio.Services.Agent.Listener
@@ -76,6 +77,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
         public TaskCompletionSource<bool> RunOnceJobCompleted => _runOnceJobCompleted;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA2000:Dispose objects before losing scope", MessageId = "WorkerDispatcher")]
+        [LogMethod("JobDispatch", LogLevel = Microsoft.VisualStudio.Services.Agent.AOP.LogLevel.Info, MinDurationMs = 100)]
         public void Run(Pipelines.AgentJobRequestMessage jobRequestMessage, bool runOnce = false)
         {
             ArgUtil.NotNull(jobRequestMessage, nameof(jobRequestMessage));
@@ -107,6 +109,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
             _jobDispatchedQueue.Enqueue(newDispatch.JobId);
         }
 
+        [LogMethod("JobMetadataUpdate", LogLevel = Microsoft.VisualStudio.Services.Agent.AOP.LogLevel.Verbose)]
         public void MetadataUpdate(JobMetadataMessage jobMetadataMessage)
         {
             ArgUtil.NotNull(jobMetadataMessage, nameof(jobMetadataMessage));
@@ -124,6 +127,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
             }
         }
 
+        [LogMethod("JobCancellation", LogLevel = Microsoft.VisualStudio.Services.Agent.AOP.LogLevel.Info)]
         public bool Cancel(JobCancelMessage jobCancelMessage)
         {
             ArgUtil.NotNull(jobCancelMessage, nameof(jobCancelMessage));
@@ -146,6 +150,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
             }
         }
 
+        [LogMethod("JobWait", LogLevel = Microsoft.VisualStudio.Services.Agent.AOP.LogLevel.Info, MinDurationMs = 500)]
         public async Task WaitAsync(CancellationToken token)
         {
             WorkerDispatcher currentDispatch = null;
@@ -191,6 +196,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
             }
         }
 
+        [LogMethod("JobDispatcherShutdown", LogLevel = Microsoft.VisualStudio.Services.Agent.AOP.LogLevel.Info, MinDurationMs = 100)]
         public async Task ShutdownAsync()
         {
             Trace.Info($"Shutting down JobDispatcher. Make sure all WorkerDispatcher has finished.");
@@ -308,6 +314,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
             }
         }
 
+        [LogMethod("RunOnceJob", LogLevel = Microsoft.VisualStudio.Services.Agent.AOP.LogLevel.Info, MinDurationMs = 1000)]
         private async Task RunOnceAsync(Pipelines.AgentJobRequestMessage message, WorkerDispatcher previousJobDispatch, WorkerDispatcher currentJobDispatch)
         {
             try
@@ -325,6 +332,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
             }
         }
 
+        [LogMethod("RunJob", LogLevel = Microsoft.VisualStudio.Services.Agent.AOP.LogLevel.Info, MinDurationMs = 1000)]
         private async Task RunAsync(Pipelines.AgentJobRequestMessage message, WorkerDispatcher previousJobDispatch, WorkerDispatcher newJobDispatch)
         {
             
@@ -697,6 +705,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
             }
         }
 
+        [LogMethod("JobRequestRenewal", LogLevel = Microsoft.VisualStudio.Services.Agent.AOP.LogLevel.Verbose, MinDurationMs = 2000)]
         public async Task RenewJobRequestAsync(int poolId, long requestId, Guid lockToken, TaskCompletionSource<int> firstJobRequestRenewed, CancellationToken token)
         {
             ArgUtil.NotNull(firstJobRequestRenewed, nameof(firstJobRequestRenewed));
@@ -819,6 +828,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
         }
 
         // TODO: We need send detailInfo back to DT in order to add an issue for the job
+        [LogMethod("CompleteJobRequest", LogLevel = Microsoft.VisualStudio.Services.Agent.AOP.LogLevel.Info, MinDurationMs = 500)]
         private async Task CompleteJobRequestAsync(int poolId, Pipelines.AgentJobRequestMessage message, Guid lockToken, TaskResult result, string detailInfo = null)
         {
             Trace.Entering();
