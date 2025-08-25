@@ -48,7 +48,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
             ArgUtil.NotNull(command, nameof(command));
             try
             {
-                Trace.Verbose("Initializing core services...");
+                Trace.Verbose("Initializing core services... ");
                 var agentWebProxy = HostContext.GetService<IVstsAgentWebProxy>();
                 var agentCertManager = HostContext.GetService<IAgentCertificateManager>();
                 VssUtil.InitializeVssClientSettings(HostContext.UserAgent, agentWebProxy.WebProxy, agentCertManager.VssClientCertificateManager, agentCertManager.SkipServerCertificateValidation);
