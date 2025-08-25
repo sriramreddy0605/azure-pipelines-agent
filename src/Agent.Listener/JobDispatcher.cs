@@ -78,35 +78,37 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA2000:Dispose objects before losing scope", MessageId = "WorkerDispatcher")]
         public void Run(Pipelines.AgentJobRequestMessage jobRequestMessage, bool runOnce = false)
         {
-            ArgUtil.NotNull(jobRequestMessage, nameof(jobRequestMessage));
-            Trace.Info($"Job request {jobRequestMessage.RequestId} for plan {jobRequestMessage.Plan.PlanId} job {jobRequestMessage.JobId} received.");
+            using(Trace.EnteringWithDuration()) {
+                ArgUtil.NotNull(jobRequestMessage, nameof(jobRequestMessage));
+                Trace.Info($"Job request {jobRequestMessage.RequestId} for plan {jobRequestMessage.Plan.PlanId} job {jobRequestMessage.JobId} received.");
 
-            WorkerDispatcher currentDispatch = null;
-            if (_jobDispatchedQueue.Count > 0)
-            {
-                Guid dispatchedJobId = _jobDispatchedQueue.Dequeue();
-                if (_jobInfos.TryGetValue(dispatchedJobId, out currentDispatch))
+                WorkerDispatcher currentDispatch = null;
+                if (_jobDispatchedQueue.Count > 0)
                 {
-                    Trace.Verbose($"Retrieve previous WorkerDispather for job {currentDispatch.JobId}.");
+                    Guid dispatchedJobId = _jobDispatchedQueue.Dequeue();
+                    if (_jobInfos.TryGetValue(dispatchedJobId, out currentDispatch))
+                    {
+                        Trace.Verbose($"Retrieve previous WorkerDispather for job {currentDispatch.JobId}.");
+                    }
                 }
-            }
 
-            WorkerDispatcher newDispatch = new WorkerDispatcher(jobRequestMessage.JobId, jobRequestMessage.RequestId);
-            if (runOnce)
-            {
-                Trace.Info("Starting dispatcher with runOnce option.(Agent will terminate agent after completion)");
-                jobRequestMessage.Variables[Constants.Variables.Agent.RunMode] = new VariableValue(Constants.Agent.CommandLine.Flags.Once);
-                newDispatch.WorkerDispatch = RunOnceAsync(jobRequestMessage, currentDispatch, newDispatch);
-            }
-            else
-            {
-                Trace.Info("Starting Dispatcher(RunAsync)");
-                newDispatch.WorkerDispatch = RunAsync(jobRequestMessage, currentDispatch, newDispatch);
-            }
+                WorkerDispatcher newDispatch = new WorkerDispatcher(jobRequestMessage.JobId, jobRequestMessage.RequestId);
+                if (runOnce)
+                {
+                    Trace.Info("Starting dispatcher with runOnce option.(Agent will terminate agent after completion)");
+                    jobRequestMessage.Variables[Constants.Variables.Agent.RunMode] = new VariableValue(Constants.Agent.CommandLine.Flags.Once);
+                    newDispatch.WorkerDispatch = RunOnceAsync(jobRequestMessage, currentDispatch, newDispatch);
+                }
+                else
+                {
+                    Trace.Info("Starting Dispatcher(RunAsync)");
+                    newDispatch.WorkerDispatch = RunAsync(jobRequestMessage, currentDispatch, newDispatch);
+                }
 
-            _jobInfos.TryAdd(newDispatch.JobId, newDispatch);
-            _jobDispatchedQueue.Enqueue(newDispatch.JobId);
-            Trace.Info($"Job dispatcher setup complete [JobId:{newDispatch.JobId}, QueuePosition:{_jobDispatchedQueue.Count}, ActiveJobs:{_jobInfos.Count}, DispatchMode:{(runOnce ? "RunOnce" : "Normal")}]");
+                _jobInfos.TryAdd(newDispatch.JobId, newDispatch);
+                _jobDispatchedQueue.Enqueue(newDispatch.JobId);
+                Trace.Info($"Job dispatcher setup complete [JobId:{newDispatch.JobId}, QueuePosition:{_jobDispatchedQueue.Count}, ActiveJobs:{_jobInfos.Count}, DispatchMode:{(runOnce ? "RunOnce" : "Normal")}]");
+            }
         }
 
         public void MetadataUpdate(JobMetadataMessage jobMetadataMessage)

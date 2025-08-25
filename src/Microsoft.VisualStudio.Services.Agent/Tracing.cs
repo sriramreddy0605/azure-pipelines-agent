@@ -99,12 +99,19 @@ namespace Microsoft.VisualStudio.Services.Agent
 
         public virtual void Entering([CallerMemberName] string name = "")
         {
-            Trace(TraceEventType.Verbose, $"Entering {name}");
+            Trace(TraceEventType.Verbose, $"Entering === {name}");
+            // return null;
         }
 
         public virtual void Leaving([CallerMemberName] string name = "")
         {
-            Trace(TraceEventType.Verbose, $"Leaving {name}");
+            Trace(TraceEventType.Verbose, $"Leaving === {name}");
+        }
+
+        public virtual IDisposable EnteringWithDuration([CallerMemberName] string name = "")
+        {
+            Entering(name);
+            return null;
         }
 
         public void Dispose()

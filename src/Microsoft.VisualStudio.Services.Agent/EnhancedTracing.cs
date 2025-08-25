@@ -79,12 +79,38 @@ namespace Microsoft.VisualStudio.Services.Agent
 
         public override void Entering([CallerMemberName] string name = "")
         {
-            LogWithOperation(TraceEventType.Verbose, $"Entering {name}", name);
+            LogWithOperation(TraceEventType.Verbose, $"Entering --- {name}", name);
+        }
+
+        // public override IDisposable Entering([CallerMemberName] string name = "")
+        // {
+        //     LogWithOperation(TraceEventType.Verbose, $"Entering --- {name}", name);
+        //     return new MethodTimer(this, name);
+        // }
+
+        /// <summary>
+        /// Creates a disposable duration tracker that logs entering and leaving with duration.
+        /// Usage: using (trace.EnteringWithDuration()) { /* method logic */ }
+        /// This provides automatic duration tracking with exception-safe cleanup.
+        /// </summary>
+        public override IDisposable EnteringWithDuration([CallerMemberName] string name = "")
+        {
+            LogWithOperation(TraceEventType.Verbose, $"Entering --- {name}", name);
+            return new MethodTimer(this, name);
         }
 
         public override void Leaving([CallerMemberName] string name = "")
         {
-            LogWithOperation(TraceEventType.Verbose, $"Leaving {name}", name);
+            LogWithOperation(TraceEventType.Verbose, $"Leaving --- {name}", name);
+        }
+
+        /// <summary>
+        /// Internal method to log leaving with duration - called by MethodTimer.
+        /// </summary>
+        internal void LogLeavingWithDuration(string methodName, TimeSpan duration)
+        {
+            var message = $"Leaving --- {methodName} (Duration: {duration.TotalMilliseconds:F2}ms)";
+            LogWithOperation(TraceEventType.Verbose, message, methodName);
         }
 
         private void LogWithOperation(TraceEventType eventType, string message, string operation)
@@ -97,6 +123,36 @@ namespace Microsoft.VisualStudio.Services.Agent
         {
             var operationPart = !string.IsNullOrEmpty(operation) ? $"[{operation}]" : "";
             return $"{operationPart} {message}".TrimEnd();
+        }
+
+        /// <summary>
+        /// Private class that implements automatic duration tracking using the disposable pattern.
+        /// This ensures guaranteed cleanup and duration logging regardless of how the method exits.
+        /// </summary>
+        private sealed class MethodTimer : IDisposable
+        {
+            private readonly EnhancedTracing _tracing;
+            private readonly string _methodName;
+            private readonly Stopwatch _stopwatch;
+            private bool _disposed = false;
+
+            public MethodTimer(EnhancedTracing tracing, string methodName)
+            {
+                _tracing = tracing;
+                _methodName = methodName;
+                _stopwatch = Stopwatch.StartNew();
+            }
+
+            public void Dispose()
+            {
+                _tracing.Info($"In Method Timer Dispose function - disposed = {_disposed}");
+                if (!_disposed)
+                {
+                    _disposed = true;
+                    _stopwatch.Stop();
+                    _tracing.LogLeavingWithDuration(_methodName, _stopwatch.Elapsed);
+                }
+            }
         }
     }
 }
