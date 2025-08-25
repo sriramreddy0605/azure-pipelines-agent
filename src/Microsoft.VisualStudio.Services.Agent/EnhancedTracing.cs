@@ -79,7 +79,7 @@ namespace Microsoft.VisualStudio.Services.Agent
 
         public override void Entering([CallerMemberName] string name = "")
         {
-            LogWithOperation(TraceEventType.Verbose, $"Entering --- {name}", name);
+            LogWithOperation(TraceEventType.Verbose, $"Entering {name}", name);
         }
 
         // public override IDisposable Entering([CallerMemberName] string name = "")
@@ -88,25 +88,17 @@ namespace Microsoft.VisualStudio.Services.Agent
         //     return new MethodTimer(this, name);
         // }
 
-        /// <summary>
-        /// Creates a disposable duration tracker that logs entering and leaving with duration.
-        /// Usage: using (trace.EnteringWithDuration()) { /* method logic */ }
-        /// This provides automatic duration tracking with exception-safe cleanup.
-        /// </summary>
         public override IDisposable EnteringWithDuration([CallerMemberName] string name = "")
         {
-            LogWithOperation(TraceEventType.Verbose, $"Entering --- {name}", name);
+            LogWithOperation(TraceEventType.Verbose, $"Entering {name}", name);
             return new MethodTimer(this, name);
         }
 
         public override void Leaving([CallerMemberName] string name = "")
         {
-            LogWithOperation(TraceEventType.Verbose, $"Leaving --- {name}", name);
+            LogWithOperation(TraceEventType.Verbose, $"Leaving {name}", name);
         }
 
-        /// <summary>
-        /// Internal method to log leaving with duration - called by MethodTimer.
-        /// </summary>
         internal void LogLeavingWithDuration(string methodName, TimeSpan duration)
         {
             var formattedDuration = FormatDuration(duration);
@@ -126,10 +118,6 @@ namespace Microsoft.VisualStudio.Services.Agent
             return $"{operationPart} {message}".TrimEnd();
         }
 
-        /// <summary>
-        /// Formats a TimeSpan duration into a human-readable string.
-        /// Uses time-based format for longer durations and unit-based for shorter ones.
-        /// </summary>
         private string FormatDuration(TimeSpan duration)
         {
             if (duration.TotalMinutes >= 1)
@@ -153,10 +141,6 @@ namespace Microsoft.VisualStudio.Services.Agent
             }
         }
 
-        /// <summary>
-        /// Private class that implements automatic duration tracking using the disposable pattern.
-        /// This ensures guaranteed cleanup and duration logging regardless of how the method exits.
-        /// </summary>
         private sealed class MethodTimer : IDisposable
         {
             private readonly EnhancedTracing _tracing;
