@@ -1,3 +1,16 @@
+## Features
+ - Added support for basic auth for proxy setup (#5269)
+ - Impoving container initialize logic (#5280)
+ - Adding trace logs in agent worker - job runner in agent lifecycle execution (#5285)
+ - Adding logs for agent lifecycle for listener process (#5284)
+ - Adding logs for step runner and task runner in agent lifecycle (#5287)
+
+## Bugs
+ - Enabling the warning when agent runs in PowerShell core using CheckPsModulesLocations knob (#5286)
+
+## Misc
+
+
 
 ## Agent Downloads
 
