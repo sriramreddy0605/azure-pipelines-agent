@@ -82,12 +82,6 @@ namespace Microsoft.VisualStudio.Services.Agent
             LogWithOperation(TraceEventType.Verbose, $"Entering {name}", name);
         }
 
-        // public override IDisposable Entering([CallerMemberName] string name = "")
-        // {
-        //     LogWithOperation(TraceEventType.Verbose, $"Entering --- {name}", name);
-        //     return new MethodTimer(this, name);
-        // }
-
         public override IDisposable EnteringWithDuration([CallerMemberName] string name = "")
         {
             LogWithOperation(TraceEventType.Verbose, $"Entering {name}", name);
