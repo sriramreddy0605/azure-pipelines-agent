@@ -109,7 +109,8 @@ namespace Microsoft.VisualStudio.Services.Agent
         /// </summary>
         internal void LogLeavingWithDuration(string methodName, TimeSpan duration)
         {
-            var message = $"Leaving --- {methodName} (Duration: {duration.TotalMilliseconds:F2}ms)";
+            var formattedDuration = FormatDuration(duration);
+            var message = $"Leaving --- {methodName} (Duration: {formattedDuration})";
             LogWithOperation(TraceEventType.Verbose, message, methodName);
         }
 
@@ -123,6 +124,33 @@ namespace Microsoft.VisualStudio.Services.Agent
         {
             var operationPart = !string.IsNullOrEmpty(operation) ? $"[{operation}]" : "";
             return $"{operationPart} {message}".TrimEnd();
+        }
+
+        /// <summary>
+        /// Formats a TimeSpan duration into a human-readable string.
+        /// Uses time-based format for longer durations and unit-based for shorter ones.
+        /// </summary>
+        private string FormatDuration(TimeSpan duration)
+        {
+            if (duration.TotalMinutes >= 1)
+            {
+                if (duration.TotalHours >= 1)
+                {
+                    return $"{(int)duration.TotalHours}h {duration.Minutes}m {duration.Seconds}.{duration.Milliseconds:D3}s";
+                }
+                else
+                {
+                    return $"{duration.Minutes}m {duration.Seconds}.{duration.Milliseconds:D3}s";
+                }
+            }
+            else if (duration.TotalSeconds >= 1)
+            {
+                return $"{duration.TotalSeconds:F3}s";
+            }
+            else
+            {
+                return $"{duration.TotalMilliseconds:F2}ms";
+            }
         }
 
         /// <summary>
