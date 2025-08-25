@@ -59,27 +59,29 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         public async Task RunAsync()
         {
             // Validate args.
-            Trace.Entering();
-            ArgUtil.NotNull(ExecutionContext, nameof(ExecutionContext));
-            ArgUtil.NotNull(ExecutionContext.Variables, nameof(ExecutionContext.Variables));
-            ArgUtil.NotNull(Task, nameof(Task));
+            using(Trace.EnteringWithDuration()){
+                Trace.Entering();
+                ArgUtil.NotNull(ExecutionContext, nameof(ExecutionContext));
+                ArgUtil.NotNull(ExecutionContext.Variables, nameof(ExecutionContext.Variables));
+                ArgUtil.NotNull(Task, nameof(Task));
 
-            bool logTaskNameInUserAgent = AgentKnobs.LogTaskNameInUserAgent.GetValue(ExecutionContext).AsBoolean();
+                bool logTaskNameInUserAgent = AgentKnobs.LogTaskNameInUserAgent.GetValue(ExecutionContext).AsBoolean();
 
-            if (logTaskNameInUserAgent)
-            {
-                VssUtil.PushTaskIntoAgentInfo(Task.Name ?? "", Task.Reference?.Version ?? "");
-            }
-
-            try
-            {
-                await RunAsyncInternal();
-            }
-            finally
-            {
                 if (logTaskNameInUserAgent)
                 {
-                    VssUtil.RemoveTaskFromAgentInfo();
+                    VssUtil.PushTaskIntoAgentInfo(Task.Name ?? "", Task.Reference?.Version ?? "");
+                }
+
+                try
+                {
+                    await RunAsyncInternal();
+                }
+                finally
+                {
+                    if (logTaskNameInUserAgent)
+                    {
+                        VssUtil.RemoveTaskFromAgentInfo();
+                    }
                 }
             }
         }

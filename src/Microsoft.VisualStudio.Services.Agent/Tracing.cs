@@ -99,12 +99,24 @@ namespace Microsoft.VisualStudio.Services.Agent
 
         public virtual void Entering([CallerMemberName] string name = "")
         {
-            Trace(TraceEventType.Verbose, $"Entering {name}");
+            Trace(TraceEventType.Verbose, $"Entering === {name}");
+            // return null;
         }
 
         public virtual void Leaving([CallerMemberName] string name = "")
         {
-            Trace(TraceEventType.Verbose, $"Leaving {name}");
+            Trace(TraceEventType.Verbose, $"Leaving === {name}");
+        }
+
+        /// <summary>
+        /// Creates a disposable duration tracker. Base implementation provides traditional Entering/Leaving pattern.
+        /// Enhanced tracing can override this to provide actual duration measurement.
+        /// Usage: using (trace.EnteringWithDuration()) { /* method logic */ }
+        /// </summary>
+        public virtual IDisposable EnteringWithDuration([CallerMemberName] string name = "")
+        {
+            Entering(name);
+            return null;
         }
 
         public void Dispose()
@@ -130,7 +142,6 @@ namespace Microsoft.VisualStudio.Services.Agent
                 // the shared HostTraceListener used across the entire process.
                 // Closing the shared listener from one Tracing instance would stop all logging.
                 _traceSource.Flush();
-                // Intentionally NOT calling _traceSource.Close();
             }
         }
     }

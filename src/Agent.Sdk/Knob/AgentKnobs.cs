@@ -841,6 +841,6 @@ namespace Agent.Sdk.Knob
             nameof(UseEnhancedLogging),
             "If true, use structured enhanced logging format with timestamps, components, and operations",
             new EnvironmentKnobSource("AZP_USE_ENHANCED_LOGGING"),
-            new BuiltInDefaultKnobSource("false"));
+            new BuiltInDefaultKnobSource("true"));
     }
 }
