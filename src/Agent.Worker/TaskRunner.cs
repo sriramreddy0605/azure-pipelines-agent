@@ -60,7 +60,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         {
             using(Trace.EnteringWithDuration()) {
                 // Validate args.
-                Trace.Entering();
                 ArgUtil.NotNull(ExecutionContext, nameof(ExecutionContext));
                 ArgUtil.NotNull(ExecutionContext.Variables, nameof(ExecutionContext.Variables));
                 ArgUtil.NotNull(Task, nameof(Task));

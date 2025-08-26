@@ -47,7 +47,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         {
             using(Trace.EnteringWithDuration()) {
                 // Validate parameters.
-                Trace.Entering();
                 ArgUtil.NotNull(message, nameof(message));
                 ArgUtil.NotNull(message.Resources, nameof(message.Resources));
                 ArgUtil.NotNull(message.Variables, nameof(message.Variables));
