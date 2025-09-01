@@ -66,17 +66,6 @@ namespace Microsoft.VisualStudio.Services.Agent
             inner.Info(message, operation);
         }
 
-        public override void Info(string format, [CallerMemberName] string operation = "", params object[] args)
-        {
-            var inner = _inner;
-            if (inner is null)
-            {
-                base.Info(format, operation, args);
-                return;
-            }
-            inner.Info(format, operation, args);
-        }
-
         public override void Info(object item, [CallerMemberName] string operation = "")
         {
             var inner = _inner;
@@ -110,17 +99,6 @@ namespace Microsoft.VisualStudio.Services.Agent
             inner.Error(message, operation);
         }
 
-        public override void Error(string format, [CallerMemberName] string operation = "", params object[] args)
-        {
-            var inner = _inner;
-            if (inner is null)
-            {
-                base.Error(format, operation, args);
-                return;
-            }
-            inner.Error(format, operation, args);
-        }
-
         public override void Warning(string message, [CallerMemberName] string operation = "")
         {
             var inner = _inner;
@@ -132,17 +110,6 @@ namespace Microsoft.VisualStudio.Services.Agent
             inner.Warning(message, operation);
         }
 
-        public override void Warning(string format, [CallerMemberName] string operation = "", params object[] args)
-        {
-            var inner = _inner;
-            if (inner is null)
-            {
-                base.Warning(format, operation, args);
-                return;
-            }
-            inner.Warning(format, operation, args);
-        }
-
         public override void Verbose(string message, [CallerMemberName] string operation = "")
         {
             var inner = _inner;
@@ -152,17 +119,6 @@ namespace Microsoft.VisualStudio.Services.Agent
                 return;
             }
             inner.Verbose(message, operation);
-        }
-
-        public override void Verbose(string format, [CallerMemberName] string operation = "", params object[] args)
-        {
-            var inner = _inner;
-            if (inner is null)
-            {
-                base.Verbose(format, operation, args);
-                return;
-            }
-            inner.Verbose(format, operation, args);
         }
 
         public override void Verbose(object item, [CallerMemberName] string operation = "")
