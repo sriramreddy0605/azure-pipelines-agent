@@ -182,7 +182,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 jobContext.SetVariable(Constants.Variables.Agent.OS, VarUtil.OS);
                 jobContext.SetVariable(Constants.Variables.Agent.OSArchitecture, VarUtil.OSArchitecture);
                 jobContext.SetVariable(Constants.Variables.Agent.RootDirectory, HostContext.GetDirectory(WellKnownDirectory.Work), isFilePath: true);
-                Trace.Info(StringUtil.SafeLog("Agent metadata populated [AgentId:{0}, AgentName:{1}, OS:{2}, Architecture:{3}, SelfHosted:{4}, CloudId:{5}, MachineName:{6}]", settings.AgentId, settings.AgentName, VarUtil.OS, VarUtil.OSArchitecture, !settings.IsMSHosted, settings.AgentCloudId, Environment.MachineName));
+                Trace.Info($"Agent metadata populated [AgentId:{settings.AgentId}, AgentName:{settings.AgentName}, OS:{VarUtil.OS}, Architecture:{VarUtil.OSArchitecture}, SelfHosted:{!settings.IsMSHosted}, CloudId:{settings.AgentCloudId}, MachineName:{Environment.MachineName}]");
                 if (PlatformUtil.RunningOnWindows)
                 {
                     string serverOMDirectoryVariable = AgentKnobs.InstallLegacyTfExe.GetValue(jobContext).AsBoolean()
