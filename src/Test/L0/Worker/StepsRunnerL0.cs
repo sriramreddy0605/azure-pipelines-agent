@@ -19,6 +19,45 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
 {
     public sealed class StepsRunnerL0
     {
+        [Fact]
+        [Trait("Level", "L0")]
+        [Trait("Category", "Worker")]
+        public async Task CancelsStepAndLogsErrorOnJobCancellation()
+        {
+            using (TestHostContext hc = CreateTestContext())
+            {
+                var step = new Moq.Mock<IStep>();
+                step.Setup(x => x.Condition).Returns(ExpressionManager.Succeeded);
+                step.Setup(x => x.ContinueOnError).Returns(false);
+                step.Setup(x => x.Enabled).Returns(true);
+
+                var tcs = new TaskCompletionSource();
+                step.Setup(x => x.RunAsync()).Returns(tcs.Task);
+
+                var stepContext = new Moq.Mock<IExecutionContext>();
+                stepContext.SetupAllProperties();
+                stepContext.Setup(x => x.Variables).Returns(_variables);
+                stepContext.Setup(x => x.Complete(It.IsAny<TaskResult?>(), It.IsAny<string>(), It.IsAny<string>()));
+                stepContext.Setup(x => x.GetScopedEnvironment()).Returns(new SystemEnvironment());
+                step.Setup(x => x.ExecutionContext).Returns(stepContext.Object);
+
+                bool cancelTokenCalled = false;
+                stepContext.Setup(x => x.CancelToken())
+                    .Callback(() => cancelTokenCalled = true);
+
+                using (var cts = new System.Threading.CancellationTokenSource())
+                {
+                    _ec.Setup(x => x.CancellationToken).Returns(cts.Token);
+                    var runTask = _stepsRunner.RunAsync(_ec.Object, new List<IStep> { step.Object });
+                    await Task.Yield(); // Ensure callback registration
+                    cts.Cancel();
+                    tcs.SetResult(); // Allow the step to complete
+                    await runTask;
+                    Assert.True(cancelTokenCalled, "CancelToken() should be called on job cancellation.");
+                }
+            }
+        }
+
         private Mock<IExecutionContext> _ec;
         private StepsRunner _stepsRunner;
         private Variables _variables;
