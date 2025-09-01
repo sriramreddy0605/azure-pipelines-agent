@@ -386,7 +386,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
             // Wait for process to finish.
             if (_proc.ExitCode != 0 && requireExitCodeZero)
             {
-                throw new ProcessExitCodeException(exitCode: _proc.ExitCode, fileName: fileName, arguments: arguments, processId: _proc.Id);
+                throw new ProcessExitCodeException(exitCode: _proc.ExitCode, fileName: fileName, arguments: arguments);
             }
 
             return _proc.ExitCode;
@@ -482,7 +482,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
                 }
             }
 
-            Trace.Info($"Kill entire process tree since both cancel and terminate signal has been ignored by the target process. [Process ID: {_proc.Id}]");
+            Trace.Info($"[{_proc.Id}] Kill entire process tree with root {_proc.Id} since both cancel and terminate signal has been ignored by the target process.");
             KillProcessTree();
         }
 
@@ -545,7 +545,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
                     }
                 }
 
-                Trace.Info($"STDOUT/STDERR stream read finished. [Process ID: {_proc.Id}]");
+                Trace.Info($"[{_proc.Id}] STDOUT/STDERR stream read finished.");
 
                 if (Interlocked.Decrement(ref _asyncStreamReaderCount) == 0 && _waitingOnStreams)
                 {
@@ -575,7 +575,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
 
                             if (!keepStandardInOpen)
                             {
-                                Trace.Info($"Close STDIN after the first redirect finished.  [Process ID: {_proc.Id}]");
+                                Trace.Info($"[{_proc.Id}] Close STDIN after the first redirect finished.");
                                 standardIn.Close();
                                 break;
                             }
@@ -583,7 +583,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
                     }
                 }
 
-                Trace.Info($"STDIN stream write finished.  [Process ID: {_proc.Id}]");
+                Trace.Info($"[{_proc.Id}] STDIN stream write finished.");
             });
         }
 
@@ -603,7 +603,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
         {
             if (PlatformUtil.HostOS != PlatformUtil.OS.Linux)
             {
-                Trace.Info($"OOM score adjustment is Linux-only. [Process ID: {process.Id}]");
+                Trace.Info($"[{process.Id}] OOM score adjustment is Linux-only.");
                 return;
             }
 
@@ -618,7 +618,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
                 }
                 else
                 {
-                    Trace.Info($"Invalid PIPELINE_JOB_OOMSCOREADJ ({userOomScoreAdj}). Valid range is -1000:1000. Using default 500. [Process ID: {process.Id}]");
+                    Trace.Info($"[{process.Id}] Invalid PIPELINE_JOB_OOMSCOREADJ ({userOomScoreAdj}). Valid range is -1000:1000. Using default 500.");
                 }
             }
             // Values (up to 1000) make the process more likely to be killed under OOM scenario,
@@ -631,13 +631,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Util
     public sealed class ProcessExitCodeException : Exception
     {
         public int ExitCode { get; private set; }
-        public int ProcessId { get; private set; }
 
-        public ProcessExitCodeException(int exitCode, string fileName, string arguments, int processId)
-            : base(StringUtil.Loc("ProcessExitCode", exitCode, fileName, arguments, processId))
+        public ProcessExitCodeException(int exitCode, string fileName, string arguments)
+            : base(StringUtil.Loc("ProcessExitCode", exitCode, fileName, arguments))
         {
             ExitCode = exitCode;
-            ProcessId = processId;
         }
     }
 
