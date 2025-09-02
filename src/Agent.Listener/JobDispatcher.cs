@@ -444,11 +444,21 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
 
                     var featureFlagProvider = HostContext.GetService<IFeatureFlagProvider>();
                     var newMaskerAndRegexesFeatureFlagStatus = await featureFlagProvider.GetFeatureFlagAsync(HostContext, "DistributedTask.Agent.EnableNewMaskerAndRegexes", Trace);
+                    var enhancedLoggingFlag = await featureFlagProvider.GetFeatureFlagAsync(HostContext, "DistributedTask.Agent.UseEnhancedLogging", Trace);
                     var environment = new Dictionary<string, string>();
                     if (newMaskerAndRegexesFeatureFlagStatus?.EffectiveState == "On")
                     {
                         environment.Add("AZP_ENABLE_NEW_MASKER_AND_REGEXES", "true");
                     }
+
+                    // Ensure worker sees the enhanced logging knob if the listener enabled it
+                    if (enhancedLoggingFlag?.EffectiveState == "On")
+                    {
+                        environment["AZP_USE_ENHANCED_LOGGING"] = "true";
+                        var traceManager = HostContext.GetService<ITraceManager>();
+                        traceManager.SetEnhancedLoggingEnabled(true);
+                    }
+
                     // Start the process channel.
                     // It's OK if StartServer bubbles an execption after the worker process has already started.
                     // The worker will shutdown after 30 seconds if it hasn't received the job message.
