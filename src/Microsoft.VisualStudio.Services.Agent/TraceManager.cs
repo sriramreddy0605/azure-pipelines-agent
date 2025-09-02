@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.Services.Agent
 
     public sealed class TraceManager : AgentService, ITraceManager
     {
-        private readonly ConcurrentDictionary<string, TracingProxy> _sources = new(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, ITracingProxy> _sources = new(StringComparer.OrdinalIgnoreCase);
         private readonly HostTraceListener _hostTraceListener;
         private readonly TraceSetting _traceSetting;
         private readonly ILoggedSecretMasker _secretMasker;
@@ -58,7 +58,7 @@ namespace Microsoft.VisualStudio.Services.Agent
 
         public SourceSwitch Switch { get; private set; }
 
-        public Tracing this[string name] => _sources.GetOrAdd(name, CreateTracingProxy);
+        public Tracing this[string name] => (Tracing)_sources.GetOrAdd(name, CreateTracingProxy);
 
         /// <summary>
         /// Toggle enhanced logging across all existing sources if state changed.
@@ -100,7 +100,7 @@ namespace Microsoft.VisualStudio.Services.Agent
             _sources.Clear();
         }
 
-        private TracingProxy CreateTracingProxy(string name)
+        private ITracingProxy CreateTracingProxy(string name)
         {
             var sourceSwitch = GetSourceSwitch(name);
             var proxy = new TracingProxy(name, _secretMasker, sourceSwitch, _hostTraceListener);

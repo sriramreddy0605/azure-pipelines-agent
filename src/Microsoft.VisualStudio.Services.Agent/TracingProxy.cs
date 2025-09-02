@@ -11,7 +11,7 @@ namespace Microsoft.VisualStudio.Services.Agent
     // A stable Tracing handle that forwards to a swappable inner Tracing implementation.
     // This lets callers keep their Tracing reference while TraceManager switches
     // between standard and enhanced tracing at runtime.
-    public sealed class TracingProxy : Tracing
+    public sealed class TracingProxy : Tracing, ITracingProxy
     {
         private volatile Tracing _inner;
         private readonly object _swapLock = new object();

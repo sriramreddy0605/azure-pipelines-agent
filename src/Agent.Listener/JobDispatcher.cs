@@ -444,6 +444,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
 
                     var featureFlagProvider = HostContext.GetService<IFeatureFlagProvider>();
                     var newMaskerAndRegexesFeatureFlagStatus = await featureFlagProvider.GetFeatureFlagAsync(HostContext, "DistributedTask.Agent.EnableNewMaskerAndRegexes", Trace);
+                    var enhancedLoggingFlag = await featureFlagProvider.GetFeatureFlagAsync(HostContext, "DistributedTask.Agent.UseEnhancedLogging", Trace);
                     var environment = new Dictionary<string, string>();
                     if (newMaskerAndRegexesFeatureFlagStatus?.EffectiveState == "On")
                     {
@@ -451,9 +452,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                     }
 
                     // Ensure worker sees the enhanced logging knob if the listener enabled it
-                    if (string.Equals(Environment.GetEnvironmentVariable("AZP_USE_ENHANCED_LOGGING"), "true", StringComparison.OrdinalIgnoreCase))
+                    if (enhancedLoggingFlag?.EffectiveState == "On")
                     {
                         environment["AZP_USE_ENHANCED_LOGGING"] = "true";
+                        var traceManager = HostContext.GetService<ITraceManager>();
+                        traceManager.SetEnhancedLoggingEnabled(true);
                     }
 
                     // Start the process channel.
