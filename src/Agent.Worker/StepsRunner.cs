@@ -163,7 +163,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                             if (!conditionReTestResult.Value || AgentKnobs.TerminateJobInCaseOfTimeout.GetValue(jobContext).AsBoolean())
                             {
                                 // Cancel the step.
-                                Trace.Info("Cancel current running step.");
+                                Trace.Info($"Cancel current running step: {step.DisplayName}");
                                 step.ExecutionContext.Error(StringUtil.Loc("StepCancelled"));
                                 step.ExecutionContext.CancelToken();
                             }
