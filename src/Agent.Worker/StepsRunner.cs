@@ -160,10 +160,13 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                                 }
                             }
 
-                            // Cancel the step.
-                            Trace.Info("Cancel current running step.");
-                            step.ExecutionContext.Error(StringUtil.Loc("StepCancelled"));
-                            step.ExecutionContext.CancelToken();
+                            if (!conditionReTestResult.Value || AgentKnobs.TerminateJobInCaseOfTimeout.GetValue(jobContext).AsBoolean())
+                            {
+                                // Cancel the step.
+                                Trace.Info("Cancel current running step.");
+                                step.ExecutionContext.Error(StringUtil.Loc("StepCancelled"));
+                                step.ExecutionContext.CancelToken();
+                            }
                         });
                     }
                     else if (AgentKnobs.FailJobWhenAgentDies.GetValue(jobContext).AsBoolean() &&

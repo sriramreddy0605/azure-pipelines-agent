@@ -842,5 +842,12 @@ namespace Agent.Sdk.Knob
             new PipelineFeatureSource("CheckBeforeRetryDockerStart"),
             new EnvironmentKnobSource("AGENT_CHECK_BEFORE_RETRY_DOCKER_START"),
             new BuiltInDefaultKnobSource("false"));
+
+        public static readonly Knob TerminateJobInCaseOfTimeout = new Knob(
+            nameof(TerminateJobInCaseOfTimeout),
+            "Run job gracefully closure in case of timeout",
+            new RuntimeKnobSource("TERMINATE_JOB_IN_CASE_OF_TIMEOUT"),
+            new EnvironmentKnobSource("TERMINATE_JOB_IN_CASE_OF_TIMEOUT"),
+            new BuiltInDefaultKnobSource("false"));
     }
 }
