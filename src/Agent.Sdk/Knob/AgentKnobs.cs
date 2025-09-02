@@ -847,6 +847,7 @@ namespace Agent.Sdk.Knob
             nameof(TerminateJobInCaseOfTimeout),
             "Run job gracefully closure in case of timeout",
             new RuntimeKnobSource("TERMINATE_JOB_IN_CASE_OF_TIMEOUT"),
+            new PipelineFeatureSource("TERMINATE_JOB_IN_CASE_OF_TIMEOUT"),
             new EnvironmentKnobSource("TERMINATE_JOB_IN_CASE_OF_TIMEOUT"),
             new BuiltInDefaultKnobSource("false"));
     }
