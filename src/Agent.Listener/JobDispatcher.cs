@@ -8,6 +8,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -798,29 +799,14 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
             {
                 try
                 {
+                    Trace.Info($"=== Job Renewal Request Starting === [RequestId: {requestId}, Attempt: {6 - firstRenewRetryLimit}, Time: {DateTime.UtcNow:HH:mm:ss.fff}]");
+                    var renewalStartTime = DateTime.UtcNow;
+                    
                     request = await agentServer.RenewAgentRequestAsync(poolId, requestId, lockToken, token);
-
+                    
+                    var renewalDuration = DateTime.UtcNow - renewalStartTime;
                     Trace.Info($"Successfully renew job request {requestId}, job is valid till {request.LockedUntil.Value}");
-
-                    if (!firstJobRequestRenewed.Task.IsCompleted)
-                    {
-                        // fire first renew succeed event.
-                        firstJobRequestRenewed.TrySetResult(0);
-                        Trace.Info(StringUtil.Format("First job request renewal completed successfully [RequestId:{0}, InitialRenewal:True, Status:Confirmed]",
-                            requestId));
-                    }
-
-                    if (encounteringError > 0)
-                    {
-                        encounteringError = 0;
-                        agentServer.SetConnectionTimeout(AgentConnectionType.JobRequest, TimeSpan.FromSeconds(60));
-                        HostContext.WritePerfCounter("JobRenewRecovered");
-                        Trace.Info(StringUtil.Format("Job renewal error recovery completed [RequestId:{0}, ErrorsCleared:True, ConnectionTimeout:60s, Status:Recovered]",
-                            requestId));
-                    }
-
-                    // renew again after 60 sec delay
-                    await HostContext.Delay(TimeSpan.FromSeconds(60), token);
+                    Trace.Info($"=== Job Renewal Completed Successfully === [Duration: {renewalDuration.TotalMilliseconds:F0}ms, ValidUntil: {request.LockedUntil.Value:HH:mm:ss}]");
                 }
                 catch (TaskAgentJobNotFoundException)
                 {
@@ -844,6 +830,64 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                 catch (Exception ex)
                 {
                     Trace.Error($"Catch exception during renew agent jobrequest {requestId}.");
+                    
+                    // Enhanced error logging for job renewal failures
+                    var errorTime = DateTime.UtcNow;
+                    
+                    if (ex is SocketException sockEx)
+                    {
+                        Trace.Error($"*** SOCKET ERROR during job renewal *** Socket Error: {sockEx.SocketErrorCode} ({sockEx.ErrorCode}) - {sockEx.Message}");
+                        Trace.Error($"This may indicate socket exhaustion or network connectivity issues");
+                        Trace.Error($"Check if PowerShellOnTargetMachine or similar tasks are consuming many connections");
+                        
+                        if (sockEx.SocketErrorCode == SocketError.AddressAlreadyInUse || 
+                            sockEx.SocketErrorCode == SocketError.AddressNotAvailable ||
+                            sockEx.SocketErrorCode == SocketError.TooManyOpenSockets)
+                        {
+                            Trace.Error("*** POTENTIAL SOCKET EXHAUSTION DETECTED ***");
+                            Trace.Error("Consider enabling legacy HTTP handler to isolate connection pools");
+                        }
+                    }
+                    else if (ex is System.Net.Http.HttpRequestException httpEx)
+                    {
+                        Trace.Error($"HTTP request exception during job renewal: {httpEx.Message}");
+                        if (httpEx.InnerException is SocketException innerSock)
+                        {
+                            Trace.Error($"Inner socket exception: {innerSock.SocketErrorCode} - {innerSock.Message}");
+                        }
+                        else if (httpEx.InnerException != null)
+                        {
+                            Trace.Error($"Inner exception: {httpEx.InnerException.GetType().Name}: {httpEx.InnerException.Message}");
+                        }
+                    }
+                    else if (ex is VssUnauthorizedException authEx)
+                    {
+                        Trace.Error($"*** AUTHENTICATION FAILURE during job renewal *** {authEx.Message}");
+                        Trace.Error("This typically indicates token expiry or invalid credentials");
+                        Trace.Error("Connection refresh will attempt to re-authenticate");
+                        
+                        // Additional context for authentication failures
+                        if (authEx.Message.Contains("401") || authEx.Message.Contains("Unauthorized"))
+                        {
+                            Trace.Error("HTTP 401 Unauthorized response - OAuth token likely expired");
+                            Trace.Error("Check token expiry timing in previous VssConnection logs");
+                        }
+                        
+                        // Log timing context for token expiry analysis
+                        Trace.Error($"Authentication failure occurred at: {errorTime:yyyy-MM-dd HH:mm:ss.fff} UTC");
+                        Trace.Error("Review connection creation logs for token expiry warnings");
+                    }
+                    else if (ex is TimeoutException timeoutEx)
+                    {
+                        Trace.Error($"*** TIMEOUT during job renewal *** {timeoutEx.Message}");
+                        Trace.Error("This may indicate server load, network issues, or connection pool exhaustion");
+                    }
+                    else
+                    {
+                        Trace.Error($"Unexpected exception type during job renewal: {ex.GetType().Name}");
+                    }
+                    
+                    Trace.Error($"Job renewal error occurred at: {errorTime:yyyy-MM-dd HH:mm:ss.fff} UTC");
                     Trace.Error(ex);
                     encounteringError++;
 
@@ -893,6 +937,12 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
 
                         try
                         {
+                            // Log diagnostics periodically during job renewal delays
+                            if (delayTime.TotalMinutes >= 1) // Only for longer delays
+                            {
+                                LogSimpleDiagnostics(requestId);
+                            }
+                            
                             // back-off before next retry.
                             await HostContext.Delay(delayTime, token);
                         }
@@ -1151,6 +1201,27 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                         }
                     }
                 }
+            }
+        }
+
+        private void LogSimpleDiagnostics(long requestId)
+        {
+            try
+            {
+                // Simple network and memory diagnostics using IPGlobalProperties
+                var ipProperties = IPGlobalProperties.GetIPGlobalProperties();
+                var tcpStats = ipProperties.GetTcpIPv4Statistics();
+                
+                // Memory usage from current process
+                var process = Process.GetCurrentProcess();
+                var gcMemory = GC.GetTotalMemory(false);
+                
+                Trace.Info($"[RENEWAL-DIAGNOSTICS] RequestId:{requestId} TCP:{tcpStats.CurrentConnections} Memory:WS={process.WorkingSet64 / 1024 / 1024}MB,GC={gcMemory / 1024 / 1024}MB");
+            }
+            catch (Exception ex)
+            {
+                // Don't let diagnostics crash job renewal
+                Trace.Warning($"Failed to log renewal diagnostics: {ex.Message}");
             }
         }
     }
