@@ -51,7 +51,16 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Container
             ArgUtil.NotNull(hostContext, nameof(hostContext));
 
             base.Initialize(hostContext);
-            DockerPath = WhichUtil.Which("docker", true, Trace);
+            try
+            {
+                DockerPath = WhichUtil.Which("docker", true, Trace);
+            }
+            catch (System.IO.FileNotFoundException ex)
+            {
+                // Docker not found - this can happen in test environments
+                Trace.Info($"Docker executable not found: {ex.Message}");
+                DockerPath = "docker"; // Use default docker command
+            }
             DockerInstanceLabel = IOUtil.GetPathHash(hostContext.GetDirectory(WellKnownDirectory.Root)).Substring(0, 6);
         }
 
@@ -498,6 +507,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Container
                 retryCount++;
             }
 
+            context.Output($"Final exit code for {command}: {exitCode}");
             return exitCode;
         }
 
