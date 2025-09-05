@@ -8,7 +8,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -851,63 +850,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                 {
                     Trace.Error($"Catch exception during renew agent jobrequest {requestId}.");
                     
-                    // Enhanced error logging for job renewal failures
-                    var errorTime = DateTime.UtcNow;
+                    // Simple diagnostic info for troubleshooting
+                    Trace.Error($"DIAGNOSTIC: {ex.GetType().Name} - ErrorCode: {GetErrorCode(ex)} - {ex.Message}");
                     
-                    if (ex is SocketException sockEx)
-                    {
-                        Trace.Error($"*** SOCKET ERROR during job renewal *** Socket Error: {sockEx.SocketErrorCode} ({sockEx.ErrorCode}) - {sockEx.Message}");
-                        Trace.Error($"This may indicate socket exhaustion or network connectivity issues");
-                        Trace.Error($"Check if PowerShellOnTargetMachine or similar tasks are consuming many connections");
-                        
-                        if (sockEx.SocketErrorCode == SocketError.AddressAlreadyInUse || 
-                            sockEx.SocketErrorCode == SocketError.AddressNotAvailable ||
-                            sockEx.SocketErrorCode == SocketError.TooManyOpenSockets)
-                        {
-                            Trace.Error("*** POTENTIAL SOCKET EXHAUSTION DETECTED ***");
-                            Trace.Error("Consider enabling legacy HTTP handler to isolate connection pools");
-                        }
-                    }
-                    else if (ex is System.Net.Http.HttpRequestException httpEx)
-                    {
-                        Trace.Error($"HTTP request exception during job renewal: {httpEx.Message}");
-                        if (httpEx.InnerException is SocketException innerSock)
-                        {
-                            Trace.Error($"Inner socket exception: {innerSock.SocketErrorCode} - {innerSock.Message}");
-                        }
-                        else if (httpEx.InnerException != null)
-                        {
-                            Trace.Error($"Inner exception: {httpEx.InnerException.GetType().Name}: {httpEx.InnerException.Message}");
-                        }
-                    }
-                    else if (ex is VssUnauthorizedException authEx)
-                    {
-                        Trace.Error($"*** AUTHENTICATION FAILURE during job renewal *** {authEx.Message}");
-                        Trace.Error("This typically indicates token expiry or invalid credentials");
-                        Trace.Error("Connection refresh will attempt to re-authenticate");
-                        
-                        // Additional context for authentication failures
-                        if (authEx.Message.Contains("401") || authEx.Message.Contains("Unauthorized"))
-                        {
-                            Trace.Error("HTTP 401 Unauthorized response - OAuth token likely expired");
-                            Trace.Error("Check token expiry timing in previous VssConnection logs");
-                        }
-                        
-                        // Log timing context for token expiry analysis
-                        Trace.Error($"Authentication failure occurred at: {errorTime:yyyy-MM-dd HH:mm:ss.fff} UTC");
-                        Trace.Error("Review connection creation logs for token expiry warnings");
-                    }
-                    else if (ex is TimeoutException timeoutEx)
-                    {
-                        Trace.Error($"*** TIMEOUT during job renewal *** {timeoutEx.Message}");
-                        Trace.Error("This may indicate server load, network issues, or connection pool exhaustion");
-                    }
-                    else
-                    {
-                        Trace.Error($"Unexpected exception type during job renewal: {ex.GetType().Name}");
-                    }
-                    
-                    Trace.Error($"Job renewal error occurred at: {errorTime:yyyy-MM-dd HH:mm:ss.fff} UTC");
                     Trace.Error(ex);
                     encounteringError++;
 
@@ -954,15 +899,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                         Trace.Info(StringUtil.Format("Job renewal connection refresh initiated [RequestId:{0}, Timeout:30s, Reason:RetryRecovery, ErrorCount:{1}]",
                             requestId, encounteringError));
                         await agentServer.RefreshConnectionAsync(AgentConnectionType.JobRequest, TimeSpan.FromSeconds(30));
-
+                        
                         try
                         {
-                            // Log diagnostics periodically during job renewal delays
-                            if (delayTime.TotalMinutes >= 1) // Only for longer delays
-                            {
-                                LogSimpleDiagnostics(requestId);
-                            }
-                            
                             // back-off before next retry.
                             await HostContext.Delay(delayTime, token);
                         }
@@ -1224,25 +1163,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
             }
         }
 
-        private void LogSimpleDiagnostics(long requestId)
+        private string GetErrorCode(Exception ex)
         {
-            try
-            {
-                // Simple network and memory diagnostics using IPGlobalProperties
-                var ipProperties = IPGlobalProperties.GetIPGlobalProperties();
-                var tcpStats = ipProperties.GetTcpIPv4Statistics();
-                
-                // Memory usage from current process
-                var process = Process.GetCurrentProcess();
-                var gcMemory = GC.GetTotalMemory(false);
-                
-                Trace.Info($"[RENEWAL-DIAGNOSTICS] RequestId:{requestId} TCP:{tcpStats.CurrentConnections} Memory:WS={process.WorkingSet64 / 1024 / 1024}MB,GC={gcMemory / 1024 / 1024}MB");
-            }
-            catch (Exception ex)
-            {
-                // Don't let diagnostics crash job renewal
-                Trace.Warning($"Failed to log renewal diagnostics: {ex.Message}");
-            }
+            return ex is SocketException sockEx ? $"Socket:{sockEx.SocketErrorCode}" :
+                   ex is System.Net.Http.HttpRequestException ? "HTTP" :
+                   ex is VssUnauthorizedException ? "Auth" : "Other";
         }
     }
 }
