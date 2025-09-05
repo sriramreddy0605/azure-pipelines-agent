@@ -807,6 +807,26 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                     var renewalDuration = DateTime.UtcNow - renewalStartTime;
                     Trace.Info($"Successfully renew job request {requestId}, job is valid till {request.LockedUntil.Value}");
                     Trace.Info($"=== Job Renewal Completed Successfully === [Duration: {renewalDuration.TotalMilliseconds:F0}ms, ValidUntil: {request.LockedUntil.Value:HH:mm:ss}]");
+
+                    if (!firstJobRequestRenewed.Task.IsCompleted)
+                    {
+                        // fire first renew succeed event.
+                        firstJobRequestRenewed.TrySetResult(0);
+                        Trace.Info(StringUtil.Format("First job request renewal completed successfully [RequestId:{0}, InitialRenewal:True, Status:Confirmed]",
+                            requestId));
+                    }
+
+                    if (encounteringError > 0)
+                    {
+                        encounteringError = 0;
+                        agentServer.SetConnectionTimeout(AgentConnectionType.JobRequest, TimeSpan.FromSeconds(60));
+                        HostContext.WritePerfCounter("JobRenewRecovered");
+                        Trace.Info(StringUtil.Format("Job renewal error recovery completed [RequestId:{0}, ErrorsCleared:True, ConnectionTimeout:60s, Status:Recovered]",
+                            requestId));
+                    }
+
+                    // renew again after 60 sec delay
+                    await HostContext.Delay(TimeSpan.FromSeconds(60), token);
                 }
                 catch (TaskAgentJobNotFoundException)
                 {
