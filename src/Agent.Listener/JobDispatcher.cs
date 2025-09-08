@@ -533,6 +533,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                         Trace.Info(StringUtil.Format("Sending job request message to worker process - job: {0}, size: {1}",
                             message.JobId, numBytesString));
                         HostContext.WritePerfCounter($"AgentSendingJobToWorker_{message.JobId}");
+                        var stopWatch = Stopwatch.StartNew();
                         using (var csSendJobRequest = new CancellationTokenSource(_channelTimeout))
                         {
                             await processChannel.SendAsync(
@@ -540,7 +541,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                                 body: body,
                                 cancellationToken: csSendJobRequest.Token);
                         }
-                        Trace.Info("Job message sent to worker successfully");
+                        stopWatch.Stop();
+                        Trace.Info($"Took {stopWatch.ElapsedMilliseconds} ms to send job message to worker");
                     }
                     catch (OperationCanceledException)
                     {
