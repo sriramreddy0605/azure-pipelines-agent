@@ -106,37 +106,53 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                             return result;
                         }
 
-                        // Otherwise a message was received from the channel.
-                        channelMessage = await channelTask;
-                        Trace.Info(StringUtil.Format("Control message received from listener [Type:{0}, Iteration:{1}]",
-                            channelMessage.MessageType, messageLoopIteration));
-                        switch (channelMessage.MessageType)
-                        {
-                            case MessageType.CancelRequest:
-                                Trace.Info("Job cancellation request received - initiating graceful job termination");
+                    // Otherwise a message was received from the channel.
+                    channelMessage = await channelTask;
+                    Trace.Info(StringUtil.Format("Control message received from listener [Type:{0}, Iteration:{1}]",
+                        channelMessage.MessageType, messageLoopIteration));
+                    switch (channelMessage.MessageType)
+                    {
+                        case MessageType.CancelRequest:
+                            Trace.Info("Job cancellation request received - initiating graceful job termination");
+                            if (!AgentKnobs.EnableTimeoutLogFlushing.GetValue(HostContext).AsBoolean())
+                            {
                                 cancel = true;
-                                jobRequestCancellationToken.Cancel();   // Expire the host cancellation token.
-                                break;
-                            case MessageType.AgentShutdown:
-                                Trace.Info("Agent shutdown request received - terminating job and shutting down worker");
+                            }
+                            jobRequestCancellationToken.Cancel();   // Expire the host cancellation token.
+                            break;
+                        case MessageType.AgentShutdown:
+                            Trace.Info("Agent shutdown request received - terminating job and shutting down worker");
+                            cancel = true;
+                            HostContext.ShutdownAgent(ShutdownReason.UserCancelled);
+                            break;
+                        case MessageType.OperatingSystemShutdown:
+                            Trace.Info("Operating system shutdown detected - performing emergency job termination");
+                            cancel = true;
+                            HostContext.ShutdownAgent(ShutdownReason.OperatingSystemShutdown);
+                            break;
+                        case MessageType.JobMetadataUpdate:
+                            Trace.Info(StringUtil.Format("Metadata update message received - updating job runner metadata, Metadata: {0}", channelMessage.Body));
+                            var metadataMessage = JsonUtility.FromString<JobMetadataMessage>(channelMessage.Body);
+                            jobRunner.UpdateMetadata(metadataMessage);
+                            Trace.Info("Job metadata update processed successfully");
+                            break;
+                        case MessageType.FlushLogsRequest:
+                            // Check if timeout log flushing feature is enabled
+                            if (AgentKnobs.EnableTimeoutLogFlushing.GetValue(HostContext).AsBoolean())
+                            {
+                                Trace.Info("FlushLogsRequest received - triggering worker timeout to allow log flushing");
                                 cancel = true;
-                                HostContext.ShutdownAgent(ShutdownReason.UserCancelled);
-                                break;
-                            case MessageType.OperatingSystemShutdown:
-                                Trace.Info("Operating system shutdown detected - performing emergency job termination");
-                                cancel = true;
-                                HostContext.ShutdownAgent(ShutdownReason.OperatingSystemShutdown);
-                                break;
-                            case MessageType.JobMetadataUpdate:
-                                Trace.Info(StringUtil.Format("Metadata update message received - updating job runner metadata, Metadata: {0}", channelMessage.Body));
-                                var metadataMessage = JsonUtility.FromString<JobMetadataMessage>(channelMessage.Body);
-                                jobRunner.UpdateMetadata(metadataMessage);
-                                Trace.Info("Job metadata update processed successfully");
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException(nameof(channelMessage.MessageType), channelMessage.MessageType, nameof(channelMessage.MessageType));
-                        }
+                                HostContext.ShutdownWorkerForTimeout();
+                            }
+                            else
+                            {
+                                Trace.Info("FlushLogsRequest received but timeout log flushing is disabled - ignoring request");
+                            }
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(channelMessage.MessageType), channelMessage.MessageType, nameof(channelMessage.MessageType));
                     }
+                }
 
                     // Await the job.
                     var workerResult = TaskResultUtil.TranslateToReturnCode(await jobRunnerTask);

@@ -101,16 +101,17 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 HostContext.WritePerfCounter($"WorkerJobServerQueueStarted_{message.RequestId.ToString()}");
                 Trace.Info(StringUtil.Format("JobServer connection established successfully [URL:{0}, ThrottlingEnabled:True]", jobServerUrl));
 
-                IExecutionContext jobContext = null;
-                CancellationTokenRegistration? agentShutdownRegistration = null;
-                VssConnection taskConnection = null;
-                VssConnection legacyTaskConnection = null;
-                IResourceMetricsManager resourceDiagnosticManager = null;
-                try
-                {
-                    // Create the job execution context.
-                    jobContext = HostContext.CreateService<IExecutionContext>();
-                    jobContext.InitializeJob(message, jobRequestCancellationToken);
+            IExecutionContext jobContext = null;
+            CancellationTokenRegistration? agentShutdownRegistration = null;
+            CancellationTokenRegistration? workerTimeoutRegistration = null;
+            VssConnection taskConnection = null;
+            VssConnection legacyTaskConnection = null;
+            IResourceMetricsManager resourceDiagnosticManager = null;
+            try
+            {
+                // Create the job execution context.
+                jobContext = HostContext.CreateService<IExecutionContext>();
+                jobContext.InitializeJob(message, jobRequestCancellationToken);
 
                     jobContext.Start();
                     jobContext.Section(StringUtil.Loc("StepStarting", message.JobDisplayName));
@@ -134,27 +135,34 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                         }
                     }
 
-                    agentShutdownRegistration = HostContext.AgentShutdownToken.Register(() =>
+                agentShutdownRegistration = HostContext.AgentShutdownToken.Register(() =>
+                {
+                    // log an issue, then agent get shutdown by Ctrl-C or Ctrl-Break.
+                    // the server will use Ctrl-Break to tells the agent that operating system is shutting down.
+                    string errorMessage;
+                    switch (HostContext.AgentShutdownReason)
                     {
-                        // log an issue, then agent get shutdown by Ctrl-C or Ctrl-Break.
-                        // the server will use Ctrl-Break to tells the agent that operating system is shutting down.
-                        string errorMessage;
-                        switch (HostContext.AgentShutdownReason)
-                        {
-                            case ShutdownReason.UserCancelled:
-                                errorMessage = StringUtil.Loc("UserShutdownAgent");
-                                Trace.Warning($"Agent shutdown initiated [Reason:UserCancelled, JobId:{message.JobId}]");
-                                break;
-                            case ShutdownReason.OperatingSystemShutdown:
-                                errorMessage = StringUtil.Loc("OperatingSystemShutdown", Environment.MachineName);
-                                Trace.Warning(StringUtil.Format("Agent shutdown initiated [Reason:OperatingSystemShutdown, JobId:{0}, Machine:{1}]", message.JobId, Environment.MachineName));
-                                break;
-                            default:
-                                Trace.Error(StringUtil.Format("Unknown shutdown reason detected [Reason:{0}, JobId:{1}]", HostContext.AgentShutdownReason, message.JobId));
-                                throw new ArgumentException(HostContext.AgentShutdownReason.ToString(), nameof(HostContext.AgentShutdownReason));
-                        }
-                        jobContext.AddIssue(new Issue() { Type = IssueType.Error, Message = errorMessage });
-                    });
+                        case ShutdownReason.UserCancelled:
+                            errorMessage = StringUtil.Loc("UserShutdownAgent");
+                            Trace.Warning($"Agent shutdown initiated [Reason:UserCancelled, JobId:{message.JobId}]");
+                            break;
+                        case ShutdownReason.OperatingSystemShutdown:
+                            errorMessage = StringUtil.Loc("OperatingSystemShutdown", Environment.MachineName);
+                            Trace.Warning(StringUtil.Format("Agent shutdown initiated [Reason:OperatingSystemShutdown, JobId:{0}, Machine:{1}]", message.JobId, Environment.MachineName));
+                            break;
+                        default:
+                            Trace.Error(StringUtil.Format("Unknown shutdown reason detected [Reason:{0}, JobId:{1}]", HostContext.AgentShutdownReason, message.JobId));
+                            throw new ArgumentException(HostContext.AgentShutdownReason.ToString(), nameof(HostContext.AgentShutdownReason));
+                    }
+                    jobContext.AddIssue(new Issue() { Type = IssueType.Error, Message = errorMessage });
+                });
+
+                // Register for worker timeout cancellation - similar to agent shutdown
+                workerTimeoutRegistration = HostContext.WorkerShutdownForTimeout.Register(() =>
+                {
+                    Trace.Warning($"Worker shutdown for timeout triggered [JobId:{message.JobId}]");
+                    jobContext.AddIssue(new Issue() { Type = IssueType.Error, Message = "Job cancelled due to worker timeout." });
+                });
 
                     // Validate directory permissions.
                     string workDirectory = HostContext.GetDirectory(WellKnownDirectory.Work);
@@ -444,15 +452,21 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 {
                     ExceptionsUtil.HandleAggregateException((AggregateException)e, (message) => Trace.Error(message));
 
-                    return TaskResult.Failed;
-                }
-                finally
+                return TaskResult.Failed;
+            }
+            finally
+            {
+                if (agentShutdownRegistration != null)
                 {
-                    if (agentShutdownRegistration != null)
-                    {
-                        agentShutdownRegistration.Value.Dispose();
-                        agentShutdownRegistration = null;
-                    }
+                    agentShutdownRegistration.Value.Dispose();
+                    agentShutdownRegistration = null;
+                }
+
+                if (workerTimeoutRegistration != null)
+                {
+                    workerTimeoutRegistration.Value.Dispose();
+                    workerTimeoutRegistration = null;
+                }
 
                     legacyTaskConnection?.Dispose();
                     taskConnection?.Dispose();
