@@ -99,168 +99,121 @@ namespace Microsoft.VisualStudio.Services.Agent
         public async Task RefreshConnectionAsync(AgentConnectionType connectionType, TimeSpan timeout)
         {
             Trace.Info($"Refresh {connectionType} VssConnection to get on a different AFD node.");
-            
-            // Enhanced logging for connection refresh diagnostics
-            Trace.Info($"=== Connection Refresh Started ===");
-            Trace.Info($"Connection type: {connectionType}");
-            Trace.Info($"Refresh timeout: {timeout.TotalSeconds}s");
-            Trace.Info($"Current time: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss.fff} UTC");
-            
-            var refreshStartTime = DateTime.UtcNow;
             VssConnection newConnection = null;
-            VssConnection oldConnection = null;
             
-            try
+            switch (connectionType)
             {
-                switch (connectionType)
-                {
-                    case AgentConnectionType.MessageQueue:
-                        oldConnection = _messageConnection;
-                        Trace.Info($"Refreshing MessageQueue connection (old connection auth state: {oldConnection?.HasAuthenticated})");
-                        try
+                case AgentConnectionType.MessageQueue:
+                    try
+                    {
+                        _hasMessageConnection = false;
+                        newConnection = await EstablishVssConnection(_messageConnection.Uri, _messageConnection.Credentials, timeout);
+                        var client = newConnection.GetClient<TaskAgentHttpClient>();
+                        _messageConnection = newConnection;
+                        _messageTaskAgentClient = client;
+                    }
+                    catch (SocketException ex)
+                    {
+                        ExceptionsUtil.HandleSocketException(ex, _requestConnection.Uri.ToString(), (msg) => Trace.Error(msg));
+                        newConnection?.Dispose();
+                    }
+                    catch (Exception ex)
+                    {
+                        // Enhanced diagnostics for connection failures
+                        if (ex is VssUnauthorizedException)
                         {
-                            _hasMessageConnection = false;
-                            newConnection = await EstablishVssConnection(_messageConnection.Uri, _messageConnection.Credentials, timeout);
-                            var client = newConnection.GetClient<TaskAgentHttpClient>();
-                            _messageConnection = newConnection;
-                            _messageTaskAgentClient = client;
-                            
-                            var refreshDuration = DateTime.UtcNow - refreshStartTime;
-                            Trace.Info($"MessageQueue connection refresh completed successfully in {refreshDuration.TotalMilliseconds:F0}ms");
+                            Trace.Error($"Authentication failure during {connectionType} refresh - token may need renewal");
                         }
-                        catch (SocketException ex)
+                        else if (ex is System.Net.Http.HttpRequestException httpEx && httpEx.InnerException is SocketException sockEx &&
+                                 (sockEx.SocketErrorCode == SocketError.AddressAlreadyInUse || sockEx.SocketErrorCode == SocketError.AddressNotAvailable))
                         {
-                            Trace.Warning($"Socket error during MessageQueue connection refresh: {ex.SocketErrorCode} - {ex.Message}");
-                            ExceptionsUtil.HandleSocketException(ex, _requestConnection.Uri.ToString(), (msg) => Trace.Error(msg));
-                            newConnection?.Dispose();
+                            Trace.Error($"Socket exhaustion detected during {connectionType} refresh: {sockEx.SocketErrorCode}");
                         }
-                        catch (Exception ex)
+                        
+                        Trace.Error($"Catch exception during reset {connectionType} connection.");
+                        Trace.Error(ex);
+                        newConnection?.Dispose();
+                    }
+                    finally
+                    {
+                        _hasMessageConnection = true;
+                    }
+                    break;
+                case AgentConnectionType.JobRequest:
+                    try
+                    {
+                        _hasRequestConnection = false;
+                        newConnection = await EstablishVssConnection(_requestConnection.Uri, _requestConnection.Credentials, timeout);
+                        var client = newConnection.GetClient<TaskAgentHttpClient>();
+                        _requestConnection = newConnection;
+                        _requestTaskAgentClient = client;
+                    }
+                    catch (SocketException ex)
+                    {
+                        ExceptionsUtil.HandleSocketException(ex, _requestConnection.Uri.ToString(), (msg) => Trace.Error(msg));
+                        newConnection?.Dispose();
+                    }
+                    catch (Exception ex)
+                    {
+                        // Enhanced diagnostics for connection failures
+                        if (ex is VssUnauthorizedException)
                         {
-                            var refreshDuration = DateTime.UtcNow - refreshStartTime;
-                            Trace.Error($"Failed to refresh MessageQueue connection after {refreshDuration.TotalMilliseconds:F0}ms");
-                            
-                            // Enhanced logging for connection refresh failures
-                            if (ex is VssUnauthorizedException authEx)
-                            {
-                                Trace.Error($"*** AUTHENTICATION FAILURE during MessageQueue refresh *** {authEx.Message}");
-                                Trace.Error("This typically indicates token expiry - credentials may need to be refreshed");
-                                
-                                if (authEx.Message.Contains("401"))
-                                {
-                                    Trace.Error("HTTP 401 during refresh suggests OAuth token has expired");
-                                }
-                            }
-                            else if (ex is System.Net.Http.HttpRequestException httpRefreshEx)
-                            {
-                                Trace.Error($"HTTP error during MessageQueue refresh: {httpRefreshEx.Message}");
-                                if (httpRefreshEx.InnerException is System.Net.Sockets.SocketException sockRefreshEx)
-                                {
-                                    Trace.Error($"Socket error during refresh: {sockRefreshEx.SocketErrorCode} - suggests connection pool exhaustion");
-                                }
-                            }
-                            else if (ex is System.Net.Sockets.SocketException sockEx)
-                            {
-                                Trace.Error($"Socket error during MessageQueue refresh: {sockEx.SocketErrorCode} - {sockEx.Message}");
-                                if (sockEx.SocketErrorCode == System.Net.Sockets.SocketError.AddressAlreadyInUse ||
-                                    sockEx.SocketErrorCode == System.Net.Sockets.SocketError.AddressNotAvailable)
-                                {
-                                    Trace.Error("*** SOCKET EXHAUSTION during refresh *** Consider legacy HTTP handler");
-                                }
-                            }
-                            
-                            Trace.Error($"Catch exception during reset {connectionType} connection.");
-                            Trace.Error(ex);
-                            newConnection?.Dispose();
+                            Trace.Error($"Authentication failure during {connectionType} refresh - token may need renewal");
                         }
-                        finally
+                        else if (ex is System.Net.Http.HttpRequestException httpEx && httpEx.InnerException is SocketException sockEx &&
+                                 (sockEx.SocketErrorCode == SocketError.AddressAlreadyInUse || sockEx.SocketErrorCode == SocketError.AddressNotAvailable))
                         {
-                            _hasMessageConnection = true;
+                            Trace.Error($"Socket exhaustion detected during {connectionType} refresh: {sockEx.SocketErrorCode}");
                         }
-                        break;
-                    case AgentConnectionType.JobRequest:
-                        oldConnection = _requestConnection;
-                        Trace.Info($"Refreshing JobRequest connection (old connection auth state: {oldConnection?.HasAuthenticated})");
-                        try
+                        
+                        Trace.Error($"Catch exception during reset {connectionType} connection.");
+                        Trace.Error(ex);
+                        newConnection?.Dispose();
+                    }
+                    finally
+                    {
+                        _hasRequestConnection = true;
+                    }
+                    break;
+                case AgentConnectionType.Generic:
+                    try
+                    {
+                        _hasGenericConnection = false;
+                        newConnection = await EstablishVssConnection(_genericConnection.Uri, _genericConnection.Credentials, timeout);
+                        var client = newConnection.GetClient<TaskAgentHttpClient>();
+                        _genericConnection = newConnection;
+                        _genericTaskAgentClient = client;
+                    }
+                    catch (SocketException ex)
+                    {
+                        ExceptionsUtil.HandleSocketException(ex, _requestConnection.Uri.ToString(), (msg) => Trace.Error(msg));
+                        newConnection?.Dispose();
+                    }
+                    catch (Exception ex)
+                    {
+                        // Enhanced diagnostics for connection failures
+                        if (ex is VssUnauthorizedException)
                         {
-                            _hasRequestConnection = false;
-                            newConnection = await EstablishVssConnection(_requestConnection.Uri, _requestConnection.Credentials, timeout);
-                            var client = newConnection.GetClient<TaskAgentHttpClient>();
-                            _requestConnection = newConnection;
-                            _requestTaskAgentClient = client;
-                            
-                            var refreshDuration = DateTime.UtcNow - refreshStartTime;
-                            Trace.Info($"JobRequest connection refresh completed successfully in {refreshDuration.TotalMilliseconds:F0}ms");
+                            Trace.Error($"Authentication failure during {connectionType} refresh - token may need renewal");
                         }
-                        catch (SocketException ex)
+                        else if (ex is System.Net.Http.HttpRequestException httpEx && httpEx.InnerException is SocketException sockEx &&
+                                 (sockEx.SocketErrorCode == SocketError.AddressAlreadyInUse || sockEx.SocketErrorCode == SocketError.AddressNotAvailable))
                         {
-                            Trace.Warning($"Socket error during JobRequest connection refresh: {ex.SocketErrorCode} - {ex.Message}");
-                            ExceptionsUtil.HandleSocketException(ex, _requestConnection.Uri.ToString(), (msg) => Trace.Error(msg));
-                            newConnection?.Dispose();
+                            Trace.Error($"Socket exhaustion detected during {connectionType} refresh: {sockEx.SocketErrorCode}");
                         }
-                        catch (Exception ex)
-                        {
-                            var refreshDuration = DateTime.UtcNow - refreshStartTime;
-                            Trace.Error($"Failed to refresh JobRequest connection after {refreshDuration.TotalMilliseconds:F0}ms");
-                            Trace.Error($"Catch exception during reset {connectionType} connection.");
-                            Trace.Error(ex);
-                            newConnection?.Dispose();
-                        }
-                        finally
-                        {
-                            _hasRequestConnection = true;
-                        }
-                        break;
-                    case AgentConnectionType.Generic:
-                        oldConnection = _genericConnection;
-                        Trace.Info($"Refreshing Generic connection (old connection auth state: {oldConnection?.HasAuthenticated})");
-                        try
-                        {
-                            _hasGenericConnection = false;
-                            newConnection = await EstablishVssConnection(_genericConnection.Uri, _genericConnection.Credentials, timeout);
-                            var client = newConnection.GetClient<TaskAgentHttpClient>();
-                            _genericConnection = newConnection;
-                            _genericTaskAgentClient = client;
-                            
-                            var refreshDuration = DateTime.UtcNow - refreshStartTime;
-                            Trace.Info($"Generic connection refresh completed successfully in {refreshDuration.TotalMilliseconds:F0}ms");
-                            Trace.Info("*** Generic connection refresh successful - token refresh likely completed ***");
-                        }
-                        catch (SocketException ex)
-                        {
-                            Trace.Warning($"Socket error during Generic connection refresh: {ex.SocketErrorCode} - {ex.Message}");
-                            ExceptionsUtil.HandleSocketException(ex, _requestConnection.Uri.ToString(), (msg) => Trace.Error(msg));
-                            newConnection?.Dispose();
-                        }
-                        catch (Exception ex)
-                        {
-                            var refreshDuration = DateTime.UtcNow - refreshStartTime;
-                            Trace.Error($"Failed to refresh Generic connection after {refreshDuration.TotalMilliseconds:F0}ms");
-                            Trace.Error($"Catch exception during reset {connectionType} connection.");
-                            Trace.Error(ex);
-                            newConnection?.Dispose();
-                        }
-                        finally
-                        {
-                            _hasGenericConnection = true;
-                        }
-                        break;
-                    default:
-                        Trace.Error($"Unexpected connection type: {connectionType}.");
-                        break;
-                }
-            }
-            finally
-            {
-                var totalRefreshDuration = DateTime.UtcNow - refreshStartTime;
-                Trace.Info($"=== Connection Refresh Completed ===");
-                Trace.Info($"Total refresh duration: {totalRefreshDuration.TotalMilliseconds:F0}ms");
-                Trace.Info($"Refresh result: {(newConnection != null ? "Success" : "Failed")}");
-                
-                if (oldConnection != null && newConnection != null && oldConnection != newConnection)
-                {
-                    Trace.Info("Old connection will be disposed as new connection established");
-                    // Note: The old connection will be disposed by garbage collection
-                }
+                        
+                        Trace.Error($"Catch exception during reset {connectionType} connection.");
+                        Trace.Error(ex);
+                        newConnection?.Dispose();
+                    }
+                    finally
+                    {
+                        _hasGenericConnection = true;
+                    }
+                    break;
+                default:
+                    Trace.Error($"Unexpected connection type: {connectionType}.");
+                    break;
             }
         }
 
@@ -286,7 +239,7 @@ namespace Microsoft.VisualStudio.Services.Agent
 
         private async Task<VssConnection> EstablishVssConnection(Uri serverUrl, VssCredentials credentials, TimeSpan timeout)
         {
-            Trace.Info($"Establish connection with {timeout.TotalSeconds} seconds timeout.");
+            Trace.Info($"Starting VssConnection establishment with {timeout.TotalSeconds} seconds timeout.");
             
             // Enhanced logging for connection diagnostics
             Trace.Info($"Establishing connection to: {serverUrl}");
@@ -352,6 +305,8 @@ namespace Microsoft.VisualStudio.Services.Agent
                         Trace.Warning("Connection created but authentication status unclear");
                     }
                     
+                    Trace.Info("VssConnection establishment completed successfully");
+                    
                     return connection;
                 }
                 catch (Exception ex) when (attemptCount > 0)
@@ -399,18 +354,6 @@ namespace Microsoft.VisualStudio.Services.Agent
                         Trace.Warning($"Authentication failed during connection: {authEx.Message}");
                         // This could indicate token expiry or invalid credentials
                         Trace.Warning("*** AUTHENTICATION FAILURE *** This may indicate expired or invalid authentication credentials");
-                        
-                        // Log additional context for authentication failures
-                        if (authEx.Message.Contains("401"))
-                        {
-                            Trace.Warning("HTTP 401 Unauthorized - likely token expiry or invalid credentials");
-                        }
-                        
-                        // Try to log credential state for debugging
-                        if (credentials?.Federated is VssOAuthAccessTokenCredential)
-                        {
-                            Trace.Warning("OAuth credential may be expired - token refresh will be attempted");
-                        }
                     }
                     else if (ex is System.Threading.Tasks.TaskCanceledException timeoutEx)
                     {

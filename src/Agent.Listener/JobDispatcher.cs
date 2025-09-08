@@ -533,7 +533,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                         Trace.Info(StringUtil.Format("Sending job request message to worker process - job: {0}, size: {1}",
                             message.JobId, numBytesString));
                         HostContext.WritePerfCounter($"AgentSendingJobToWorker_{message.JobId}");
-                        var stopWatch = Stopwatch.StartNew();
                         using (var csSendJobRequest = new CancellationTokenSource(_channelTimeout))
                         {
                             await processChannel.SendAsync(
@@ -541,8 +540,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                                 body: body,
                                 cancellationToken: csSendJobRequest.Token);
                         }
-                        stopWatch.Stop();
-                        Trace.Info($"Took {stopWatch.ElapsedMilliseconds} ms to send job message to worker");
+                        Trace.Info("Job message sent to worker successfully");
                     }
                     catch (OperationCanceledException)
                     {
@@ -798,14 +796,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
             {
                 try
                 {
-                    Trace.Info($"=== Job Renewal Request Starting === [RequestId: {requestId}, Attempt: {6 - firstRenewRetryLimit}, Time: {DateTime.UtcNow:HH:mm:ss.fff}]");
-                    var renewalStartTime = DateTime.UtcNow;
-                    
                     request = await agentServer.RenewAgentRequestAsync(poolId, requestId, lockToken, token);
-                    
-                    var renewalDuration = DateTime.UtcNow - renewalStartTime;
+
                     Trace.Info($"Successfully renew job request {requestId}, job is valid till {request.LockedUntil.Value}");
-                    Trace.Info($"=== Job Renewal Completed Successfully === [Duration: {renewalDuration.TotalMilliseconds:F0}ms, ValidUntil: {request.LockedUntil.Value:HH:mm:ss}]");
 
                     if (!firstJobRequestRenewed.Task.IsCompleted)
                     {
@@ -849,10 +842,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                 catch (Exception ex)
                 {
                     Trace.Error($"Catch exception during renew agent jobrequest {requestId}.");
-                    
-                    // Simple diagnostic info for troubleshooting
-                    Trace.Error($"DIAGNOSTIC: {ex.GetType().Name} - ErrorCode: {GetErrorCode(ex)} - {ex.Message}");
-                    
                     Trace.Error(ex);
                     encounteringError++;
 
@@ -899,7 +888,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                         Trace.Info(StringUtil.Format("Job renewal connection refresh initiated [RequestId:{0}, Timeout:30s, Reason:RetryRecovery, ErrorCount:{1}]",
                             requestId, encounteringError));
                         await agentServer.RefreshConnectionAsync(AgentConnectionType.JobRequest, TimeSpan.FromSeconds(30));
-                        
+
                         try
                         {
                             // back-off before next retry.
@@ -1161,13 +1150,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                     }
                 }
             }
-        }
-
-        private string GetErrorCode(Exception ex)
-        {
-            return ex is SocketException sockEx ? $"Socket:{sockEx.SocketErrorCode}" :
-                   ex is System.Net.Http.HttpRequestException ? "HTTP" :
-                   ex is VssUnauthorizedException ? "Auth" : "Other";
         }
     }
 }
