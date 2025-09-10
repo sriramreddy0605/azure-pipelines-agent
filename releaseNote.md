@@ -1,3 +1,17 @@
+## Features
+ - Adding process id in process invoker logs (#5300)
+ - Updated Tracing class with operation name (#5296)
+ - Added new tracing class to enhance logs with operation and other para… (#5288)
+ - Adding code for duration tracking in lgos (#5307)
+ - Fixing race condition during token generation (#5306)
+
+## Bugs
+ - Form-data cgfix in release folder (#5303)
+ - Fix Git for Windows version (#5311)
+
+## Misc
+
+
 
 ## Agent Downloads
 
