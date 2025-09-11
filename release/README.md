@@ -16,7 +16,26 @@ This directory contains the release automation scripts for the Azure Pipelines A
 
 When updating npm dependencies in `package.json`, follow these steps to ensure all scripts continue working:
 
-### 1. Update Dependencies
+### 1. Required Environment Setup
+
+#### Node.js and npm Version Requirements
+
+The release pipeline uses **Node.js 20.19.4** as specified in `.vsts.release.yml`. Ensure you're using this version for consistency:
+Please double check the version of node in `.vsts.release.yml` as the version mentioned above might have changed there. 
+
+```bash
+# Check your current Node.js version
+node --version
+
+# If using nvm to manage Node.js versions:
+nvm use 20.19.4
+# or install if not available:
+nvm install 20.19.4
+
+# Verify npm version (should be compatible with Node.js 20.19.4)
+npm --version
+```
+### 2. Update Dependencies
 
 ```bash
 cd release/
@@ -26,7 +45,7 @@ npm install package@latest
 npm audit fix --force
 ```
 
-### 2. Test Each Script
+### 3. Test Each Script
 
 #### A. Test `fillReleaseNotesTemplate.js`
 
@@ -76,7 +95,37 @@ PAT="your_azdo_pat" node createAdoPrs.js --dryrun=true 3.999.999
 # Should NOT show authentication errors (401)
 ```
 
-### 3. Common Issues and Solutions
+#### For Testing with Real APIs
+
+1. **GitHub PAT**: Required for `rollrelease.js` and `createReleaseBranch.js`
+   - Set `PAT` environment variable
+   - Needs `repo` scope permissions
+
+2. **Azure DevOps PAT**: Required for `createAdoPrs.js`
+   - Set `PAT` environment variable  
+   - Needs `Code (read & write)` and `Pull Request (read & write)` permissions
+
+3. **Git Configuration**: Required for all scripts that make commits
+   ```bash
+   git config --global user.email "your.email@domain.com"
+   git config --global user.name "Your Name"
+   ```
+
+#### Mock Data Setup
+
+Some scripts expect certain directories/files to exist:
+
+```bash
+# For hash-related scripts (REQUIRED - scripts will fail without these)
+mkdir -p ../_hashes/hash
+# Create mock hash files for testing as shown in fillReleaseNotesTemplate.js section
+
+# For integration file generation
+mkdir -p ../_layout/integrations
+```
+
+
+### 4. Common Issues and Solutions
 
 #### Package Compatibility Issues
 
@@ -107,37 +156,6 @@ if (dryrun) {
     return mockResponse;
 }
 // Make actual API calls here
-```
-
-### 4. Required Environment Setup
-
-#### For Testing with Real APIs
-
-1. **GitHub PAT**: Required for `rollrelease.js` and `createReleaseBranch.js`
-   - Set `PAT` environment variable
-   - Needs `repo` scope permissions
-
-2. **Azure DevOps PAT**: Required for `createAdoPrs.js`
-   - Set `PAT` environment variable  
-   - Needs `Code (read & write)` and `Pull Request (read & write)` permissions
-
-3. **Git Configuration**: Required for all scripts that make commits
-   ```bash
-   git config --global user.email "your.email@domain.com"
-   git config --global user.name "Your Name"
-   ```
-
-#### Mock Data Setup
-
-Some scripts expect certain directories/files to exist:
-
-```bash
-# For hash-related scripts (REQUIRED - scripts will fail without these)
-mkdir -p ../_hashes/hash
-# Create mock hash files for testing as shown in fillReleaseNotesTemplate.js section
-
-# For integration file generation
-mkdir -p ../_layout/integrations
 ```
 
 ### 5. Validation Checklist
