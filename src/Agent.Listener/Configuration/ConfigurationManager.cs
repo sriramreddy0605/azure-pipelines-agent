@@ -604,7 +604,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
                     ArgUtil.NotNull(agentProvider, agentType);
 
                     // If a URL is provided via command line, override the stored ServerUrl BEFORE checking if hosted
-                    string commandUrl = command.GetUrl();
+                    string commandUrl = command.GetUrl(suppressPromptIfEmpty: true);
                     if (!string.IsNullOrEmpty(commandUrl))
                     {
                         Trace.Info($"Overriding stored ServerUrl '{settings.ServerUrl}' with command line URL '{commandUrl}' for removal operation");
