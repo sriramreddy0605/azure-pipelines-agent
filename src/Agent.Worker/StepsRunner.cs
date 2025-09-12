@@ -130,45 +130,45 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                                 jobContext.Result = TaskResult.Canceled;
                                 jobContext.Variables.Agent_JobStatus = jobContext.Result;
 
-                            step.ExecutionContext.Debug($"Re-evaluate condition on job cancellation for step: '{step.DisplayName}'.");
-                            ConditionResult conditionReTestResult;
-                            if (HostContext.AgentShutdownToken.IsCancellationRequested)
-                            {
-                                if (AgentKnobs.FailJobWhenAgentDies.GetValue(jobContext).AsBoolean())
+                                step.ExecutionContext.Debug($"Re-evaluate condition on job cancellation for step: '{step.DisplayName}'.");
+                                ConditionResult conditionReTestResult;
+                                if (HostContext.AgentShutdownToken.IsCancellationRequested)
                                 {
-                                    PublishTelemetry(jobContext, TaskResult.Failed.ToString(), "120");
-                                    jobContext.Result = TaskResult.Failed;
-                                    jobContext.Variables.Agent_JobStatus = jobContext.Result;
-                                    Trace.Info($"Agent shutdown failure applied [Step:'{step.DisplayName}', FailJobEnabled:True, JobResult:Failed]");
-                                }
-                                step.ExecutionContext.Debug($"Skip Re-evaluate condition on agent shutdown.");
-                                conditionReTestResult = false;
-                                Trace.Info($"Condition re-evaluation skipped [Step:'{step.DisplayName}', Reason:AgentShutdown]");
-                            }
-                            else if (AgentKnobs.EnableTimeoutLogFlushing.GetValue(HostContext).AsBoolean() && 
-                                    HostContext.WorkerShutdownForTimeout.IsCancellationRequested)
-                            {
-                                jobContext.Result = TaskResult.Canceled;
-                                jobContext.Variables.Agent_JobStatus = jobContext.Result;
-                                conditionReTestResult = false;
-                                Trace.Info($"Condition re-evaluation skipped [Step:'{step.DisplayName}', Reason:WorkerTimeout]");
-                            }
-                            else
-                            {
-                                try
-                                {
-                                    Trace.Info($"Condition re-evaluation initiated [Step:'{step.DisplayName}', Expression:'{step.Condition}', HostTracingOnly:True]");
-                                    conditionReTestResult = expressionManager.Evaluate(step.ExecutionContext, step.Condition, hostTracingOnly: true);
-                                    Trace.Info($"Condition re-evaluation completed [Step:'{step.DisplayName}', Result:{conditionReTestResult.Value}]");
-                                }
-                                catch (Exception ex)
-                                {
-                                    // Cancel the step since we get exception while re-evaluate step condition.
-                                    Trace.Info("Caught exception from expression when re-test condition on job cancellation.");
-                                    step.ExecutionContext.Error(ex);
+                                    if (AgentKnobs.FailJobWhenAgentDies.GetValue(jobContext).AsBoolean())
+                                    {
+                                        PublishTelemetry(jobContext, TaskResult.Failed.ToString(), "120");
+                                        jobContext.Result = TaskResult.Failed;
+                                        jobContext.Variables.Agent_JobStatus = jobContext.Result;
+                                        Trace.Info($"Agent shutdown failure applied [Step:'{step.DisplayName}', FailJobEnabled:True, JobResult:Failed]");
+                                    }
+                                    step.ExecutionContext.Debug($"Skip Re-evaluate condition on agent shutdown.");
                                     conditionReTestResult = false;
+                                    Trace.Info($"Condition re-evaluation skipped [Step:'{step.DisplayName}', Reason:AgentShutdown]");
                                 }
-                            }
+                                else if (AgentKnobs.EnableTimeoutLogFlushing.GetValue(step.ExecutionContext).AsBoolean() && 
+                                    HostContext.WorkerShutdownForTimeout.IsCancellationRequested)
+                                {
+                                    jobContext.Result = TaskResult.Canceled;
+                                    jobContext.Variables.Agent_JobStatus = jobContext.Result;
+                                    conditionReTestResult = false;
+                                    Trace.Info($"Condition re-evaluation skipped [Step:'{step.DisplayName}', Reason:WorkerTimeout]");
+                                }
+                                else
+                                {
+                                    try
+                                    {
+                                        Trace.Info($"Condition re-evaluation initiated [Step:'{step.DisplayName}', Expression:'{step.Condition}', HostTracingOnly:True]");
+                                        conditionReTestResult = expressionManager.Evaluate(step.ExecutionContext, step.Condition, hostTracingOnly: true);
+                                        Trace.Info($"Condition re-evaluation completed [Step:'{step.DisplayName}', Result:{conditionReTestResult.Value}]");
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        // Cancel the step since we get exception while re-evaluate step condition.
+                                        Trace.Info("Caught exception from expression when re-test condition on job cancellation.");
+                                        step.ExecutionContext.Error(ex);
+                                        conditionReTestResult = false;
+                                    }
+                                }
 
                                 if (!conditionReTestResult.Value)
                                 {
@@ -200,39 +200,39 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                             }
                         }
 
-                    // Evaluate condition.
-                    step.ExecutionContext.Debug($"Evaluating condition for step: '{step.DisplayName}'");
-                    Exception conditionEvaluateError = null;
-                    ConditionResult conditionResult;
-                    if (HostContext.AgentShutdownToken.IsCancellationRequested)
-                    {
-                        step.ExecutionContext.Debug($"Skip evaluate condition on agent shutdown.");
-                        conditionResult = false;
-                        Trace.Info($"Condition evaluation skipped due to agent shutdown: '{step.DisplayName}'");
-                    }
-                    else if (AgentKnobs.EnableTimeoutLogFlushing.GetValue(HostContext).AsBoolean() && 
-                            HostContext.WorkerShutdownForTimeout.IsCancellationRequested)
-                    {
-                        jobContext.Result = TaskResult.Canceled;
-                        jobContext.Variables.Agent_JobStatus = jobContext.Result;
-                        conditionResult = false;
-                        Trace.Info($"Condition evaluation skipped due to worker timeout: '{step.DisplayName}'");
-                    }
-                    else
-                    {
-                        try
+                        // Evaluate condition.
+                        step.ExecutionContext.Debug($"Evaluating condition for step: '{step.DisplayName}'");
+                        Exception conditionEvaluateError = null;
+                        ConditionResult conditionResult;
+                        if (HostContext.AgentShutdownToken.IsCancellationRequested)
                         {
-                            conditionResult = expressionManager.Evaluate(step.ExecutionContext, step.Condition);
-                            Trace.Info($"Condition evaluation completed - Result: {conditionResult.Value}, Step: '{step.DisplayName}'");
-                        }
-                        catch (Exception ex)
-                        {
-                            Trace.Info("Caught exception from expression.");
-                            Trace.Error(ex);
+                            step.ExecutionContext.Debug($"Skip evaluate condition on agent shutdown.");
                             conditionResult = false;
-                            conditionEvaluateError = ex;
+                            Trace.Info($"Condition evaluation skipped due to agent shutdown: '{step.DisplayName}'");
                         }
-                    }
+                        else if (AgentKnobs.EnableTimeoutLogFlushing.GetValue(step.ExecutionContext).AsBoolean() && 
+                            HostContext.WorkerShutdownForTimeout.IsCancellationRequested)
+                        {
+                            jobContext.Result = TaskResult.Canceled;
+                            jobContext.Variables.Agent_JobStatus = jobContext.Result;
+                            conditionResult = false;
+                            Trace.Info($"Condition evaluation skipped due to worker timeout: '{step.DisplayName}'");
+                        }
+                        else
+                        {
+                            try
+                            {
+                                conditionResult = expressionManager.Evaluate(step.ExecutionContext, step.Condition);
+                                Trace.Info($"Condition evaluation completed - Result: {conditionResult.Value}, Step: '{step.DisplayName}'");
+                            }
+                            catch (Exception ex)
+                            {
+                                Trace.Info("Caught exception from expression.");
+                                Trace.Error(ex);
+                                conditionResult = false;
+                                conditionEvaluateError = ex;
+                            }
+                        }
 
                         // no evaluate error but condition is false
                         if (!conditionResult.Value && conditionEvaluateError == null)
@@ -290,8 +290,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                         Trace.Info($"Task step completion - TaskName:{taskStep.Task.Reference.Name}, StepIndex:{stepIndex}/{steps.Count}, Result: {step.ExecutionContext.Result}, TaskStage:{taskStep.Stage}");
                     }
 
+                }
+                Trace.Info($"Step iteration loop completed - All {steps.Count} steps processed, Final job result: {jobContext.Result}");
             }
-            Trace.Info($"Step iteration loop completed - All {steps.Count} steps processed, Final job result: {jobContext.Result}");
         }
 
         private async Task RunStepWithTimeoutAsync(IStep step, CancellationToken jobCancellationToken)
@@ -299,7 +300,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             Trace.Info($"Individual step execution initiated: '{step.DisplayName}'");
 
             // Check if timeout log flushing feature is enabled
-            bool timeoutLogFlushingEnabled = AgentKnobs.EnableTimeoutLogFlushing.GetValue(HostContext).AsBoolean();
+            bool timeoutLogFlushingEnabled = AgentKnobs.EnableTimeoutLogFlushing.GetValue(step.ExecutionContext).AsBoolean();
 
             // Register for worker timeout to cancel the step only if timeout log flushing is enabled
             CancellationTokenRegistration? workerTimeoutRegistration = null;
@@ -332,8 +333,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         private async Task RunStepAsync(IStep step, CancellationToken jobCancellationToken)
         {
             Trace.Info($"Individual step execution initiated: '{step.DisplayName}'");
-
             // Start the step.
+
             step.ExecutionContext.Section(StringUtil.Loc("StepStarting", step.DisplayName));
             step.ExecutionContext.SetTimeout(timeout: step.Timeout);
 
