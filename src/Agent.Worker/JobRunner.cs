@@ -101,17 +101,17 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 HostContext.WritePerfCounter($"WorkerJobServerQueueStarted_{message.RequestId.ToString()}");
                 Trace.Info(StringUtil.Format("JobServer connection established successfully [URL:{0}, ThrottlingEnabled:True]", jobServerUrl));
 
-            IExecutionContext jobContext = null;
-            CancellationTokenRegistration? agentShutdownRegistration = null;
-            CancellationTokenRegistration? workerTimeoutRegistration = null;
-            VssConnection taskConnection = null;
-            VssConnection legacyTaskConnection = null;
-            IResourceMetricsManager resourceDiagnosticManager = null;
-            try
-            {
-                // Create the job execution context.
-                jobContext = HostContext.CreateService<IExecutionContext>();
-                jobContext.InitializeJob(message, jobRequestCancellationToken);
+                IExecutionContext jobContext = null;
+                CancellationTokenRegistration? agentShutdownRegistration = null;
+                CancellationTokenRegistration? workerTimeoutRegistration = null;
+                VssConnection taskConnection = null;
+                VssConnection legacyTaskConnection = null;
+                IResourceMetricsManager resourceDiagnosticManager = null;
+                try
+                {
+                    // Create the job execution context.
+                    jobContext = HostContext.CreateService<IExecutionContext>();
+                    jobContext.InitializeJob(message, jobRequestCancellationToken);
 
                     jobContext.Start();
                     jobContext.Section(StringUtil.Loc("StepStarting", message.JobDisplayName));
@@ -157,12 +157,12 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     jobContext.AddIssue(new Issue() { Type = IssueType.Error, Message = errorMessage });
                 });
 
-                // Register for worker timeout cancellation - similar to agent shutdown
-                workerTimeoutRegistration = HostContext.WorkerShutdownForTimeout.Register(() =>
-                {
-                    Trace.Warning($"Worker shutdown for timeout triggered [JobId:{message.JobId}]");
-                    jobContext.AddIssue(new Issue() { Type = IssueType.Error, Message = "Job cancelled due to worker timeout." });
-                });
+                    // Register for worker timeout cancellation - similar to agent shutdown
+                    workerTimeoutRegistration = HostContext.WorkerShutdownForTimeout.Register(() =>
+                    {
+                        Trace.Warning($"Worker shutdown for timeout triggered [JobId:{message.JobId}]");
+                        jobContext.AddIssue(new Issue() { Type = IssueType.Error, Message = "Job cancelled due to worker timeout." });
+                    });
 
                     // Validate directory permissions.
                     string workDirectory = HostContext.GetDirectory(WellKnownDirectory.Work);
@@ -462,11 +462,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     agentShutdownRegistration = null;
                 }
 
-                if (workerTimeoutRegistration != null)
-                {
-                    workerTimeoutRegistration.Value.Dispose();
-                    workerTimeoutRegistration = null;
-                }
+                    if (workerTimeoutRegistration != null)
+                    {
+                        workerTimeoutRegistration.Value.Dispose();
+                        workerTimeoutRegistration = null;
+                    }
 
                     legacyTaskConnection?.Dispose();
                     taskConnection?.Dispose();

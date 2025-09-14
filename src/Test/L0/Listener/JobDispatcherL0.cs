@@ -511,7 +511,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Listener
         [Fact]
         [Trait("Level", "L0")]
         [Trait("Category", "Agent")]
-        public async Task HandleWorkerTimeoutAsync_WhenFeatureEnabled_SendsFlushLogsRequest()
+        public async Task HandleWorkerTimeoutAsync_AlwaysSendsFlushLogsRequest()
         {
             using (TestHostContext hc = new TestHostContext(this))
             {
@@ -546,7 +546,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Listener
                 // Act
                 var task = (Task)method.Invoke(jobDispatcher, new object[] {
                     message.JobId,
-                    true, // timeoutLogFlushingEnabled
                     _processChannel.Object,
                     workerProcessTask,
                     workerProcessCancelTokenSource,
@@ -555,7 +554,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Listener
 
                 await task;
 
-                // Assert
+                // Assert - HandleWorkerTimeoutAsync always sends FlushLogsRequest
                 _processChannel.Verify(x => x.SendAsync(
                     MessageType.FlushLogsRequest,
                     string.Empty,
@@ -563,54 +562,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Listener
             }
         }
 
-        [Fact]
-        [Trait("Level", "L0")]
-        [Trait("Category", "Agent")]
-        public async Task HandleWorkerTimeoutAsync_WhenFeatureDisabled_DoesNotSendFlushLogsRequest()
-        {
-            using (TestHostContext hc = new TestHostContext(this))
-            {
-                // Arrange
-                var jobDispatcher = new JobDispatcher();
-                _configurationStore.Setup(x => x.GetSettings()).Returns(new AgentSettings() { PoolId = 1 });
-                hc.SetSingleton<IConfigurationStore>(_configurationStore.Object);
-                hc.SetSingleton<IAgentServer>(_agentServer.Object);
-                hc.SetSingleton<IProcessInvoker>(_processInvoker.Object);
-                hc.SetSingleton<IProcessChannel>(_processChannel.Object);
-                hc.SetSingleton<IFeatureFlagProvider>(_featureFlagProvider.Object);
-
-                jobDispatcher.Initialize(hc);
-
-                var message = CreateJobRequestMessage();
-                var workerProcessTask = Task.FromResult(0);
-                using var workerProcessCancelTokenSource = new CancellationTokenSource();
-                using var workerCancelTimeoutTokenSource = new CancellationTokenSource();
-                var workerCancelTimeoutKillToken = workerCancelTimeoutTokenSource.Token;
-
-                // Use reflection to access the private HandleWorkerTimeoutAsync method
-                var method = typeof(JobDispatcher).GetMethod("HandleWorkerTimeoutAsync", 
-                    BindingFlags.NonPublic | BindingFlags.Instance);
-                Assert.NotNull(method);
-
-                // Act
-                var task = (Task)method.Invoke(jobDispatcher, new object[] {
-                    message.JobId,
-                    false, // timeoutLogFlushingEnabled
-                    _processChannel.Object,
-                    workerProcessTask,
-                    workerProcessCancelTokenSource,
-                    workerCancelTimeoutKillToken
-                });
-
-                await task;
-
-                // Assert - Should NOT send FlushLogsRequest when feature is disabled
-                _processChannel.Verify(x => x.SendAsync(
-                    MessageType.FlushLogsRequest,
-                    string.Empty,
-                    It.IsAny<CancellationToken>()), Times.Never);
-            }
-        }
+        // Note: HandleWorkerTimeoutAsync always sends FlushLogsRequest when called.
+        // The timeout log flushing feature control happens at a higher level 
+        // determining whether HandleWorkerTimeoutAsync is called at all.
 
         [Fact]
         [Trait("Level", "L0")]
@@ -625,13 +579,12 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Listener
             Assert.NotNull(method);
             
             var parameters = method.GetParameters();
-            Assert.Equal(6, parameters.Length);
+            Assert.Equal(5, parameters.Length);
             Assert.Equal("jobId", parameters[0].Name);
-            Assert.Equal("timeoutLogFlushingEnabled", parameters[1].Name);
-            Assert.Equal("processChannel", parameters[2].Name);
-            Assert.Equal("workerProcessTask", parameters[3].Name);
-            Assert.Equal("workerProcessCancelTokenSource", parameters[4].Name);
-            Assert.Equal("workerCancelTimeoutKillToken", parameters[5].Name);
+            Assert.Equal("processChannel", parameters[1].Name);
+            Assert.Equal("workerProcessTask", parameters[2].Name);
+            Assert.Equal("workerProcessCancelTokenSource", parameters[3].Name);
+            Assert.Equal("workerCancelTimeoutKillToken", parameters[4].Name);
         }
     }
 }

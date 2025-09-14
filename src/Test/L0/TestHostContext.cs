@@ -476,7 +476,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests
 
         string IKnobValueContext.GetVariableValueOrDefault(string variableName)
         {
-            throw new NotSupportedException("Method not supported for Microsoft.VisualStudio.Services.Agent.Tests.TestHostContext");
+            // Return null for unknown variables to allow knob fallback to other sources
+            return null;
         }
 
         IScopedEnvironment IKnobValueContext.GetScopedEnvironment()

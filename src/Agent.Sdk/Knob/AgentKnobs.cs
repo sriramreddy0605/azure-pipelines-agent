@@ -710,6 +710,8 @@ namespace Agent.Sdk.Knob
         public static readonly Knob EnableTimeoutLogFlushing = new Knob(
             nameof(EnableTimeoutLogFlushing),
             "If true, enables timeout log flushing where worker gets 1 minute to flush logs after job timeout before force kill.",
+            new PipelineFeatureSource("EnableTimeoutLogFlushing"),
+            new RuntimeKnobSource("AZP_ENABLE_TIMEOUT_LOG_FLUSHING"),
             new EnvironmentKnobSource("AZP_ENABLE_TIMEOUT_LOG_FLUSHING"),
             new BuiltInDefaultKnobSource("false"));
 
