@@ -135,27 +135,27 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                         }
                     }
 
-                agentShutdownRegistration = HostContext.AgentShutdownToken.Register(() =>
-                {
-                    // log an issue, then agent get shutdown by Ctrl-C or Ctrl-Break.
-                    // the server will use Ctrl-Break to tells the agent that operating system is shutting down.
-                    string errorMessage;
-                    switch (HostContext.AgentShutdownReason)
+                    agentShutdownRegistration = HostContext.AgentShutdownToken.Register(() =>
                     {
-                        case ShutdownReason.UserCancelled:
-                            errorMessage = StringUtil.Loc("UserShutdownAgent");
-                            Trace.Warning($"Agent shutdown initiated [Reason:UserCancelled, JobId:{message.JobId}]");
-                            break;
-                        case ShutdownReason.OperatingSystemShutdown:
-                            errorMessage = StringUtil.Loc("OperatingSystemShutdown", Environment.MachineName);
-                            Trace.Warning(StringUtil.Format("Agent shutdown initiated [Reason:OperatingSystemShutdown, JobId:{0}, Machine:{1}]", message.JobId, Environment.MachineName));
-                            break;
-                        default:
-                            Trace.Error(StringUtil.Format("Unknown shutdown reason detected [Reason:{0}, JobId:{1}]", HostContext.AgentShutdownReason, message.JobId));
-                            throw new ArgumentException(HostContext.AgentShutdownReason.ToString(), nameof(HostContext.AgentShutdownReason));
-                    }
-                    jobContext.AddIssue(new Issue() { Type = IssueType.Error, Message = errorMessage });
-                });
+                        // log an issue, then agent get shutdown by Ctrl-C or Ctrl-Break.
+                        // the server will use Ctrl-Break to tells the agent that operating system is shutting down.
+                        string errorMessage;
+                        switch (HostContext.AgentShutdownReason)
+                        {
+                            case ShutdownReason.UserCancelled:
+                                errorMessage = StringUtil.Loc("UserShutdownAgent");
+                                Trace.Warning($"Agent shutdown initiated [Reason:UserCancelled, JobId:{message.JobId}]");
+                                break;
+                            case ShutdownReason.OperatingSystemShutdown:
+                                errorMessage = StringUtil.Loc("OperatingSystemShutdown", Environment.MachineName);
+                                Trace.Warning(StringUtil.Format("Agent shutdown initiated [Reason:OperatingSystemShutdown, JobId:{0}, Machine:{1}]", message.JobId, Environment.MachineName));
+                                break;
+                            default:
+                                Trace.Error(StringUtil.Format("Unknown shutdown reason detected [Reason:{0}, JobId:{1}]", HostContext.AgentShutdownReason, message.JobId));
+                                throw new ArgumentException(HostContext.AgentShutdownReason.ToString(), nameof(HostContext.AgentShutdownReason));
+                        }
+                        jobContext.AddIssue(new Issue() { Type = IssueType.Error, Message = errorMessage });
+                    });
 
                     // Register for worker timeout cancellation - similar to agent shutdown
                     workerTimeoutRegistration = HostContext.WorkerShutdownForTimeout.Register(() =>
@@ -452,15 +452,15 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 {
                     ExceptionsUtil.HandleAggregateException((AggregateException)e, (message) => Trace.Error(message));
 
-                return TaskResult.Failed;
-            }
-            finally
-            {
-                if (agentShutdownRegistration != null)
-                {
-                    agentShutdownRegistration.Value.Dispose();
-                    agentShutdownRegistration = null;
+                    return TaskResult.Failed;
                 }
+                finally
+                {
+                    if (agentShutdownRegistration != null)
+                    {
+                        agentShutdownRegistration.Value.Dispose();
+                        agentShutdownRegistration = null;
+                    }
 
                     if (workerTimeoutRegistration != null)
                     {
